@@ -70,7 +70,7 @@ Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`)
 | **Mar 13–18** | Ajuste de costos según dónde mueren | S6 simulador como Lambda + Scheduler | N5 landing · pulido de producto | **18:00** R2 y R3 de punta a punta con el mapa en vivo |
 | **Mar 18–24** | **Prueba de fuego propia (los tres):** R1→R2→R3 contra AWS, 3 corridas · ajustes · latencia | | | p95 de R3 ≤ 150 ms y errores < 0,5 % |
 | **Mié 07–10** | Sección del README | README, diagrama, `docs/costos.md` | README, pitch, revisión final de secretos | **08:00** repo revisado · **10:00** entrega |
-| **Jue 29** | Ensayo de preguntas del motor | Ensayo de preguntas de infra y simulador | **Ensayo completo de la demo en la laptop** (sección 8) + video de respaldo | La demo corre de punta a punta desde la laptop, con el hotspot del celular |
+| **Jue 29** | Ensayo de preguntas del motor | Ensayo de preguntas de infra y simulador | **Ensayo completo de la demo en la laptop** (sección 7) + video de respaldo | La demo corre de punta a punta desde la laptop, con el hotspot del celular |
 | **Vie 30** | Pitch en la ULEAM (5 min + 3 de preguntas) | | **Lleva la laptop y opera la demo** | — |
 
 Si un punto de control falla, **se para y se resuelve entre los tres** antes de seguir (`AGENTS.md` §9). Lo Pro (K5 predicción, capacidad de refugios, flota) **solo** si el control de las 18:00 del martes está en verde.
@@ -121,7 +121,7 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 | 7 | `feat/n6-auto-seleccion` | Auto-selección al cargar (pasa a otro si llega o lo muerden) + flecha al `siguienteNodo` de cada sobreviviente | 4 | Sin tocar nada, siempre hay una ruta planificada visible |
 | 8 | `feat/n5-landing` | Landing: qué es, cómo se usa, enlace al mapa | — | — |
 | 9 | (miércoles) | README: qué hace, uso del mapa, `docs/mapa.png`; pitch (PDF/PPT/PPTX ≤ 20 MB); revisión final de secretos en el historial | 8 | Entregables enviados antes de las 10:00 |
-| 10 | `docs/demo-runbook` | `docs/DEMO.md`: guion de la demo con los comandos exactos (sección 8), preparado con Alex | — | Ensayado el jueves en la laptop |
+| 10 | `docs/demo-runbook` | `docs/DEMO.md`: guion de la demo con los comandos exactos (sección 7), preparado con Alex | — | Ensayado el jueves en la laptop |
 | 11 | (jueves) | Ensayo completo en la laptop y grabación del video de respaldo | — | Video guardado en la laptop y en la nube |
 
 > **Carga de Alex:** es la zona con más tareas. Si a las 23:00 del lunes S2/S3 no están, Kevin toma las reglas puras de zombies y mordidas en `shared/` (su zona) y Alex solo las conecta al loop del simulador.
