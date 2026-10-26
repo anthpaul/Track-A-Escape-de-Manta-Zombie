@@ -11,13 +11,13 @@ variable "env" {
 }
 
 variable "aws_region" {
-  description = "AWS region. The team account blocks us-east-1 through an SCP."
+  description = "AWS region of the team account. us-east-1 only if the organization requires it (AGENTS.md Q1)."
   type        = string
   default     = "us-east-2"
 
   validation {
-    condition     = var.aws_region == "us-east-2"
-    error_message = "Only us-east-2 is allowed (see AGENTS.md section 2). Discuss with the team before changing it."
+    condition     = contains(["us-east-1", "us-east-2"], var.aws_region)
+    error_message = "Only us-east-1 or us-east-2 are allowed (see AGENTS.md section 1). Discuss with the team before changing it."
   }
 }
 

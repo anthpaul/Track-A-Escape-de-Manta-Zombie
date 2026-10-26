@@ -1,13 +1,13 @@
 # INFRA.md — Infraestructura y diseño de DynamoDB
 
-Receta probada en el hackathon de práctica: un dominio de CloudFront sirve el sitio estático y la API, una Lambda con Hono atiende todo `/api/*`, y DynamoDB guarda todo en una sola tabla. **No se rediseña para el reto nuevo:** se copia `infra/`, se cambian 3 valores y se deploya. Lo único que depende del reto es el modelo de datos (§4).
+Un dominio de CloudFront sirve el sitio estático (mapa en vivo) y la API, una Lambda con Hono atiende todo `/api/*`, y DynamoDB guarda el estado del mundo en una sola tabla. El modelo de datos vive en `AGENTS.md` §4.
 
 ## Quick path (30 minutos, lo hace Alex)
 
-1. Copiar la carpeta `infra/` del repo de práctica al repo nuevo (sin `.terraform/`, `*.tfstate`, `tfplan` ni `build/`).
-2. Cambiar los 3 valores de §2.
+1. Login en la cuenta del equipo: `aws sts get-caller-identity` debe mostrar tu usuario IAM.
+2. Bootstrap del bucket del state, una sola vez por cuenta (`infra/README.md` §1).
 3. Desde la raíz: `npm ci`, `npm run build -w backend`.
-4. En `infra/`: copiar `backend.hcl.example` a `backend.hcl` con el bucket real, `terraform init -backend-config=backend.hcl`, `terraform plan -out=tfplan`, leer el plan, `terraform apply tfplan`.
+4. En `infra/`: copiar `backend.hcl.example` a `backend.hcl` con el bucket real, exportar `TF_VAR_api_key`, `terraform init -backend-config=backend.hcl`, `terraform plan -out=tfplan`, leer el plan, `terraform apply tfplan`.
 5. Verificar: `curl "$(terraform output -raw site_url)/api/health"` → `{"ok":true,...}`.
 
 ---
@@ -17,7 +17,6 @@ Receta probada en el hackathon de práctica: un dominio de CloudFront sirve el s
 ```text
                          ┌──────────────── CloudFront (un solo dominio) ────────────────┐
  celular / navegador ──▶ │  /*          → S3 (sitio estático, privado, OAC)              │
-                         │  /api/n/*    → API Gateway (cache según Cache-Control, ≤300s) │
                          │  /api/*      → API Gateway (sin cache)                         │
                          └───────────────────────────────┬───────────────────────────────┘
                                                          ▼
@@ -30,28 +29,29 @@ Receta probada en el hackathon de práctica: un dominio de CloudFront sirve el s
 
 **Por qué un solo dominio:** el front llama a `/api` relativo, así que no hay CORS en producción ni URLs distintas por entorno. CORS solo existe en `backend/src/dev.ts` para desarrollo local (3000 → 3001).
 
-| Archivo | Recursos | Qué cambiar por reto |
+**Por qué la API no se cachea en CloudFront:** `/paso` y `/estado` cambian cada turno (2 s). La caché que importa es la del turno N dentro de cada Lambda (`AGENTS.md` §4.3).
+
+| Archivo | Recursos |
+|---|---|
+| `main.tf` | Providers, backend S3 del state (bucket y región salen de `backend.hcl`), tags por defecto |
+| `variables.tf` | `project`, `env`, región (`us-east-2` por defecto, `us-east-1` permitido), tabla, memoria de la Lambda, `api_key`, throttling, logs |
+| `dynamodb.tf` | Tabla `PK`/`SK` + `GSI1` (`GSI1PK`/`GSI1SK`, `ALL`), PITR |
+| `iam.tf` | Rol de la Lambda: logs + Get/Put/Update/Delete/Query/ConditionCheck/BatchGet. **Sin `Scan`** |
+| `lambda.tf` | `archive_file` de `backend/dist/handler.js`, función, log group (7 días) |
+| `apigateway.tf` | HTTP API, CORS (local), integración proxy v2, ruta `$default`, stage con throttling |
+| `s3.tf` | Bucket del sitio (privado, `force_destroy`), policy solo para CloudFront |
+| `cloudfront.tf` | OAC, función que reescribe `/ruta` → `/ruta.html`, behavior de `/api/*` sin cache |
+| `outputs.tf` | `site_url`, `api_url`, `bucket_name`, `cloudfront_id`, `table_name`, `lambda_name` |
+| `bootstrap/` | Bucket del state `spookython-tfstate-<account_id>` (versionado, cifrado, `prevent_destroy`) |
+
+## 2. Secretos y configuración local
+
+| Qué | Dónde vive | Cómo llega a cada integrante |
 |---|---|---|
-| `main.tf` | Providers, backend S3 del state, tags por defecto | `key` del state (§2) |
-| `variables.tf` | `project`, `env`, región (validada = `us-east-2`), tabla, throttling, logs | `project`, `table_name` |
-| `dynamodb.tf` | Tabla `PK`/`SK` + `GSI1` (`GSI1PK`/`GSI1SK`, `ALL`), PITR | Nada (el modelo vive en el código) |
-| `iam.tf` | Rol de la Lambda: logs + Get/Put/Update/Delete/Query/ConditionCheck/BatchGet. **Sin `Scan`** | Solo si un access pattern necesita otra acción |
-| `lambda.tf` | `archive_file` de `backend/dist/handler.js`, función, log group (7 días) | Nada |
-| `apigateway.tf` | HTTP API, CORS, integración proxy v2, ruta `$default`, stage con throttling | Nada |
-| `s3.tf` | Bucket del sitio (privado, `force_destroy`), policy solo para CloudFront | Nada |
-| `cloudfront.tf` | OAC, función que reescribe `/ruta` → `/ruta.html`, behaviors de `/api` | Los `path_pattern` si cambia el prefijo público cacheable |
-| `outputs.tf` | `site_url`, `api_url`, `bucket_name`, `cloudfront_id`, `table_name`, `lambda_name` | Nada |
-| `bootstrap/` | Bucket del state (versionado, cifrado, `prevent_destroy`) | **No se vuelve a correr**: el bucket ya existe |
-
-## 2. Los 3 valores que se cambian
-
-| Dónde | Valor actual (práctica) | Valor para el reto |
-|---|---|---|
-| `main.tf` → `backend "s3"` → `key` | `infra/terraform.tfstate` | `spookython/terraform.tfstate` ✓ ya aplicado |
-| `variables.tf` → `project` | `alquileres` | `spookython` ✓ ya aplicado |
-| `variables.tf` → `table_name` | `hackathon_alquileres` | `spookython_mundo` ✓ ya aplicado |
-
-**Por qué un `key` nuevo:** con el mismo `key`, Terraform vería la infra de práctica como "la actual" y propondría reemplazarla. Con un `key` nuevo se crea todo de cero, al lado. Si ya no se usa la infra de práctica, se destruye **desde su carpeta** con su state (`terraform destroy`) para no pagar de más.
+| Nombre del bucket del state y región | `infra/backend.hcl` (gitignored) | Por privado; se copia de `backend.hcl.example` |
+| API key de `/paso` | `TF_VAR_api_key` en la terminal | Por privado; nunca en un archivo commiteado |
+| Credenciales AWS | `aws configure` de cada uno | Cada integrante con su propio usuario IAM |
+| State de Terraform | Bucket S3 remoto con lockfile | Compartido automáticamente |
 
 ## 3. Deploy y verificación
 
@@ -61,7 +61,7 @@ Receta probada en el hackathon de práctica: un dominio de CloudFront sirve el s
 npm ci && npm run build -w backend
 cd infra
 terraform init -backend-config=backend.hcl   # nunca -reconfigure ni -migrate-state
-terraform plan -out=tfplan     # primera vez: "17 to add, 0 to change, 0 to destroy"
+terraform plan -out=tfplan     # primera vez: todo "to add", nada "to destroy"
 terraform apply tfplan         # CloudFront tarda 5–15 min la primera vez
 terraform output
 ```
@@ -92,82 +92,35 @@ aws cloudfront create-invalidation --distribution-id "$(cd infra && terraform ou
 | Prueba | Esperado |
 |---|---|
 | `curl <site_url>/api/health` | `{"ok":true,"service":...}` (CloudFront → API → Lambda funciona) |
-| `curl -o /dev/null -w "%{http_code}" <site_url>/api/me/<algo>` | `401` (la ruta existe y está protegida) |
-| Una acción real en el sitio | Aparece el ítem en DynamoDB (consola → tabla → Explore items) |
+| `curl -o /dev/null -w "%{http_code}" -X POST <site_url>/api/paso` | `401` (la ruta existe y está protegida) |
+| `curl <site_url>/api/estado` con el simulador corriendo | El `turno` sube cada 2 s |
 
 ---
 
-## 4. Método para diseñar DynamoDB desde cualquier reto
+## 4. Reglas de diseño de DynamoDB
 
-DynamoDB no se diseña como SQL. **Primero se listan las preguntas que hace la app, después se eligen las claves que las responden.** Si se empieza por las tablas, se termina en `Scan`.
+El modelo concreto (ítems, claves y access patterns) está en `AGENTS.md` §4.2. Estas son las reglas que lo sostienen:
 
-### 4.1 Los 6 pasos
-
-| Paso | Qué hacer | Resultado en AGENTS.md |
-|---|---|---|
-| 1. Usuarios y acciones | Por cada usuario del enunciado, escribir qué lee y qué escribe | — |
-| 2. Entidades | Sustantivos que se guardan (negocio, artículo, reserva, turno, pedido...) | §4.1 |
-| 3. Access patterns | Cada pantalla o endpoint → una pregunta concreta ("reservas del negocio X que empiezan el día D") | §4.2 |
-| 4. Claves | El "dueño" de los datos va en `PK`; lo que se lista o filtra por rango, en `SK` con prefijo y orden útil (fechas ISO primero) | §4.1 |
-| 5. Índice | GSI1 solo para preguntas que la tabla base no responde. Nunca como fuente de verdad para reglas críticas (es eventualmente consistente) | §4.1 |
-| 6. Concurrencia y estados | Qué recurso es escaso (stock, turno, cupo) y qué transiciones existen | §4.3, §4.4 |
-
-### 4.2 Reglas de diseño
-
-- **Una partición por dueño de datos** (`PK = NEGOCIO#<id>`): todo lo del negocio sale con un `Query`, y aislar dueños es trivial (cada uno solo toca su `PK`).
-- **Prefijos en `SK`** (`ARTICULO#`, `RESERVA#<fecha>#<id>`): un `begins_with` responde "todos los X" o "los X de tal día".
-- **ISO 8601 en claves de fecha:** ordenan como texto (`2026-10-31` > `2026-10-30`).
-- **Ids ULID** generados en el servidor: únicos y ordenables por tiempo.
+- **Primero las preguntas, después las claves.** Cada endpoint o pantalla → una pregunta concreta → una operación (`GetItem` o `Query`). Si se empieza por las tablas, se termina en `Scan`.
+- **Una partición por partida** (`PK = PARTIDA#<id>`): todo lo de una partida sale con un `Query`.
+- **Prefijos en `SK`** (`TURNO#`, `RUTA#`, `REFUGIO#`): un `begins_with` responde "todos los X".
+- **Números con ceros a la izquierda en claves** (`TURNO#000142`): ordenan bien como texto.
 - **`data` como map** con el payload validado por Zod; las claves quedan afuera.
 - **Prohibido `Scan`** en producción. Si un patrón lo necesita, el diseño está mal.
-- **Datos viejos sin migración:** un campo nuevo se completa con su valor por defecto al **leer**, no con un `.default()` en el schema.
+- **`ttl` en todos los ítems** para que DynamoDB los borre solos.
 
-### 4.3 Ejemplo resuelto (práctica: alquileres)
+### Concurrencia: capacidad de refugios (Pro)
 
-| Entidad | PK | SK | GSI1PK / GSI1SK | `data` |
-|---|---|---|---|---|
-| Negocio | `NEGOCIO#<id>` | `METADATA` | — | nombre, slug, whatsapp, dirección, ownerToken |
-| Artículo | `NEGOCIO#<id>` | `ARTICULO#<id>` | `ARTICULO_DISPONIBLE#<negocio>` / `<categoria>#<nombre>` | nombre, categoría, precioPorDia, fotos, activo, **cantidad** |
-| Reserva | `NEGOCIO#<id>` | `RESERVA#<fechaInicio>#<id>` | `ARTICULO#<articulo>` / `RESERVA#<inicio>#<fin>` | cliente, fechas, **estado**, total |
-
-| Pregunta | Operación |
-|---|---|
-| Negocio por id | `GetItem PK=NEGOCIO#<id>, SK=METADATA` |
-| Catálogo del negocio | `Query PK=NEGOCIO#<id>, SK begins_with ARTICULO#` |
-| Reservas que empiezan el día D | `Query PK=NEGOCIO#<id>, SK begins_with RESERVA#<D>#` |
-| Disponibilidad / reglas | `Query PK=NEGOCIO#<id>, SK begins_with RESERVA#` con `ConsistentRead` + función pura de `shared/` |
-| Auth del dueño | El token es `<negocioId>.<secreto>` → `GetItem` del negocio y comparación en tiempo constante |
-
-### 4.4 Patrón de concurrencia (recurso escaso)
-
-Sirve para stock, turnos, cupos, mesas: cualquier cosa donde dos usuarios pueden pedir lo último al mismo tiempo.
+Dos sobrevivientes pueden pedir el último lugar de un refugio al mismo tiempo. Se resuelve con un contador atómico condicional, sin transacciones:
 
 ```text
-loop (hasta 12 intentos, espera aleatoria corta entre intentos):
-  recurso   = GetItem(ConsistentRead)              → data + version
-  ocupación = Query tabla base (ConsistentRead, todas las páginas)
-  si regla_pura(recurso, ocupación, pedido) falla → 409 (error de negocio claro)
-  TransactWriteItems:
-    Update recurso  IF data = :data AND version = :version   SET version = version + 1
-    Put    pedido   IF attribute_not_exists(SK)
-  si TransactionCanceled por la condición del recurso → reintentar
-agotado → 500 (nunca disfrazarlo de "ocupado")
+UpdateItem PARTIDA#<id> / REFUGIO#<id>
+  SET asignados = asignados + 1
+  IF asignados < capacidad
+→ ConditionalCheckFailed: el refugio está lleno, se elige el siguiente mejor
 ```
 
-- La **versión** serializa los pedidos sobre el mismo recurso: de dos simultáneos, uno gana y el otro relee y vuelve a validar.
-- Las **transiciones de estado** usan `UpdateItem` con `ConditionExpression #data.#estado IN (:desde...)`.
-- Liberar un recurso (cancelar, devolver) no necesita la versión: nunca puede causar una sobreventa.
-- Tests obligatorios: N pedidos simultáneos por las últimas K unidades → exactamente K éxitos.
-
-### 4.5 Formas típicas de reto y su punto de partida
-
-| Si el reto es de... | Recurso escaso | Partición | SK útiles |
-|---|---|---|---|
-| Reservas / alquileres | Unidades por fecha | Negocio | `ITEM#`, `RESERVA#<fecha>#` |
-| Turnos / citas | Franja horaria | Local o profesional | `TURNO#<fecha>T<hora>#` |
-| Pedidos / delivery | Stock o capacidad de cocina | Negocio | `PRODUCTO#`, `PEDIDO#<fecha>#`, estado en `data` |
-| Inscripciones / cupos | Cupos del evento | Evento | `INSCRIPCION#<id>` + contador con versión |
-| Reportes / incidencias | — (no hay escasez) | Organización o zona | `REPORTE#<fecha>#`, GSI por estado |
+Test obligatorio: N asignaciones simultáneas sobre K lugares libres → exactamente K éxitos.
 
 ---
 
@@ -178,22 +131,24 @@ agotado → 500 (nunca disfrazarlo de "ocupado")
 | DynamoDB on-demand, Lambda, API Gateway, S3, CloudFront | Prácticamente $0 con tráfico de demo (free tier y pago por uso) |
 | PITR de DynamoDB | Centavos para una tabla chica |
 | ElastiCache (Valkey) | **Cobra desde el minuto uno**: por eso está apagado |
+| *Provisioned concurrency* (solo si hace falta en la prueba) | Se cobra mientras está activa: activarla solo durante las rondas y declararla en `docs/costos.md` |
 
 Al terminar: `terraform destroy` en `infra/` (el bucket del sitio tiene `force_destroy`; el del state se queda por `prevent_destroy`). Cada integrante borra sus access keys.
 
-## 6. Troubleshooting (casos reales)
+## 6. Troubleshooting
 
 | Síntoma | Causa | Solución |
 |---|---|---|
 | `terraform: command not found` en MSYS2 (UCRT64) | MSYS2 no hereda el PATH de Windows | `export PATH="$PATH:/c/Users/<user>/AppData/Local/Microsoft/WinGet/Packages/Hashicorp.Terraform_Microsoft.Winget.Source_8wekyb3d8bbwe"` o usar Git Bash |
 | `aws` no se reconoce | Mismo motivo | `export PATH="$PATH:/c/Program Files/Amazon/AWSCLIV2"` |
 | `Backend initialization required` | Primera vez en esa máquina | `terraform init -backend-config=backend.hcl` |
+| `No value for required variable "api_key"` | Falta exportar la API key | `export TF_VAR_api_key="..."` |
 | `No configuration files` | Se corrió Terraform fuera de `infra/` | `cd infra` |
-| El sitio no guarda nada en DynamoDB | Se publicó un build en modo mock | Rebuild con el comando de §3 y verificar `useMocks:!1` |
+| El mapa no muestra datos reales | Se publicó un build en modo mock | Rebuild con el comando de §3 y verificar `useMocks:!1` |
 | `file:///C:/Program%20Files/Git/api/...` en la consola | MSYS convirtió `/api` en una ruta de Windows | `MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL='*'` en el build |
 | `EBUSY ... rmdir frontend/out` | Una terminal o el explorador está parado dentro de `out/` | Salir de esa carpeta y repetir |
 | `/api/...` da 404 por CloudFront pero `api_url` responde | Hono perdió `basePath('/api')` | Restaurarlo; `npm test -w backend` lo detecta |
 | 404 de `/<ruta>/__next.<algo>.txt` en la consola | Next pide los payloads con puntos y el export los guarda con barras | No rompe (cae a carga completa). Mejora: regla extra en la función de CloudFront |
 | `Missing Authentication Token` (XML de `cloudfront.amazonaws.com`) | Se abrió en el navegador el `Location` de una invalidación | No es un error del sitio: el sitio es `site_url` |
-| `AccessDeniedException ... service control policy` | Región `us-east-1` | Usar `us-east-2` |
+| `AccessDeniedException ... service control policy` | La cuenta bloquea esa región por SCP | Cambiar `aws_region` (y `region` en `backend.hcl`) a una región permitida |
 | Un push directo a `main` falla con `GH013` | El ruleset funciona | Abrir PR |

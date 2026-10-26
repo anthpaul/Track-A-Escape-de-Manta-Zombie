@@ -1,7 +1,6 @@
 # One distribution, one domain:
 #   /            -> S3 static export (frontend/out)
-#   /api/n/*     -> API Gateway, cached at the edge following the Lambda's Cache-Control
-#   /api/*       -> API Gateway, never cached (/me/*, reservas, disponibilidad)
+#   /api/*       -> API Gateway, never cached (/paso and /estado change every turn)
 # Same origin for site and API, so the browser needs no CORS in production.
 
 locals {
@@ -11,6 +10,7 @@ locals {
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
+  # Static site only; the API behavior uses caching_disabled.
   name = "Managed-CachingOptimized"
 }
 
@@ -23,32 +23,6 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
-# TTL comes from the origin's Cache-Control (max-age=60 catalog, 300 business).
-# no-store / private responses are not cached because min_ttl is 0.
-resource "aws_cloudfront_cache_policy" "api_public" {
-  name        = "${local.name_prefix}-api-public"
-  min_ttl     = 0
-  default_ttl = 0
-  max_ttl     = 300
-
-  parameters_in_cache_key_and_forwarded_to_origin {
-    enable_accept_encoding_brotli = true
-    enable_accept_encoding_gzip   = true
-
-    cookies_config {
-      cookie_behavior = "none"
-    }
-
-    headers_config {
-      header_behavior = "none"
-    }
-
-    query_strings_config {
-      query_string_behavior = "all"
-    }
-  }
-}
-
 resource "aws_cloudfront_origin_access_control" "site" {
   name                              = "${local.name_prefix}-site-oac"
   origin_access_control_origin_type = "s3"
@@ -56,8 +30,8 @@ resource "aws_cloudfront_origin_access_control" "site" {
   signing_protocol                  = "sigv4"
 }
 
-# The static export writes /panel as panel.html. Map clean URLs to files:
-#   / -> /index.html, /catalogo -> /catalogo.html, /panel/ -> /panel.html
+# The static export writes /mapa as mapa.html. Map clean URLs to files:
+#   / -> /index.html, /mapa -> /mapa.html, /mapa/ -> /mapa.html
 resource "aws_cloudfront_function" "rewrite_html" {
   name    = "${local.name_prefix}-rewrite-html"
   runtime = "cloudfront-js-2.0"
@@ -118,17 +92,6 @@ resource "aws_cloudfront_distribution" "main" {
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.rewrite_html.arn
     }
-  }
-
-  ordered_cache_behavior {
-    path_pattern             = "/api/n/*"
-    target_origin_id         = local.api_origin_id
-    viewer_protocol_policy   = "https-only"
-    allowed_methods          = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
-    cached_methods           = ["GET", "HEAD"]
-    compress                 = true
-    cache_policy_id          = aws_cloudfront_cache_policy.api_public.id
-    origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
   }
 
   ordered_cache_behavior {

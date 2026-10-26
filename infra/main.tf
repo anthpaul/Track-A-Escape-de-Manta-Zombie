@@ -12,13 +12,11 @@ terraform {
     }
   }
 
-  # Bucket created by infra/bootstrap. Its name holds the account id, so it
-  # comes from the gitignored backend.hcl: terraform init -backend-config=backend.hcl
+  # Bucket created by infra/bootstrap. Its name holds the account id, so bucket
+  # and region come from the gitignored backend.hcl: terraform init -backend-config=backend.hcl
   # Locking uses an S3 lockfile (use_lockfile), so no DynamoDB lock table is needed.
   backend "s3" {
-    # Own state, separate from the practice project in the same bucket.
     key          = "spookython/terraform.tfstate"
-    region       = "us-east-2"
     encrypt      = true
     use_lockfile = true
   }

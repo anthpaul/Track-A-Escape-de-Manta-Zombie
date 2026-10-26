@@ -98,7 +98,7 @@ DEMO EN VIVO: viernes 30 de octubre en la ULEAM, 5 min de pitch + 3 min de pregu
 
 | # | Pregunta | Por qué importa |
 |---|---|---|
-| Q1 | `TODO:` ¿La región final es `us-east-1`? ¿Nos dan sandbox? | Nuestra cuenta **bloquea `us-east-1` por SCP**. Si exigen esa región, necesitamos su sandbox |
+| Q1 | `TODO:` ¿La región final es `us-east-1`? ¿Nos dan sandbox? | Usamos `us-east-2`, la región de la cuenta del equipo. Si exigen `us-east-1`, se cambia `aws_region` y `region` en `backend.hcl` |
 | Q2 | `TODO:` ¿Un sobreviviente avanza **una arista por turno** sin importar su largo? | Define si "eficiencia" se mide en saltos (turnos) o en metros, y el costo del A* |
 | Q3 | `TODO:` ¿El jurado corre **su** simulador contra nuestro `/paso`, o solo el nuestro? | Si corren el suyo, nuestro motor no puede depender de datos que solo escribe nuestro simulador |
 | Q4 | `TODO:` ¿Capacidad de cada refugio (Pro)? ¿La fijamos nosotros? | Reparto de sobrevivientes |
@@ -112,7 +112,7 @@ Hasta que respondan: asumimos **Q2 = una arista por turno** y **Q3 = el motor le
 | # | Riesgo | Impacto | Mitigación | Dueño | Estado |
 |---|---|---|---|---|---|
 | R1 | Q3: el jurado corre su simulador y no tenemos los zombies | Supervivencia 50 % en cero (rutas ciegas) | Preguntar hoy. Interfaz `FuenteMundo` con dos implementaciones: `DynamoFuente` (nuestro simulador) y `HttpFuente` (el `/estado` de ellos) | Anthony (preguntar) · Kevin (interfaz) | `TODO` |
-| R2 | Q1: exigen `us-east-1` y nuestra cuenta la bloquea por SCP | No podemos desplegar donde piden | Preguntar hoy. Si es obligatoria, pedir su sandbox y cambiar `aws_region` en `variables.tf` (hoy la validación solo permite `us-east-2`) | Anthony | `TODO` |
+| R2 | Q1: exigen `us-east-1` y la cuenta nueva la bloquea | No podemos desplegar donde piden | Preguntar hoy. Desplegamos en `us-east-2`; `aws_region` también acepta `us-east-1` y la región del state va en `backend.hcl` | Anthony | `TODO` |
 | R3 | Arranques en frío en la R3 (200 sobrevivientes, ~100 rps en ráfagas) | Latencia p95 y disponibilidad (30 % de la prueba) | Lambda a **1024 MB** (ya aplicado en `infra/`), bundle chico y llamadas de calentamiento antes de cada ronda. Si el p95 pasa de 150 ms, *provisioned concurrency* solo durante la prueba (declararla en costos) | Alex | Memoria lista · calentamiento `TODO` |
 | R4 | Caché por turno sin el turno escrito: el simulador llama a `/paso` antes de escribir `TURNO#N` | El motor no ve los zombies del turno | Orden fijo en el simulador: mover zombies → **escribir `TURNO#N` y esperar el OK** → llamar a `/paso`. Si el turno no existe, el motor usa el último turno conocido (nunca "mundo vacío") | Alex · Kevin | `TODO` |
 | R5 | El motor y el simulador aplican reglas distintas (vecinos, mordidas, horda) | El motor da un paso que "cree" seguro y el simulador lo muerde | Las reglas viven **solo** en `shared/`, con tests | Kevin | `TODO` |
@@ -136,11 +136,11 @@ Hasta que respondan: asumimos **Q2 = una arista por turno** y **Q3 = el motor le
 | IaC | Terraform `~> 1.9`, provider `aws ~> 6.21` | Activo |
 | Monitoreo | CloudWatch (logs + métricas de latencia) | Activo |
 
-**Región:** `us-east-2` en nuestra cuenta, hasta que se responda Q1. No se agregan otros servicios AWS sin discutirlo y registrarlo acá.
+**Región:** `us-east-2`, la de la cuenta del equipo. `us-east-1` solo si la organización la exige (Q1). No se agregan otros servicios AWS sin discutirlo y registrarlo acá.
 
 ## 2. Stack de implementación
 
-Igual que el proyecto de práctica (ver `CONFIG.md` y `SETUP.md` de la plantilla), más:
+Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con export estático en el front, Hono + Zod en la Lambda, TypeScript `strict` en todo. Además:
 
 | Agregado | Para qué |
 |---|---|
@@ -343,11 +343,11 @@ T0.3 grafo → K1 A* → K3 /paso en AWS → S4 rondas → ajuste de costos → 
 ## 10. Secrets y cuenta
 
 - Nunca se commitean `.env*`, `*.tfvars`, `*.tfstate`, `.terraform/`, `*.csv`, keys ni la API key. Revisar con `git log -p` antes de hacer público el repo.
-- Cada integrante usa su usuario IAM con `aws configure` (región `us-east-2` hasta Q1). Los datos de la cuenta **no** van en este repo.
+- Cada integrante usa su usuario IAM con `aws configure` (región `us-east-2`). Los datos de la cuenta **no** van en este repo: el bucket del state va en `infra/backend.hcl` (gitignored) y la API key en `TF_VAR_api_key`.
 
-## 11. Lecciones del hackathon de práctica
+## 11. Lecciones aprendidas
 
-Ver `INFRA.md` §6 (troubleshooting) y la tabla de lecciones de la plantilla. Las más importantes acá:
+Ver `INFRA.md` §6 (troubleshooting). Las más importantes:
 - el contrato (§5) se aprueba antes de codear;
 - el build del front se hace solo con el comando de §8 y se verifica `useMocks:!1`;
 - siempre `terraform plan` antes de `apply`;
