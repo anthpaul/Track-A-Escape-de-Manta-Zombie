@@ -21,3 +21,24 @@ export type Calle = {
 export type Refugio = { id: string; nodo: string; nombre: string; capacidad: number };
 
 export type Grafo = { version: string; nodos: Nodo[]; calles: Calle[]; refugios: Refugio[] };
+
+// Live state, shape of GET /api/estado (AGENTS.md §5). Same temporary-copy note as above.
+export type TipoZombie = "caminante" | "corredor" | "horda" | "dormido";
+export type Zombie = { id: string; tipo: TipoZombie; nodo: string };
+
+export type EstadoSobreviviente = "en_ruta" | "a_salvo" | "mordido";
+export type Sobreviviente = { id: string; nodo: string; estado: EstadoSobreviviente; siguienteNodo?: string };
+
+export type OcupacionRefugio = { id: string; ocupacion: number; capacidad: number };
+export type Metricas = { vivos: number; aSalvo: number; mordidos: number; p95ms: number | null };
+
+export type Snapshot = {
+  turno: number;
+  ronda: 1 | 2 | 3;
+  zombies: Zombie[]; // visible only: sleepers are never sent
+  aristasBloqueadas: string[];
+  sobrevivientes: Sobreviviente[];
+  refugios: OcupacionRefugio[];
+  metricas: Metricas;
+  generadoEn: string; // ISO 8601
+};

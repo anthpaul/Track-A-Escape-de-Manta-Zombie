@@ -59,3 +59,45 @@ export const capaRefugiosEtiquetas: LayerProps = {
   },
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
+
+export const COLOR_SOBREVIVIENTE = { en_ruta: "#60a5fa", mordido: "#737373" } as const;
+export const COLOR_ZONA_HORDA = "#ef4444";
+
+// Horde zone: the horde node and every neighbor (same set the router forbids). Radius grows with zoom.
+export const capaZonasHorda: LayerProps = {
+  id: "zonas-horda",
+  type: "circle",
+  paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 14, 26, 16, 70],
+    "circle-color": COLOR_ZONA_HORDA,
+    "circle-opacity": ["match", ["get", "origen"], "horda", 0.35, 0.18],
+    "circle-stroke-color": COLOR_ZONA_HORDA,
+    "circle-stroke-width": 1,
+    "circle-stroke-opacity": 0.5,
+  },
+};
+
+// Survivors already in a shelter are counted in the panel, not drawn.
+export const capaSobrevivientes: LayerProps = {
+  id: "sobrevivientes",
+  type: "circle",
+  filter: ["!=", ["get", "estado"], "a_salvo"],
+  paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 2.5, 16, 6],
+    "circle-color": ["match", ["get", "estado"], "mordido", COLOR_SOBREVIVIENTE.mordido, COLOR_SOBREVIVIENTE.en_ruta],
+    "circle-opacity": ["match", ["get", "estado"], "mordido", 0.45, 0.95],
+    "circle-stroke-color": "#0a0a0a",
+    "circle-stroke-width": 0.5,
+  },
+};
+
+export const capaZombies: LayerProps = {
+  id: "zombies",
+  type: "symbol",
+  layout: {
+    "icon-image": ["concat", "zombie-", ["get", "tipo"]],
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.35, 16, 0.7],
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
+  },
+};
