@@ -133,6 +133,8 @@ Test obligatorio: N asignaciones simultáneas sobre K lugares libres → exactam
 | ElastiCache (Valkey) | **Cobra desde el minuto uno**: por eso está apagado |
 | *Provisioned concurrency* (solo si hace falta en la prueba) | Se cobra mientras está activa: activarla solo durante las rondas y declararla en `docs/costos.md` |
 
+**AWS Budget:** `spookython-mensual`, $20 mensuales sin contar créditos ni reembolsos, con alertas al 50 % y 80 % del gasto real y al 100 % del previsto. Las alertas van al tema SNS `spookython-budget-alerts` (`us-east-2`, solo `budgets.amazonaws.com` de la cuenta puede publicar) con una suscripción por email confirmada, porque el SCP de la organización bloquea la verificación de emails de AWS Notifications. Se creó desde la consola y la CLI, fuera de Terraform. Captura: `docs/budget.png`.
+
 Al terminar: `terraform destroy` en `infra/` (el bucket del sitio tiene `force_destroy`; el del state se queda por `prevent_destroy`). Cada integrante borra sus access keys.
 
 ## 6. Troubleshooting
