@@ -48,6 +48,14 @@ test("a street pointing to a missing node is skipped instead of breaking the map
   assert.deepEqual(callesAGeoJSON(roto).features.map((f) => f.properties.id), ["C-0001", "C-0002"]);
 });
 
+test("a shelter pointing to a missing node is skipped", () => {
+  const roto: Grafo = {
+    ...grafo,
+    refugios: [...grafo.refugios, { id: "R-99", nodo: "N-9999", nombre: "Fantasma", capacidad: 1 }],
+  };
+  assert.deepEqual(refugiosAGeoJSON(roto).features.map((f) => f.properties.id), ["R-01"]);
+});
+
 test("each shelter becomes a Point at its node with name and capacity", () => {
   const fc = refugiosAGeoJSON(grafo);
   assert.equal(fc.features.length, 1);

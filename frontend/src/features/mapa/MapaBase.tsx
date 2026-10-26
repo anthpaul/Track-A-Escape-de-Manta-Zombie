@@ -11,7 +11,6 @@ setWorkerUrl(`/maplibre-gl-worker.js?v=${getVersion()}`);
 
 // Presentational base map. Live layers (streets, zombies, survivors) are passed as children.
 export default function MapaBase({ children }: { children?: React.ReactNode }) {
-  const [cargado, setCargado] = useState(false);
   const [falloEstilo, setFalloEstilo] = useState(false);
 
   return (
@@ -23,12 +22,12 @@ export default function MapaBase({ children }: { children?: React.ReactNode }) {
         mapStyle={MAP_STYLE_URL}
         attributionControl={{ compact: false }}
         style={{ width: "100%", height: "100%" }}
-        onLoad={() => setCargado(true)}
-        // Errors before the first load mean the base style never arrived (e.g. no network).
-        // Later errors are usually a single tile and are ignored.
-        onError={() => {
-          if (!cargado) setFalloEstilo(true);
+        // Only an error while the style itself is not loaded means the base map is missing
+        // (e.g. no network). Tile or glyph errors happen after the style loads and are ignored.
+        onError={(e) => {
+          if (!e.target.isStyleLoaded()) setFalloEstilo(true);
         }}
+        onStyleData={() => setFalloEstilo(false)}
       >
         {children}
       </Map>
