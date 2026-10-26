@@ -193,7 +193,8 @@ Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · 
 | Ítem | PK | SK | `data` | Lo escribe |
 |---|---|---|---|---|
 | Partida | `PARTIDA#<id>` | `METADATA` | ronda, estado, turnoActual, config | Simulador |
-| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]`, completo | Simulador |
+| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombies `[{id,tipo,nodo}]` (solo visibles; los dormidos nunca se escriben), aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]`, completo | Simulador |
+| Partida activa (candado) | `CONTROL` | `PARTIDA_ACTIVA` | partidaId, modo (`evaluacion` \| `demo`), turnoActual, expiraEn (epoch s) | Simulador |
 | Ocupación de refugio (Pro) | `PARTIDA#<id>` | `REFUGIO#<id>` | asignados (contador atómico), capacidad | Motor |
 
 Todos los ítems llevan `ttl` (epoch) para que DynamoDB los borre solos al día siguiente.
@@ -231,7 +232,37 @@ Nunca `Scan`.
 
 Costo base de una calle: `1 turno + ε × tiempo(distancia_m, tipo)` (si Q2 confirma "una arista por turno"). **No** usar solo `distancia_m / velocidad`: la eficiencia se puntúa en turnos, y optimizar en tiempo elige rutas con más saltos. Objetivo: el refugio que minimiza el costo total, con penalización si está lleno (Pro).
 
-### 4.5 Estados del sobreviviente
+### 4.5 Partida activa y semántica del turno (contrato motor ↔ simulador)
+
+> **A cerrar entre Kevin y Alex antes de K3 y S1.** Es la propuesta por defecto; si cambia, se edita acá en el mismo PR.
+
+**Identidad de partida.** `POST /paso` no trae `partidaId` (el contrato oficial no se puede cambiar). Por eso **hay una sola partida activa a la vez**, registrada en el ítem candado `CONTROL / PARTIDA_ACTIVA`:
+
+- `partidaId`: `<modo>-<ronda>-<epoch ms>` (por ejemplo `evaluacion-r3-1793030400000`), lo genera el simulador al arrancar.
+- El motor resuelve la partida leyendo ese ítem (cacheado por número de turno, igual que `TURNO#N`) y después lee `PARTIDA#<partidaId> / TURNO#<N>`.
+- `/estado` y `GET /api/sobrevivientes/:id/ruta` usan la misma partida activa.
+
+**Exclusión (una sola ronda a la vez, también entre demo y evaluación).**
+
+1. Al arrancar, el simulador toma el candado con `PutItem` condicional: `attribute_not_exists(PK) OR expiraEn < :ahora`. Si falla, otra ronda está corriendo y **sale sin hacer nada** (así se comportan las rondas de demo del Scheduler).
+2. En cada turno renueva el candado (`UpdateItem` con condición `partidaId = :mia`, `expiraEn = ahora + 30 s`). Si la condición falla, **perdió el candado y termina en ese turno**.
+3. Al terminar, lo borra con condición `partidaId = :mia`.
+4. **Ronda de evaluación:** se deshabilita el Scheduler y se invoca con `forzar: true`, que toma el candado con `PutItem` sin condición. La ronda de demo que estaba corriendo falla su próxima renovación y se detiene en ese mismo turno (máximo 2 s). El `expiraEn` evita un candado huérfano si una Lambda muere.
+
+**Semántica del turno N.**
+
+| Paso | Quién | Qué pasa |
+|---|---|---|
+| 1 | Simulador | Mueve los zombies del turno N y aplica los eventos de ciudad del turno N |
+| 2 | Simulador | Escribe `TURNO#N` con `completo: false`: zombies **ya movidos**, `aristasBloqueadas` vigentes y sobrevivientes en su posición **antes** de moverse; renueva el candado con `turnoActual = N` |
+| 3 | Simulador → motor | `POST /paso` con `turno: N` y `nodoActual` = posición del paso 2 |
+| 4 | Motor | Lee `TURNO#N` (aunque esté incompleto: solo necesita zombies y bloqueos). Si `turno` no coincide con un turno existente, usa el último existente menor o igual, nunca un mundo vacío |
+| 5 | Simulador | Valida cada respuesta con `esMovimientoValido`, aplica los movimientos, resuelve mordidas (nodo y cruce) y llegadas, y hace **un** `UpdateItem` de `TURNO#N` con `siguienteNodo` y `completo: true` |
+| 6 | `/estado` | Muestra el último `TURNO` con `completo: true` |
+
+Un turno dura 2 s de reloj: si los pasos 1–5 terminan antes, el simulador espera; si se pasan, el turno siguiente arranca igual y las respuestas tardías cuentan como "quedarse quieto".
+
+### 4.6 Estados del sobreviviente
 
 ```text
 en_ruta → a_salvo (llegó a un refugio)
