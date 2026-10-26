@@ -13,12 +13,18 @@ terraform {
   }
 }
 
+variable "aws_region" {
+  description = "Region of the state bucket. Use the same one as infra/variables.tf."
+  type        = string
+  default     = "us-east-2"
+}
+
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
 
   default_tags {
     tags = {
-      Project   = "alquileres"
+      Project   = "spookython"
       ManagedBy = "terraform"
     }
   }
@@ -27,7 +33,7 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "tfstate" {
-  bucket = "alquileres-tfstate-${data.aws_caller_identity.current.account_id}"
+  bucket = "spookython-tfstate-${data.aws_caller_identity.current.account_id}"
 
   lifecycle {
     prevent_destroy = true
@@ -62,5 +68,6 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 }
 
 output "state_bucket" {
-  value = aws_s3_bucket.tfstate.bucket
+  description = "Paste this value into infra/backend.hcl."
+  value       = aws_s3_bucket.tfstate.bucket
 }

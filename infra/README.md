@@ -1,22 +1,22 @@
 # Infra — cómo bootstrapear y deployar
 
-Todo en `us-east-2`, cuenta Hold My Coffee. Requisitos: Terraform `~> 1.9`, AWS CLI v2 configurado con tu usuario `<nombre>-dev` (`aws sts get-caller-identity` debe mostrarlo).
+Región `us-east-2` (la de la cuenta del equipo; `us-east-1` solo si la organización la exige, `AGENTS.md` Q1). Requisitos: Terraform `~> 1.9` y AWS CLI v2 configurado con **tu propio** usuario IAM (`aws sts get-caller-identity` debe mostrarlo).
 
 ## Qué se crea
 
 | Archivo | Recursos |
 |---|---|
-| `bootstrap/main.tf` | Bucket S3 del state (versionado, cifrado, privado, `prevent_destroy`) |
-| `dynamodb.tf` | Tabla `hackathon_alquileres` (PK, SK, GSI1), on-demand, PITR |
+| `bootstrap/main.tf` | Bucket S3 del state `spookython-tfstate-<account_id>` (versionado, cifrado, privado, `prevent_destroy`) |
+| `dynamodb.tf` | Tabla `spookython_mundo` (PK, SK, GSI1), on-demand, PITR |
 | `iam.tf` | Rol de la Lambda: logs + DynamoDB sin `Scan` |
-| `lambda.tf` | Lambda `nodejs24.x` arm64 + log group (7 días) |
-| `apigateway.tf` | HTTP API con ruta `$default` → Lambda, throttling 20 rps / burst 50 |
+| `lambda.tf` | Lambda `nodejs24.x` arm64 1024 MB + log group (7 días) |
+| `apigateway.tf` | HTTP API con ruta `$default` → Lambda, throttling 300 rps / burst 600 |
 | `s3.tf` | Bucket privado del sitio (solo CloudFront lee, vía OAC) |
-| `cloudfront.tf` | Un dominio: `/` → S3, `/api/n/*` → API cacheada, `/api/*` → API sin cache |
+| `cloudfront.tf` | Un dominio: `/` → S3, `/api/*` → API sin cache |
 
-Valkey (`elasticache.tf`) todavía no está: `enable_valkey` existe pero no crea nada.
+Valkey (`elasticache.tf`) no existe: `enable_valkey` está apagado y no crea nada (ver `AGENTS.md` §1).
 
-## 1. Bootstrap (una sola vez, lo hace una sola persona)
+## 1. Bootstrap (una sola vez por cuenta, lo hace una sola persona)
 
 ```bash
 cd infra/bootstrap
@@ -24,7 +24,7 @@ terraform init
 terraform apply
 ```
 
-Crea `alquileres-tfstate-<account_id>`. Su propio state queda local en `infra/bootstrap/terraform.tfstate` (gitignored). Si ya existe el bucket, **no lo corras de nuevo**.
+Crea `spookython-tfstate-<account_id>` e imprime `state_bucket`. Su propio state queda local en `infra/bootstrap/terraform.tfstate` (gitignored). Si el bucket ya existe, **no lo corras de nuevo**.
 
 ## 2. Primer deploy
 
@@ -33,7 +33,9 @@ npm ci                         # desde la raíz
 npm run build -w backend       # genera backend/dist/handler.js (archive_file lo zipea)
 
 cd infra
-terraform init -backend-config=backend.hcl   # conecta al state en S3 (copiar backend.hcl.example)
+cp backend.hcl.example backend.hcl            # pegar el state_bucket real (se pasa por privado)
+export TF_VAR_api_key="<mínimo 32 caracteres, se pasa por privado>"
+terraform init -backend-config=backend.hcl
 terraform plan -out=tfplan
 terraform apply tfplan
 terraform output
@@ -42,20 +44,15 @@ terraform output
 Verificar:
 
 ```bash
-curl "$(terraform output -raw api_url)/api/health"
+curl "$(terraform output -raw site_url)/api/health"                                   # {"ok":true,...}
+curl -o /dev/null -w "%{http_code}" -X POST "$(terraform output -raw site_url)/api/paso"  # 401 sin x-api-key
 ```
 
-> La Lambda usa `basePath('/api')`: el health check es `/api/health` tanto por API Gateway como por CloudFront y en local (`http://localhost:3001/api/health`). La respuesta esperada es HTTP 200 con `{"ok":true,"service":"alquileres-api"}`. La prueba local se ejecuta desde la raíz con `npm run test -w backend`, sin credenciales AWS.
+> La Lambda usa `basePath('/api')`: el health check es `/api/health` tanto por API Gateway como por CloudFront y en local (`http://localhost:3001/api/health`).
 
 ## 3. Deploy del frontend
 
-```bash
-npm run build -w frontend
-aws s3 sync frontend/out/ "s3://$(cd infra && terraform output -raw bucket_name)/" --delete
-aws cloudfront create-invalidation --distribution-id "$(cd infra && terraform output -raw cloudfront_id)" --paths "/*"
-```
-
-Sitio: `terraform output -raw site_url`.
+Ver el comando completo en `INFRA.md` §3 (el build necesita `NEXT_PUBLIC_USE_MOCKS=false NEXT_PUBLIC_API_URL=/api`).
 
 ## 4. Cambios en el backend
 
@@ -71,4 +68,5 @@ cd infra && terraform plan -out=tfplan && terraform apply tfplan
 - Siempre `plan` antes de `apply`, y leer el plan.
 - Un solo `apply` a la vez: el lock de S3 bloquea al segundo, no lo fuerces con `-lock=false`.
 - `.terraform.lock.hcl` se commitea (tiene hashes para Windows, macOS y Linux).
+- `backend.hcl`, `*.tfstate` y la API key **nunca** se commitean.
 - Al terminar el hackathon: `terraform destroy` en `infra/`. El bucket del state se queda (`prevent_destroy`).

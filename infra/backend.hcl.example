@@ -1,1 +1,3 @@
-bucket = "alquileres-tfstate-<account_id>"
+# Copy to backend.hcl (gitignored) and fill in the output of infra/bootstrap.
+bucket = "spookython-tfstate-<account_id>"
+region = "us-east-2"
