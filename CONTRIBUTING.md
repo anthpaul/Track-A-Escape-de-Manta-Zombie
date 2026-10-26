@@ -23,7 +23,12 @@ $env:AWS_PROFILE = "spookython"          # en cada terminal nueva (Git Bash: exp
 aws sts get-caller-identity              # debe mostrar TU usuario
 ```
 
-Para no repetirlo en cada terminal de PowerShell, agrégalo a tu perfil: `Add-Content $PROFILE '$env:AWS_PROFILE = "spookython"'`.
+Para no repetirlo en cada terminal de PowerShell, agrégalo a tu perfil (la primera línea crea el archivo si no existe):
+
+```powershell
+if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Force $PROFILE }
+Add-Content $PROFILE '$env:AWS_PROFILE = "spookython"'
+```
 
 Terraform y el AWS CLI leen `AWS_PROFILE`, así que no hace falta nada más.
 
