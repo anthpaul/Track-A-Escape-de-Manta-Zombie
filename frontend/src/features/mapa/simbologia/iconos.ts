@@ -1,7 +1,7 @@
 import { Biohazard, Navigation2, ShieldCheck, Skull, Zap, type LucideIcon } from "lucide-react";
 
 // Every icon in the app is a Lucide icon. The map uses the same components, serialized to SVG
-// and registered as MapLibre images (see RegistroIconos), so legend and map always match.
+// and registered as MapLibre images (map/layers/RegistroIconos.tsx), so legend and map always match.
 export const ICONOS_ZOMBIE = {
   caminante: { Icono: Skull, color: "#65a30d" },
   corredor: { Icono: Zap, color: "#ea580c" },

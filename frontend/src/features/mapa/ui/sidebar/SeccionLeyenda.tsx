@@ -4,8 +4,8 @@ import { useState } from "react";
 import { ChevronDown, List } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { COLOR_CALLE, COLOR_SOBREVIVIENTE, COLOR_ZONA_HORDA } from "@/features/mapa/map/layers/estilos";
-import { ICONOS_ZOMBIE, ICONO_REFUGIO } from "@/features/mapa/map/layers/iconos";
+import { COLOR_CALLE, COLOR_SOBREVIVIENTE, COLOR_ZONA_HORDA } from "@/features/mapa/simbologia/colores";
+import { ICONOS_ZOMBIE, ICONO_REFUGIO } from "@/features/mapa/simbologia/iconos";
 
 const ZOMBIES = [
   { tipo: "caminante", texto: "Zombie caminante" },
@@ -37,13 +37,13 @@ function Punto({ color, opacidad = 1 }: { color: string; opacidad?: number }) {
   );
 }
 
-// Persistent legend; colors and Lucide icons come from the same constants the map layers use.
-export default function Leyenda() {
+// Collapsible legend; colors and Lucide icons come from the same symbology the map layers use.
+export default function SeccionLeyenda() {
   const [abierta, setAbierta] = useState(true);
   const IconoRefugio = ICONO_REFUGIO.Icono;
 
   return (
-    <Card size="sm" className="absolute bottom-48 left-3 w-56 bg-card/85 backdrop-blur sm:bottom-8">
+    <Card size="sm" aria-label="Leyenda">
       <CardHeader>
         <button
           type="button"

@@ -4,7 +4,7 @@ import { Activity, Ban, Footprints, HeartCrack, HeartPulse, ShieldCheck, type Lu
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { NivelLatencia, ResumenPanel } from "@/features/mapa/domain/resumen";
-import { COLOR_REFUGIO, COLOR_SOBREVIVIENTE } from "@/features/mapa/map/layers/estilos";
+import { COLOR_REFUGIO, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
 
 const ESTILO_LATENCIA: Record<NivelLatencia, { clase: string; texto: string }> = {
   excelente: { clase: "text-green-400", texto: "excelente" },
@@ -38,16 +38,12 @@ function Fila({ Icono, etiqueta, children }: { Icono: LucideIcon; etiqueta: stri
   );
 }
 
-// Presentational stats panel: everything comes from the resumen, nothing is computed here.
-export default function PanelMetricas({ resumen }: { resumen: ResumenPanel }) {
+// Round status: counts, survival, p95 of /paso and blocked streets. Presentational only.
+export default function SeccionRonda({ resumen }: { resumen: ResumenPanel }) {
   const latencia = ESTILO_LATENCIA[resumen.latencia.nivel];
 
   return (
-    <Card
-      size="sm"
-      aria-label="Estado de la ronda"
-      className="absolute left-3 right-3 top-12 bg-card/85 backdrop-blur sm:left-auto sm:top-3 sm:w-72"
-    >
+    <Card size="sm" aria-label="Estado de la ronda">
       <CardHeader className="flex items-baseline justify-between">
         <CardTitle className="text-xl text-primary">Ronda {resumen.ronda}</CardTitle>
         <span className="tabular-nums text-muted-foreground">Turno {resumen.turno}</span>
@@ -58,7 +54,6 @@ export default function PanelMetricas({ resumen }: { resumen: ResumenPanel }) {
           <Dato Icono={ShieldCheck} etiqueta="A salvo" valor={resumen.aSalvo} color={COLOR_REFUGIO} />
           <Dato Icono={HeartCrack} etiqueta="Mordidos" valor={resumen.mordidos} color={COLOR_SOBREVIVIENTE.mordido} />
         </div>
-
         <dl className="space-y-1">
           <Fila Icono={HeartPulse} etiqueta="Supervivencia">{resumen.supervivenciaPct}%</Fila>
           <Fila Icono={Activity} etiqueta="p95 de /paso">
@@ -70,31 +65,6 @@ export default function PanelMetricas({ resumen }: { resumen: ResumenPanel }) {
             <span className={cn(resumen.callesBloqueadas > 0 && "text-red-400")}>{resumen.callesBloqueadas}</span>
           </Fila>
         </dl>
-
-        <div>
-          <h3 className="mb-1 font-heading text-sm text-primary">Refugios</h3>
-          <ul className="space-y-1.5">
-            {resumen.refugios.map((r) => (
-              <li key={r.id}>
-                <div className="flex justify-between gap-2 text-xs">
-                  <span className="truncate">{r.nombre}</span>
-                  <span className={cn("tabular-nums", r.lleno ? "font-bold text-red-400" : "text-muted-foreground")}>
-                    {r.lleno ? "LLENO" : `${r.ocupacion}/${r.capacidad}`}
-                  </span>
-                </div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${Math.min(100, (r.ocupacion / Math.max(1, r.capacidad)) * 100)}%`,
-                      backgroundColor: r.lleno ? "#f87171" : COLOR_REFUGIO,
-                    }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       </CardContent>
     </Card>
   );

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ICONOS_MAPA, svgIconoMapa } from "@/features/mapa/map/layers/iconos";
+import { ICONOS_MAPA, svgIconoMapa } from "@/features/mapa/simbologia/iconos";
 
 const decodificar = (url: string) => decodeURIComponent(url.replace("data:image/svg+xml;charset=utf-8,", ""));
 

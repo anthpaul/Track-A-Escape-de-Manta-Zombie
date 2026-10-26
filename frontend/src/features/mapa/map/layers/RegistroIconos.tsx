@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/maplibre";
-import { ICONOS_MAPA, LADO_ICONO, svgIconoMapa } from "@/features/mapa/map/layers/iconos";
+import { ICONOS_MAPA, LADO_ICONO, svgIconoMapa } from "@/features/mapa/simbologia/iconos";
 
 // Renders the Lucide components off-screen, serializes their SVG and registers each one as a
 // MapLibre image. Uses only the public lucide-react API and no emoji or image files.

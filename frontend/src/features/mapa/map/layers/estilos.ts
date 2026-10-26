@@ -1,15 +1,15 @@
 import type { LayerProps } from "react-map-gl/maplibre";
+import {
+  COLOR_CALLE,
+  COLOR_FLECHA,
+  COLOR_REFUGIO,
+  COLOR_RUTA,
+  COLOR_SOBREVIVIENTE,
+  COLOR_ZONA_HORDA,
+} from "@/features/mapa/simbologia/colores";
 
-// Colors are data-driven expressions, so one layer styles every street without per-feature loops.
-export const COLOR_CALLE = {
-  avenida: "#f59e0b",
-  calle: "#d4d4d4",
-  callejon: "#8a8a8a",
-  puente: "#38bdf8",
-  bloqueada: "#ef4444",
-} as const;
-
-export const COLOR_REFUGIO = "#22c55e";
+// MapLibre layer styles. Colors are data-driven expressions over the shared symbology,
+// so one layer styles every feature without per-feature loops.
 
 // Glyphs available on the CARTO Dark Matter font server.
 const FUENTE_ETIQUETAS = ["Montserrat SemiBold", "Open Sans Bold", "Noto Sans Regular"];
@@ -72,9 +72,6 @@ export const capaRefugiosEtiquetas: LayerProps = {
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
 
-export const COLOR_SOBREVIVIENTE = { en_ruta: "#60a5fa", mordido: "#737373" } as const;
-export const COLOR_ZONA_HORDA = "#ef4444";
-
 // Horde zone: the horde node and every neighbor (same set the router forbids). Radius grows with zoom.
 export const capaZonasHorda: LayerProps = {
   id: "zonas-horda",
@@ -113,9 +110,6 @@ export const capaZombies: LayerProps = {
     "icon-ignore-placement": true,
   },
 };
-
-export const COLOR_RUTA = "#facc15";
-const COLOR_FLECHA = "#93c5fd";
 
 // Next-step arrow per direction; thicker when more survivors take it.
 export const capaFlechasLineas: LayerProps = {

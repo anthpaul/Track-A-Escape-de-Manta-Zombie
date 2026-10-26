@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { PanelRightOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { grafoMini } from "@/features/mapa/data/mock/grafo-mini";
 import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
 import MedidorFps from "@/features/mapa/ui/MedidorFps";
-import PanelMetricas from "@/features/mapa/ui/PanelMetricas";
-import Leyenda from "@/features/mapa/ui/Leyenda";
 import { resumenPanel } from "@/features/mapa/domain/resumen";
 import { elegirSeguido } from "@/features/mapa/domain/seleccion";
-import TarjetaSobreviviente from "@/features/mapa/ui/TarjetaSobreviviente";
+import Sidebar from "@/features/mapa/ui/sidebar/Sidebar";
 
 // MapLibre needs window and WebGL, so it is never prerendered (ssr: false only works in Client Components).
 const MapaVivo = dynamic(() => import("@/features/mapa/map/MapaVivo"), {
@@ -25,7 +25,8 @@ const MapaVivo = dynamic(() => import("@/features/mapa/map/MapaVivo"), {
 // R3-sized mock round (200 survivors) to check the map stays smooth at the real load.
 const CONFIG_MOCK: ConfigSimulacion = { sobrevivientes: 200, caminantes: 4, corredores: 2, hordas: 1, semilla: 7 };
 
-// Container: picks the data sources. Mock graph and mock snapshots until manta.json (T0.3)
+// Container (the only one in the feature): picks the data sources and wires map + sidebar.
+// Mock graph and mock snapshots until manta.json (T0.3)
 // and GET /api/estado (S5) exist; N4 swaps the hook for real polling.
 export default function PantallaMapa() {
   const grafo = grafoMini;
@@ -45,25 +46,46 @@ export default function PantallaMapa() {
   const ruta = useMemo(() => (seguidoId ? rutaHaciaRefugio(grafo, snapshot, seguidoId) : []), [grafo, snapshot, seguidoId]);
   const seguido = snapshot.sobrevivientes.find((s) => s.id === seguidoId) ?? null;
 
+  // Desktop only: the side panel can be hidden to give the map the whole screen.
+  // MapLibre follows its container size on its own (ResizeObserver).
+  const [panelAbierto, setPanelAbierto] = useState(true);
+
   return (
-    <div className="relative h-full w-full">
-      <MapaVivo
-        grafo={grafo}
-        snapshot={snapshot}
-        aristasBloqueadas={aristasBloqueadas}
-        seguidoId={seguidoId}
-        ruta={ruta}
-        onSeleccionar={setPreferido}
-      />
-      {esPrueba && (
-        <span className="absolute left-3 top-3 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
-          Datos de prueba
-        </span>
-      )}
-      <PanelMetricas resumen={resumen} />
-      <TarjetaSobreviviente grafo={grafo} sobreviviente={seguido} ruta={ruta} elegidoAMano={seguidoId !== null && seguidoId === preferido} />
-      <Leyenda />
-      <MedidorFps />
+    // Phone: map on top, panel below. Desktop: map on the left, panel as a right sidebar.
+    <div className="flex h-full w-full flex-col md:flex-row">
+      <div className="relative h-[55dvh] shrink-0 md:h-full md:min-w-0 md:flex-1">
+        <MapaVivo
+          grafo={grafo}
+          snapshot={snapshot}
+          aristasBloqueadas={aristasBloqueadas}
+          seguidoId={seguidoId}
+          ruta={ruta}
+          onSeleccionar={setPreferido}
+        />
+        {!panelAbierto && (
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => setPanelAbierto(true)}
+            aria-label="Mostrar panel"
+            className="absolute right-3 top-3 hidden shadow-lg md:inline-flex"
+          >
+            <PanelRightOpen aria-hidden />
+          </Button>
+        )}
+        <MedidorFps />
+      </div>
+      <div className={panelAbierto ? "flex min-h-0 flex-1 md:flex-none" : "flex min-h-0 flex-1 md:hidden"}>
+        <Sidebar
+          grafo={grafo}
+          resumen={resumen}
+          seguido={seguido}
+          ruta={ruta}
+          elegidoAMano={seguidoId !== null && seguidoId === preferido}
+          esPrueba={esPrueba}
+          onCerrar={() => setPanelAbierto(false)}
+        />
+      </div>
     </div>
   );
 }
