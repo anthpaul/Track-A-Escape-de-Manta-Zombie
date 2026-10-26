@@ -154,7 +154,7 @@ Separar API administrativa del endpoint público del reto. Si se exponen control
 
 ## 6. Algoritmo de rutas
 
-1. Construir lista de adyacencia con pesos de tiempo estimado `distanceM / speedMps` por tipo de calle.
+1. Construir lista de adyacencia con costo base `1 turno + ε × tiempo(distancia_m, tipo)` (ajuste A3; no usar solo `distancia_m / velocidad`).
 2. Implementar Dijkstra como baseline verificable; A* opcional con heurística admisible basada en distancia geográfica y velocidad máxima.
 3. Excluir aristas bloqueadas y nodos peligrosos (horda y vecinos); considerar zombies visibles y posibles colisiones por cruce.
 4. Elegir refugio alcanzable de menor costo estimado; si ninguno es alcanzable, devolver nodo actual y registrar motivo.
@@ -189,7 +189,7 @@ Actúa como arquitecto y mentor técnico. Lee docs/PLAN_IMPLEMENTACION.md, AGENT
 ### Prompt 1 — Grafo real de Manta y contratos
 
 ```text
-Implementa de forma incremental el módulo de grafo de Manta con ~300 intersecciones, aristas con distancia_m, tipo y velocidad, geometrías para GeoJSON y 4 refugios. Usa una fuente reproducible de OpenStreetMap, documenta método/licencia y verifica conectividad. Define contratos y tipos compartidos de WorldSnapshot, Survivor, Zombie, Edge y Event. Incluye validadores, fixture pequeño para tests y pruebas de nodos vecinos, aristas bloqueadas y geometrías. Antes de codificar explica modelo, supuestos y tradeoffs; después muestra tests y cambios realizados.
+Implementa de forma incremental el módulo de grafo de Manta con ~300 intersecciones, aristas con distancia_m, tipo y velocidad, geometrías para GeoJSON y 4 refugios. Usa una fuente reproducible de OpenStreetMap, documenta método/licencia y verifica conectividad. Define contratos y tipos compartidos en español según AGENTS.md §4.1 (Nodo, Calle con geometria, Refugio, Zombie, EstadoTurno, Evento; ajustes A2 y A6). Incluye validadores, fixture pequeño para tests y pruebas de nodos vecinos, aristas bloqueadas y geometrías. Antes de codificar explica modelo, supuestos y tradeoffs; después muestra tests y cambios realizados.
 ```
 
 ### Prompt 2 — Simulador autoritativo
@@ -201,25 +201,25 @@ Construye el simulador determinista con semilla, reloj discreto de 2 segundos, R
 ### Prompt 3 — Motor de rutas y contrato estricto
 
 ```text
-Implementa POST /paso con exactamente el cuerpo {sobrevivienteId,nodoActual,turno} y respuesta {siguienteNodo}; valida x-api-key y responde en menos de 500 ms. Usa Dijkstra o A* con costo distancia/velocidad; evita aristas bloqueadas, zombies visibles y bloqueo de nodo+vecinos por hordas; elige refugio alcanzable. Devuelve nodo actual si no hay movimiento válido. Usa estado compartido versionado; no dependas de memoria global de Lambda. Escribe tests de validez, replanificación, bloqueo y casos sin ruta. Mide p50/p95/p99 con concurrencia 20/80/200. Explica cada optimización antes de aplicarla.
+Implementa POST /paso con exactamente el cuerpo {sobrevivienteId,nodoActual,turno} y respuesta {siguienteNodo}; valida x-api-key y responde en menos de 500 ms. Usa Dijkstra o A* con costo base 1 turno + ε × tiempo(distancia_m, tipo) (ajuste A3), no solo distancia/velocidad; evita aristas bloqueadas, zombies visibles y bloqueo de nodo+vecinos por hordas; elige refugio alcanzable. Devuelve nodo actual si no hay movimiento válido. Usa estado compartido versionado leído a través de FuenteMundo; no dependas de memoria global de Lambda; /paso no escribe rutas en DynamoDB (ajuste A4). Escribe tests de validez, replanificación, bloqueo y casos sin ruta. Mide p50/p95/p99 con concurrencia 20/80/200. Explica cada optimización antes de aplicarla.
 ```
 
 ### Prompt 4 — Mapa MapLibre y vista general
 
 ```text
-Implementa dashboard React + TypeScript con maplibre-gl y react-map-gl/maplibre, estilo CARTO Dark Matter y atribución visible. Usa capas/fuentes GeoJSON separadas para calles, bloqueos, zombies, sobrevivientes, refugios y zonas de horda. Cada snapshot actualiza datos sin recrear el mapa. No renderices todas las rutas; muestra marcadores y leyenda fija. Panel con ronda, turno, activos, a salvo, mordidos, p95 real y LIVE condicionado al último snapshot. Incluye estados de carga, error y desconexión. Mide FPS y rendimiento con 200 sobrevivientes. No añadas deck.gl.
+Implementa dashboard en frontend/ (Next.js con export estático, ajuste A1) + TypeScript con maplibre-gl y react-map-gl/maplibre, estilo CARTO Dark Matter y atribución visible. Usa capas/fuentes GeoJSON separadas para calles, bloqueos, zombies, sobrevivientes, refugios y zonas de horda. Cada snapshot actualiza datos sin recrear el mapa. No renderices todas las rutas; muestra marcadores y leyenda fija. Panel con ronda, turno, activos, a salvo, mordidos, p95 real y LIVE condicionado al último snapshot. Incluye estados de carga, error y desconexión. Mide FPS y rendimiento con 200 sobrevivientes. No añadas deck.gl.
 ```
 
 ### Prompt 5 — Inspección individual y zombies clicables
 
 ```text
-Agrega panel de sobrevivientes con búsqueda por ID y selección persistente; al seleccionar, usa flyTo y muestra exclusivamente su ruta y refugio, con información de turno/versión. En hover, resalta de forma ligera con debounce sin hacer cientos de solicitudes. Agrega listado filtrable de zombies con ID, tipo, estado, nodo y coordenadas; clic en coordenadas centra y destaca el zombie. Respeta invisibilidad de zombies dormidos en vista normal. Incluye flash de recálculo de la ruta seleccionada y pruebas de interacción. Explica cómo evitar renderizados innecesarios.
+Agrega panel de sobrevivientes con búsqueda por ID y selección persistente; al seleccionar, usa flyTo y muestra exclusivamente su ruta y refugio (GET /api/sobrevivientes/:id/ruta, ajuste A4), con información de turno/versión. En hover, resalta de forma ligera con debounce sin hacer cientos de solicitudes. Agrega listado filtrable de zombies con ID, tipo, estado, nodo y coordenadas; clic en coordenadas centra y destaca el zombie. Respeta invisibilidad de zombies dormidos en vista normal. Incluye flash de recálculo de la ruta seleccionada y pruebas de interacción. Explica cómo evitar renderizados innecesarios.
 ```
 
 ### Prompt 6 — Panel de eventos y rondas
 
 ```text
-Construye panel de control para iniciar/pausar/reiniciar simulaciones y elegir R1/R2/R3 con semilla. En modo demo permite seleccionar una arista válida y programar bloqueo/colapso para el siguiente turno. Al aplicarse, pinta el tramo rojo, actualiza estado versionado, registra evento y muestra rutas recalculadas; no modifiques arbitrariamente el estado a mitad del turno. Separa modo demo de modo evaluación reproducible. Agrega pruebas de consistencia mapa-motor y manejo de permisos administrativos.
+(P1: en P0 estos controles son CLI del simulador, ajuste A5.) Construye panel de control para iniciar/pausar/reiniciar simulaciones y elegir R1/R2/R3 con semilla. En modo demo permite seleccionar una arista válida y programar bloqueo/colapso para el siguiente turno. Al aplicarse, pinta el tramo rojo, actualiza estado versionado, registra evento y muestra rutas recalculadas; no modifiques arbitrariamente el estado a mitad del turno. Separa modo demo de modo evaluación reproducible. Agrega pruebas de consistencia mapa-motor y manejo de permisos administrativos.
 ```
 
 ### Prompt 7 — AWS, seguridad, presupuesto y observabilidad

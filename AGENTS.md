@@ -312,6 +312,7 @@ Hoy es lunes 26. Hay **unas 48 horas** hasta el miércoles a las 10:00.
 | K3 `POST /paso` con validación, respaldo a 300 ms y cache por turno | S3 Mordidas (nodo y cruce) y llegada a refugio | N3 Panel: ronda, turno, vivos / a salvo / mordidos, p95 |
 | K4 Elección de refugio + capacidad (Pro) | S4 Las 3 rondas de la prueba de fuego + métricas (supervivencia, eficiencia, p95, errores) | N4 Polling de `/estado` cada 2 s + indicador "en vivo" con la edad real del snapshot + selección de un sobreviviente con su ruta y *flash* de recálculo |
 | K5 Predicción de corredores (Pro) | S5 `GET /estado` alimentado desde DynamoDB | N5 Landing simple: qué es, cómo se usa |
+| K6 `GET /api/sobrevivientes/:id/ruta` con la misma función de `shared/` que `/paso` (lo necesita N4) | | |
 
 **Integración temprana:** apenas `/paso` responde en AWS (aunque sea con A* sin peligro), el simulador corre la R1 contra AWS. Nada de esperar al martes para probar de punta a punta.
 
