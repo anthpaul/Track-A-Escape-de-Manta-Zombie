@@ -14,7 +14,8 @@
 | A4 | `GET /survivors/:id/route` | `GET /api/sobrevivientes/:id/ruta`, calculada a pedido con la misma función de `shared/` que usa `/paso`. `/paso` **no** escribe rutas en DynamoDB y `/estado` no incluye rutas | Escribir la ruta en cada `/paso` serían 200 escrituras por turno en el camino crítico de la latencia |
 | A5 | API administrativa web (`/admin/simulations`, `/admin/events`) | P0: el simulador se controla por CLI (ronda, semilla, eventos programados). La API admin con autenticación propia es P1 y solo si sobra tiempo el martes | Evita sumar una superficie de seguridad nueva antes de cerrar P0 |
 | A6 | `Edge.geometry` | `Calle.geometria: [lng, lat][]` exportada por OSMnx, solo para dibujar | Las calles se ven reales en el mapa; el motor sigue usando `desde`/`hasta` |
-| A7 | Simulador "en un componente persistente o coordinador único" | P0: el simulador corre en la laptop de quien hace la prueba y escribe el estado en DynamoDB | Es un coordinador único sin otro servicio en AWS; el motor lee el estado a través de la interfaz `FuenteMundo` (`AGENTS.md` T0.6) por si la organización corre su propio simulador (Q3) |
+| A7 | Simulador "en un componente persistente o coordinador único" | El simulador es una **Lambda que juega una ronda completa** en una invocación (5 min de ronda, límite de Lambda 15 min): loop de turnos de 2 s, escribe cada turno en DynamoDB y llama a `/paso` por sobreviviente. Mismo código que `tools/simulador/`, que también corre en local para desarrollo. **Modo evaluación:** `aws lambda invoke` con ronda y semilla. **Modo demo:** EventBridge Scheduler arranca una ronda periódica para que la URL pública nunca muestre un mapa congelado | El reto exige "todo desplegado en AWS" y una URL pública que funcione hasta el pitch; un simulador en una laptop deja el mapa congelado cuando nadie lo corre. Una sola invocación por ronda es el coordinador único; el motor lee el estado por `FuenteMundo` (`AGENTS.md` T0.6) por si la organización corre su propio simulador (Q3) |
+| A9 | Solo se dibuja la ruta del sobreviviente seleccionado | Siempre hay una ruta planificada visible: al cargar, el mapa **auto-selecciona** un sobreviviente activo (y pasa a otro si llega o lo muerden) y muestra su ruta completa. Además, el snapshot incluye el `siguienteNodo` de cada sobreviviente y el mapa dibuja una flecha corta por sobreviviente hacia su próximo nodo | El reto exige que el mapa en vivo muestre la "ruta planificada"; si el jurado no toca nada, igual la ve, sin dibujar 200 rutas completas |
 | A8 | Rutas de archivos en los prompts (`docs/PLAN_IMPLEMENTACION.md`, PDF) | Este archivo vive en `docs/PLAN_IMPLEMENTACION.md`; el enunciado oficial textual está en `AGENTS.md` §0 | Los prompts lo referencian por esa ruta |
 
 El cambio de Leaflet a MapLibre de la sección 9 **ya está aplicado** en `AGENTS.md` §§2, 3, 6 y 9.
@@ -39,7 +40,7 @@ Construir una **plataforma de simulación y monitoreo de evacuación en tiempo r
 2. Se configura una ronda: R1 = 20 sobrevivientes y caminantes; R2 = 80, caminantes/corredores/hordas y colapso de un puente; R3 = 200, todos los tipos (incluidos dormidos) y dos calles bloqueadas en vivo.
 3. Cada 2 segundos, el simulador avanza un turno: actualiza zombies según reglas, activa eventos programados, publica un estado consistente, solicita `POST /paso` para cada sobreviviente activo, valida las respuestas, aplica movimientos y resuelve mordidas/refugios.
 4. El motor calcula un siguiente nodo vecino por arista transitable, o el nodo actual; elige un refugio y reacciona a los cambios del mundo. La política ante riesgos debe estar documentada.
-5. El frontend recibe un **snapshot consolidado** por turno; no necesita recibir 200 rutas completas. Solo dibuja la ruta del sobreviviente seleccionado o inspeccionado.
+5. El frontend recibe un **snapshot consolidado** por turno; no necesita recibir 200 rutas completas. Dibuja la ruta completa del sobreviviente seleccionado (con auto-selección al cargar) y una flecha al próximo nodo de cada sobreviviente (ajuste A9).
 
 ### Reglas de zombies
 
@@ -121,7 +122,7 @@ Separar API administrativa del endpoint público del reto. Si se exponen control
 ### Vista general — monitoreo
 
 - **Mapa MapLibre GL:** capas GeoJSON de calles, calles bloqueadas, zombies, sobrevivientes, refugios y zonas de peligro. Evitar un componente React DOM por cada entidad; usar fuentes/capas GPU.
-- **No dibujar 200 rutas simultáneas.** Solo posiciones en vista general; usar selección/hover para inspección. Si hay densidad visual, agrupar marcadores o variar zoom.
+- **No dibujar 200 rutas completas simultáneas.** Vista general: posiciones, flecha al próximo nodo de cada sobreviviente y la ruta completa del seleccionado (auto-selección al cargar, ajuste A9); usar selección/hover para inspección. Si hay densidad visual, agrupar marcadores o variar zoom.
 - **Panel fijo:** ronda, turno, sobrevivientes activos, a salvo, mordidos, p95 de `/paso`, indicador `● EN VIVO` basado en edad real del último snapshot, no decorativo.
 - **Leyenda persistente:** tipos de zombie, sobrevivientes, refugios, bloqueos y zonas.
 - **Eventos recientes:** turno, tipo, aristas afectadas, impacto sobre rutas; destacar tramo bloqueado en rojo y explicar el recálculo.
@@ -189,25 +190,25 @@ Actúa como arquitecto y mentor técnico. Lee docs/PLAN_IMPLEMENTACION.md, AGENT
 ### Prompt 1 — Grafo real de Manta y contratos
 
 ```text
-Implementa de forma incremental el módulo de grafo de Manta con ~300 intersecciones, aristas con distancia_m, tipo y velocidad, geometrías para GeoJSON y 4 refugios. Usa una fuente reproducible de OpenStreetMap, documenta método/licencia y verifica conectividad. Define contratos y tipos compartidos en español según AGENTS.md §4.1 (Nodo, Calle con geometria, Refugio, Zombie, EstadoTurno, Evento; ajustes A2 y A6). Incluye validadores, fixture pequeño para tests y pruebas de nodos vecinos, aristas bloqueadas y geometrías. Antes de codificar explica modelo, supuestos y tradeoffs; después muestra tests y cambios realizados.
+Implementa de forma incremental el módulo de grafo de Manta con ~300 intersecciones que cubran los barrios de inicio de los sobrevivientes (Tarqui, Los Esteros, Barbasquillo y Jocay), marcando a qué barrio pertenece cada nodo de inicio, aristas con distancia_m, tipo y velocidad, geometrías para GeoJSON y 4 refugios. Usa una fuente reproducible de OpenStreetMap, documenta método/licencia y verifica conectividad. Define contratos y tipos compartidos en español según AGENTS.md §4.1 (Nodo, Calle con geometria, Refugio, Zombie, EstadoTurno, Evento; ajustes A2 y A6). Incluye validadores, fixture pequeño para tests y pruebas de nodos vecinos, aristas bloqueadas y geometrías. Antes de codificar explica modelo, supuestos y tradeoffs; después muestra tests y cambios realizados.
 ```
 
 ### Prompt 2 — Simulador autoritativo
 
 ```text
-Construye el simulador determinista con semilla, reloj discreto de 2 segundos, R1=20, R2=80, R3=200, cuatro tipos de zombies, eventos de bloqueo y resolución de mordidas (mismo nodo y cruce en direcciones opuestas). El simulador mueve zombies primero, consulta POST /paso por sobreviviente y valida la respuesta antes de aplicar movimientos. Implementa GET /estado o mecanismo equivalente. No uses el frontend como fuente de verdad. Agrega pruebas por regla y logs por turno. Explica cómo reproducir una ronda y cómo evitar condiciones de carrera.
+Construye el simulador determinista con semilla, reloj discreto de 2 segundos, R1=20, R2=80, R3=200 sobrevivientes repartidos en Tarqui, Los Esteros, Barbasquillo y Jocay, cuatro tipos de zombies, eventos de bloqueo y resolución de mordidas (mismo nodo y cruce en direcciones opuestas). El simulador mueve zombies primero, consulta POST /paso por sobreviviente y valida la respuesta antes de aplicar movimientos. Implementa GET /estado o mecanismo equivalente, incluyendo el siguienteNodo de cada sobreviviente (ajuste A9). Empaquétalo también como Lambda que juega una ronda completa por invocación (ajuste A7) y documenta cómo invocarla en modo evaluación y cómo la programa EventBridge Scheduler en modo demo. No uses el frontend como fuente de verdad. Agrega pruebas por regla y logs por turno. Explica cómo reproducir una ronda y cómo evitar condiciones de carrera.
 ```
 
 ### Prompt 3 — Motor de rutas y contrato estricto
 
 ```text
-Implementa POST /paso con exactamente el cuerpo {sobrevivienteId,nodoActual,turno} y respuesta {siguienteNodo}; valida x-api-key y responde en menos de 500 ms. Usa Dijkstra o A* con costo base 1 turno + ε × tiempo(distancia_m, tipo) (ajuste A3), no solo distancia/velocidad; evita aristas bloqueadas, zombies visibles y bloqueo de nodo+vecinos por hordas; elige refugio alcanzable. Devuelve nodo actual si no hay movimiento válido. Usa estado compartido versionado leído a través de FuenteMundo; no dependas de memoria global de Lambda; /paso no escribe rutas en DynamoDB (ajuste A4). Escribe tests de validez, replanificación, bloqueo y casos sin ruta. Mide p50/p95/p99 con concurrencia 20/80/200. Explica cada optimización antes de aplicarla.
+Implementa POST /paso con exactamente el cuerpo {sobrevivienteId,nodoActual,turno} y respuesta {siguienteNodo}; valida x-api-key y responde en menos de 500 ms. Usa Dijkstra o A* con costo base 1 turno + ε × tiempo(distancia_m, tipo) (ajuste A3), no solo distancia/velocidad; evita aristas bloqueadas, zombies visibles, bloqueo de nodo+vecinos por hordas y calles por las que un zombie puede venir de frente en el próximo turno (mordida por cruce, AGENTS.md §4.4); con presupuesto interno de 300 ms, si el cálculo no termina responde un paso seguro de respaldo, nunca un error (AGENTS.md §4.3); elige refugio alcanzable. Devuelve nodo actual si no hay movimiento válido. Usa estado compartido versionado leído a través de FuenteMundo; no dependas de memoria global de Lambda; /paso no escribe rutas en DynamoDB (ajuste A4). Escribe tests de validez, replanificación, bloqueo y casos sin ruta. Mide p50/p95/p99 con concurrencia 20/80/200. Explica cada optimización antes de aplicarla.
 ```
 
 ### Prompt 4 — Mapa MapLibre y vista general
 
 ```text
-Implementa dashboard en frontend/ (Next.js con export estático, ajuste A1) + TypeScript con maplibre-gl y react-map-gl/maplibre, estilo CARTO Dark Matter y atribución visible. Usa capas/fuentes GeoJSON separadas para calles, bloqueos, zombies, sobrevivientes, refugios y zonas de horda. Cada snapshot actualiza datos sin recrear el mapa. No renderices todas las rutas; muestra marcadores y leyenda fija. Panel con ronda, turno, activos, a salvo, mordidos, p95 real y LIVE condicionado al último snapshot. Incluye estados de carga, error y desconexión. Mide FPS y rendimiento con 200 sobrevivientes. No añadas deck.gl.
+Implementa dashboard en frontend/ (Next.js con export estático, ajuste A1) + TypeScript con maplibre-gl y react-map-gl/maplibre, estilo CARTO Dark Matter y atribución visible. Usa capas/fuentes GeoJSON separadas para calles, bloqueos, zombies, sobrevivientes, refugios y zonas de horda. Cada snapshot actualiza datos sin recrear el mapa. No renderices todas las rutas completas: muestra marcadores, una flecha al próximo nodo de cada sobreviviente, la ruta completa del sobreviviente auto-seleccionado (ajuste A9) y leyenda fija. Panel con ronda, turno, activos, a salvo, mordidos, p95 real y LIVE condicionado al último snapshot. Incluye estados de carga, error y desconexión. Mide FPS y rendimiento con 200 sobrevivientes. No añadas deck.gl.
 ```
 
 ### Prompt 5 — Inspección individual y zombies clicables
@@ -231,7 +232,7 @@ Despliega el mínimo funcional en AWS con arquitectura justificada: API Gateway 
 ### Prompt 8 — Prueba de fuego y entrega
 
 ```text
-Ejecuta tres rondas consecutivas de cinco minutos con reglas oficiales: R1 20 sobrevivientes y caminantes; R2 80 con corredores/hordas y puente colapsado; R3 200 con dormidos y dos calles bloqueadas. Registra supervivencia, eficiencia, p95 de POST /paso, disponibilidad, fallos y evidencia de replanificación. No alteres las reglas para mejorar el puntaje. Genera README con uso/despliegue/pruebas/decisiones/limitaciones, docs/arquitectura.png, docs/costos.md, captura Budget, URL pública, URL /paso y explicación de medición. Prepara pitch de 5 minutos y preguntas técnicas. Señala cualquier criterio P0 no cumplido.
+Ejecuta tres rondas consecutivas de cinco minutos con reglas oficiales: R1 20 sobrevivientes y caminantes; R2 80 con corredores/hordas y puente colapsado; R3 200 con dormidos y dos calles bloqueadas. Registra supervivencia, eficiencia, p95 de POST /paso, disponibilidad, fallos y evidencia de replanificación. No alteres las reglas para mejorar el puntaje. Genera README con uso/despliegue/pruebas/decisiones/limitaciones, docs/arquitectura.png, docs/costos.md, captura Budget, URL pública, URL /paso y explicación de medición. Prepara pitch de 5 minutos (PDF, PPT o PPTX de 20 MB como máximo) y preguntas técnicas. Señala cualquier criterio P0 no cumplido.
 ```
 
 ### Prompt 9 — Revisión final de calidad (solo si P0 está listo)

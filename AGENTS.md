@@ -119,6 +119,8 @@ Hasta que respondan: asumimos **Q2 = una arista por turno** y **Q3 = el motor le
 | R6 | Optimizar en metros cuando la eficiencia se mide en turnos (Q2) | Eficiencia (20 %) más baja | Costo base `1 turno + ε × tiempo` (§4.4), no solo distancia ÷ velocidad | Kevin | Decidido |
 | R7 | API key sin cablear o commiteada | Calidad técnica (25 %) y seguridad | `variable "api_key"` sensible en Terraform (mínimo 32 caracteres), cargada con `TF_VAR_api_key` y pasada a la Lambda como `API_KEY` (ya aplicado en `infra/`). Comparación en tiempo constante | Alex · Kevin | Infra lista · código `TODO` |
 | R8 | Ids con formato distinto al contrato (la plantilla traía `z.ulid()`) | `/paso` responde 400 a todo | Schemas `N-0000`/`S-0000`/`C-0000` y `PasoInput`/`PasoOutput` en `shared/index.ts` con tests (ya aplicado) | Kevin (revisar) | Listo |
+| R10 | La URL pública muestra un mapa congelado cuando nadie corre el simulador | Trampa del jurado y "todo desplegado en AWS" incumplido | Simulador como Lambda + EventBridge Scheduler en modo demo (S6) | Alex | `TODO` |
+| R11 | El mapa no muestra ninguna "ruta planificada" si nadie selecciona un sobreviviente | Requisito DEBE del mapa en vivo | Auto-selección al cargar + flecha al `siguienteNodo` de cada sobreviviente (N4) | Anthony | `TODO` |
 | R9 | Repo público con secretos en el historial | Descalificación por seguridad | Revisar `git log -p` antes de hacerlo público (§10) | Anthony | `TODO` |
 
 ---
@@ -134,6 +136,7 @@ Hasta que respondan: asumimos **Q2 = una arista por turno** y **Q3 = el motor le
 | Estado del mundo | DynamoDB single-table, on-demand | Activo |
 | Cache | ElastiCache (Valkey) | **Apagado**: Lambda necesitaría VPC (más arranque en frío + NAT). DynamoDB + cache por turno alcanza |
 | IaC | Terraform `~> 1.9`, provider `aws ~> 6.21` | Activo |
+| Simulador en AWS | Lambda (ronda completa por invocación, hasta 15 min) + EventBridge Scheduler (rondas de demo periódicas) | `TODO` (S6) |
 | Monitoreo | CloudWatch (logs + métricas de latencia) | Activo |
 
 **Región:** `us-east-2`, la de la cuenta del equipo. `us-east-1` solo si la organización la exige (Q1). No se agregan otros servicios AWS sin discutirlo y registrarlo acá.
@@ -146,9 +149,9 @@ Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con expor
 |---|---|
 | **MapLibre GL JS** + **react-map-gl** (integración `react-map-gl/maplibre`) + estilo vectorial **CARTO Dark Matter** | Mapa en vivo. Versiones exactas y compatibles entre sí (`npm install -E -w frontend maplibre-gl@<x> react-map-gl@<x>`). Atribución OSM + CARTO visible |
 | Script de extracción OSM con **OSMnx** (Python, una sola vez, en `tools/osm/`) | Generar `shared/data/manta.json` con ~300 nodos, geometría de cada calle y 4 refugios. Python solo vive en `tools/`, nunca en la Lambda |
-| Simulador en Node (`tools/simulador/`) | Corre las rondas, mueve zombies, llama a `/paso`, mide latencia y supervivencia. En P0 corre en la laptop de quien hace la prueba y escribe el estado en DynamoDB; no es un servicio de AWS |
+| Simulador en Node (`tools/simulador/`) | Corre las rondas, mueve zombies, llama a `/paso`, mide latencia y supervivencia. Se despliega como **Lambda que juega una ronda completa** por invocación (escribe cada turno en DynamoDB); también corre en local para desarrollo. Modo evaluación: `aws lambda invoke` con ronda y semilla. Modo demo: EventBridge Scheduler arranca rondas periódicas para que la URL pública nunca muestre un mapa congelado |
 
-**Mapa (reglas):** cada tipo de entidad (calles, calles bloqueadas, zombies, sobrevivientes, refugios, zonas de horda) es una fuente GeoJSON con su capa; por snapshot se hace `setData`, nunca un componente React por entidad. Colores por tipo o estado con expresiones de estilo. Solo se dibuja la ruta del sobreviviente seleccionado. Las posiciones se interpolan visualmente entre turnos, pero la simulación y las mordidas usan siempre estados discretos. Zonas y colores salen del estado real, nunca de datos propios del front. deck.gl queda fuera de P0. Cambiar a estilos de Amazon Location Service requiere autenticación y revisar compatibilidad: no es solo cambiar una URL.
+**Mapa (reglas):** cada tipo de entidad (calles, calles bloqueadas, zombies, sobrevivientes, refugios, zonas de horda) es una fuente GeoJSON con su capa; por snapshot se hace `setData`, nunca un componente React por entidad. Colores por tipo o estado con expresiones de estilo. Siempre hay una ruta planificada visible (lo exige el reto): al cargar, el mapa auto-selecciona un sobreviviente activo y dibuja su ruta completa; además, una flecha corta por sobreviviente hacia su `siguienteNodo`. Nunca se dibujan las 200 rutas completas. Las posiciones se interpolan visualmente entre turnos, pero la simulación y las mordidas usan siempre estados discretos. Zonas y colores salen del estado real, nunca de datos propios del front. deck.gl queda fuera de P0. Cambiar a estilos de Amazon Location Service requiere autenticación y revisar compatibilidad: no es solo cambiar una URL.
 
 ---
 
@@ -190,7 +193,7 @@ Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · 
 | Ítem | PK | SK | `data` | Lo escribe |
 |---|---|---|---|---|
 | Partida | `PARTIDA#<id>` | `METADATA` | ronda, estado, turnoActual, config | Simulador |
-| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado}]` | Simulador |
+| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]` | Simulador |
 | Ocupación de refugio (Pro) | `PARTIDA#<id>` | `REFUGIO#<id>` | asignados (contador atómico), capacidad | Motor |
 
 Todos los ítems llevan `ttl` (epoch) para que DynamoDB los borre solos al día siguiente.
@@ -248,7 +251,7 @@ POST /api/paso                     x-api-key obligatorio
 
 GET  /api/estado                   público (solo lectura, sin secretos)
   200   { "turno": 142, "ronda": 2, "zombies": [{ "id", "tipo", "nodo" }], "aristasBloqueadas": ["C-0042"],
-          "sobrevivientes": [{ "id", "nodo", "estado" }], "refugios": [{ "id", "ocupacion", "capacidad" }],
+          "sobrevivientes": [{ "id", "nodo", "estado", "siguienteNodo" }], "refugios": [{ "id", "ocupacion", "capacidad" }],
           "metricas": { "vivos", "aSalvo", "mordidos", "p95ms" }, "generadoEn": "<ISO 8601>" }
   Cache-Control: no-store (cambia cada 2 s)
   Sin rutas: el snapshot queda chico. generadoEn alimenta el indicador "EN VIVO" (edad real del snapshot)
@@ -312,7 +315,7 @@ Hoy es lunes 26. Hay **unas 48 horas** hasta el miércoles a las 10:00.
 | K3 `POST /paso` con validación, respaldo a 300 ms y cache por turno | S3 Mordidas (nodo y cruce) y llegada a refugio | N3 Panel: ronda, turno, vivos / a salvo / mordidos, p95 |
 | K4 Elección de refugio + capacidad (Pro) | S4 Las 3 rondas de la prueba de fuego + métricas (supervivencia, eficiencia, p95, errores) | N4 Polling de `/estado` cada 2 s + indicador "en vivo" con la edad real del snapshot + selección de un sobreviviente con su ruta y *flash* de recálculo |
 | K5 Predicción de corredores (Pro) | S5 `GET /estado` alimentado desde DynamoDB | N5 Landing simple: qué es, cómo se usa |
-| K6 `GET /api/sobrevivientes/:id/ruta` con la misma función de `shared/` que `/paso` (lo necesita N4) | | |
+| K6 `GET /api/sobrevivientes/:id/ruta` con la misma función de `shared/` que `/paso` (lo necesita N4) | S6 Simulador como Lambda (ronda completa por invocación) + EventBridge Scheduler para el modo demo, en Terraform con rol de mínimo privilegio | N6 Auto-selección de un sobreviviente al cargar + flecha al `siguienteNodo` de cada uno |
 
 **Integración temprana:** apenas `/paso` responde en AWS (aunque sea con A* sin peligro), el simulador corre la R1 contra AWS. Nada de esperar al martes para probar de punta a punta.
 
