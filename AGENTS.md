@@ -239,7 +239,7 @@ Costo base de una calle: `1 turno + ε × tiempo(distancia_m, tipo)` (si Q2 conf
 **Identidad de partida.** `POST /paso` no trae `partidaId` (el contrato oficial no se puede cambiar). Por eso **hay una sola partida activa a la vez**, registrada en el ítem candado `CONTROL / PARTIDA_ACTIVA`:
 
 - `partidaId`: `<modo>-<ronda>-<epoch ms>` (por ejemplo `evaluacion-r3-1793030400000`), lo genera el simulador al arrancar.
-- El motor resuelve la partida leyendo ese ítem (cacheado por número de turno, igual que `TURNO#N`) y después lee `PARTIDA#<partidaId> / TURNO#<N>`.
+- El motor resuelve la partida leyendo ese ítem y después lee `PARTIDA#<partidaId> / TURNO#<N>`. **Ojo con la caché:** los números de turno se repiten entre partidas (cada una arranca en 1), así que la caché de turnos se indexa por `(partidaId, N)`, nunca solo por `N`. El candado se cachea como máximo 1 s; si el pedido trae un `turno` menor o igual al último visto para esa partida, se vuelve a leer el candado (puede haber empezado una partida nueva).
 - `/estado` y `GET /api/sobrevivientes/:id/ruta` usan la misma partida activa.
 
 **Exclusión (una sola ronda a la vez, también entre demo y evaluación).**
@@ -260,7 +260,7 @@ Costo base de una calle: `1 turno + ε × tiempo(distancia_m, tipo)` (si Q2 conf
 | 5 | Simulador | Valida cada respuesta con `esMovimientoValido`, aplica los movimientos, resuelve mordidas (nodo y cruce) y llegadas, y hace **un** `UpdateItem` de `TURNO#N` con `siguienteNodo` y `completo: true` |
 | 6 | `/estado` | Muestra el último `TURNO` con `completo: true` |
 
-Un turno dura 2 s de reloj: si los pasos 1–5 terminan antes, el simulador espera; si se pasan, el turno siguiente arranca igual y las respuestas tardías cuentan como "quedarse quieto".
+Un turno dura 2 s de reloj y **los turnos nunca se superponen**: el simulador corta cada `POST /paso` a los 500 ms (una respuesta tardía o inválida cuenta como "quedarse quieto"), así que los pasos 1–5 siempre entran en el turno. El turno N+1 arranca recién después del `UpdateItem` del paso 5 de N; si sobra tiempo, el simulador espera hasta completar los 2 s.
 
 ### 4.6 Estados del sobreviviente
 
