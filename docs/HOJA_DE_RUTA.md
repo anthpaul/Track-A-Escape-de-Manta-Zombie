@@ -57,6 +57,8 @@ type PasoOutput = { siguienteNodo: string }
 
 Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`): `vecinos(nodo)`, `calleEntre(a, b)`, `esMovimientoValido(desde, hasta, aristasBloqueadas)` y `nodosBloqueadosPorHordas(zombies)` (nodo + vecinos).
 
+**Aceptación del grafo en T0.2/T0.3:** aplicar `docs/CONTRATO_GRAFO.md`, sección «Aplicación en las tareas existentes». T0.2 incluye fixtures con geometrías válidas y pruebas de extremos exactos; al integrar el fixture común, se adapta el mock del frontend. T0.3 normaliza los extremos y comprueba el puente real de R2 después de simplificar. Q4 sigue pendiente: no se fijan capacidades finales ni se activa el límite Pro. Son precisiones de las tareas actuales, no nuevas fases ni cambios del cronograma.
+
 ---
 
 ## 3. Cronograma con puntos de control
