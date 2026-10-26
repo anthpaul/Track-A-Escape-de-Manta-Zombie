@@ -2,6 +2,8 @@
 
 Alex generará el mapa y Kevin implementará su lectura y validación usando este mismo formato. Este documento cierra el paso A; no contiene datos reales de Manta ni inicia la extracción de OpenStreetMap.
 
+**Alcance de estas precisiones:** se incorporan a T0.2 y T0.3 existentes, sin cambiar responsables, orden, arquitectura ni funcionalidades. Este documento cubre la parte del grafo de T0.2; los contratos de zombies y turnos siguen en `docs/HOJA_DE_RUTA.md` §2. No se marca ninguna implementación como terminada.
+
 ## Qué hace cada uno
 
 - **Alex:** genera `shared/data/manta.json` con las intersecciones, calles y cuatro refugios.
@@ -62,6 +64,10 @@ type Grafo = {
 
 **Simplificación de calles paralelas:** Alex conservará la conexión de menor distancia; si empatan, usará el ID de origen de OSM como desempate estable. Mantendrá juntos su tipo, distancia y geometría, sin mezclar atributos de calles distintas. Documentará las conexiones descartadas. El puente elegido para R2 debe existir en el grafo final y proceder de datos reales; no se inventará su tipo para cumplir el escenario.
 
+La comprobación del puente se realiza **después** de simplificar. Si no se conserva un puente real utilizable para R2, T0.3 no cumple su aceptación: Alex informa el problema para revisar la selección del grafo, sin cambiar silenciosamente la regla de menor distancia ni inventar un puente.
+
+**Extremos de geometría:** Alex orientará cada geometría desde `desde` hacia `hasta` y normalizará su primer punto a `[desde.lng, desde.lat]` y el último a `[hasta.lng, hasta.lat]`, usando las coordenadas de los nodos exportados. Kevin validará igualdad numérica exacta de esos extremos; no se introduce una tolerancia implícita. Se conservan los puntos interiores y la distancia del recorrido de origen: normalizar los extremos visuales no redefine el costo del motor.
+
 **Capacidad de refugios:** el campo se conserva porque ya pertenece al contrato. Sus valores siguen pendientes de Q4; este acuerdo no asigna capacidades ni activa el límite Pro. Esto no bloquea implementar el schema, pero sí completar ese dato del grafo final sin un acuerdo posterior.
 
 ## Comprobaciones de Kevin
@@ -69,10 +75,21 @@ type Grafo = {
 - Campos con los tipos indicados y coordenadas finitas dentro de sus rangos geográficos.
 - IDs válidos y únicos; extremos de calles y nodos de refugios existentes.
 - Distancias positivas; sin calles que conecten un nodo consigo mismo ni parejas duplicadas.
-- Geometrías con al menos dos puntos y extremos correspondientes a sus nodos.
+- Geometrías con al menos dos puntos y extremos numéricamente iguales a las coordenadas de sus nodos, en el orden definido arriba.
 - Capacidad como entero no negativo; cero significa cero lugares, no capacidad ilimitada.
 
 Alex comprobará además conectividad, cobertura de los cuatro barrios y acceso a los cuatro refugios. El mapa real tendrá aproximadamente 300 nodos y cuatro refugios; los fixtures pequeños de pruebas pueden tener menos.
+
+## Aplicación en las tareas existentes
+
+| Tarea | Precisión y comprobación pendiente | Justificación |
+|---|---|---|
+| T0.2 — Kevin | El fixture compartido usa el mismo schema del grafo. Para una calle recta de prueba, `geometria` contiene las coordenadas de sus dos nodos, nunca `[]`. Al integrar el frontend con el fixture común, Anthony adapta su mock al mismo criterio. | Evita relajar el contrato real para admitir datos de prueba incompletos. El mock actual del frontend todavía requiere esta adaptación. |
+| T0.2 — Kevin | Probar aceptación de extremos correctos y rechazo de geometrías vacías o con extremos que no coinciden. | Fija una interpretación compartida antes de consumir la exportación real. |
+| T0.3 — Alex | Normalizar extremos al exportar y comprobar conectividad, barrios, cuatro refugios y permanencia del puente real de R2 después de simplificar. | Verifica sobre el resultado final condiciones ya exigidas por el plan. |
+| Q4 — pendiente | Implementar el campo `capacidad` y su validación sin fijar capacidades reales ni activar el límite Pro. Los valores del fixture son solo datos de prueba. | Permite avanzar con T0.2 sin resolver por cuenta propia una pregunta abierta. |
+
+Estas precisiones no autorizan la extracción OSM, cambios en `/paso`, nuevas fases ni adelantar funcionalidades Pro. La capacidad final continúa pendiente del acuerdo posterior indicado arriba.
 
 ## Próximo paso
 
