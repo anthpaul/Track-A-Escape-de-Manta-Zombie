@@ -249,7 +249,8 @@ No editar a ciegas: revisar el archivo real, especialmente §§2 y 6, y sustitui
 Frontend de mapas: MapLibre GL JS + react-map-gl (integración MapLibre),
 con estilo CARTO Dark Matter y atribuciones obligatorias.
 Representar entidades y calles mediante fuentes/capas GeoJSON;
-actualizar por snapshot y mantener solo la ruta individual seleccionada.
+actualizar por snapshot; mostrar siempre la ruta completa del sobreviviente seleccionado
+(auto-selección al cargar) y una flecha al siguienteNodo de cada sobreviviente (ajuste A9).
 Interpolar posiciones visualmente entre turnos sin alterar el estado autoritativo.
 No incorporar deck.gl en P0. Documentar compatibilidad/credenciales
 si se migra a estilos de Amazon Location Service.

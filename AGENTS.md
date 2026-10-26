@@ -149,7 +149,7 @@ Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con expor
 |---|---|
 | **MapLibre GL JS** + **react-map-gl** (integración `react-map-gl/maplibre`) + estilo vectorial **CARTO Dark Matter** | Mapa en vivo. Versiones exactas y compatibles entre sí (`npm install -E -w frontend maplibre-gl@<x> react-map-gl@<x>`). Atribución OSM + CARTO visible |
 | Script de extracción OSM con **OSMnx** (Python, una sola vez, en `tools/osm/`) | Generar `shared/data/manta.json` con ~300 nodos, geometría de cada calle y 4 refugios. Python solo vive en `tools/`, nunca en la Lambda |
-| Simulador en Node (`tools/simulador/`) | Corre las rondas, mueve zombies, llama a `/paso`, mide latencia y supervivencia. Se despliega como **Lambda que juega una ronda completa** por invocación (escribe cada turno en DynamoDB); también corre en local para desarrollo. Modo evaluación: `aws lambda invoke` con ronda y semilla. Modo demo: EventBridge Scheduler arranca rondas periódicas para que la URL pública nunca muestre un mapa congelado |
+| Simulador en Node (`tools/simulador/`) | Corre las rondas, mueve zombies, llama a `/paso`, mide latencia y supervivencia. Se despliega como **Lambda que juega una ronda completa** por invocación (escribe cada turno en DynamoDB); también corre en local para desarrollo. Modo evaluación: `aws lambda invoke` con ronda y semilla. Modo demo: EventBridge Scheduler arranca rondas periódicas para que la URL pública nunca muestre un mapa congelado. **Demo y evaluación no se mezclan:** cada ronda usa su propio `PARTIDA#<id>` y marca su modo; `/estado` muestra la partida activa más reciente. Antes de una ronda de evaluación se deshabilita el Scheduler (`aws scheduler update-schedule --state DISABLED`) para que ninguna ronda de demo corra en paralelo |
 
 **Mapa (reglas):** cada tipo de entidad (calles, calles bloqueadas, zombies, sobrevivientes, refugios, zonas de horda) es una fuente GeoJSON con su capa; por snapshot se hace `setData`, nunca un componente React por entidad. Colores por tipo o estado con expresiones de estilo. Siempre hay una ruta planificada visible (lo exige el reto): al cargar, el mapa auto-selecciona un sobreviviente activo y dibuja su ruta completa; además, una flecha corta por sobreviviente hacia su `siguienteNodo`. Nunca se dibujan las 200 rutas completas. Las posiciones se interpolan visualmente entre turnos, pero la simulación y las mordidas usan siempre estados discretos. Zonas y colores salen del estado real, nunca de datos propios del front. deck.gl queda fuera de P0. Cambiar a estilos de Amazon Location Service requiere autenticación y revisar compatibilidad: no es solo cambiar una URL.
 
@@ -193,7 +193,7 @@ Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · 
 | Ítem | PK | SK | `data` | Lo escribe |
 |---|---|---|---|---|
 | Partida | `PARTIDA#<id>` | `METADATA` | ronda, estado, turnoActual, config | Simulador |
-| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]` | Simulador |
+| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]`, completo | Simulador |
 | Ocupación de refugio (Pro) | `PARTIDA#<id>` | `REFUGIO#<id>` | asignados (contador atómico), capacidad | Motor |
 
 Todos los ítems llevan `ttl` (epoch) para que DynamoDB los borre solos al día siguiente.
@@ -205,6 +205,8 @@ Todos los ítems llevan `ttl` (epoch) para que DynamoDB los borre solos al día 
 | 3 | Ocupación de refugios | `Query PARTIDA#<id>, SK begins_with REFUGIO#` |
 
 Nunca `Scan`.
+
+**Orden de escritura de un turno:** el simulador mueve los zombies → escribe `TURNO#N` con `completo: false` y sin `siguienteNodo` → llama a `/paso` por cada sobreviviente → con las respuestas hace **un** `UpdateItem` que agrega el `siguienteNodo` de cada uno y marca `completo: true`. El motor lee `TURNO#N` aunque esté incompleto (solo necesita zombies y bloqueos); `/estado` muestra el último turno con `completo: true`, así el mapa nunca ve un turno a medias.
 
 **`/paso` no escribe en DynamoDB.** Guardar la ruta de cada sobreviviente serían 200 escrituras por turno en el camino crítico de la latencia. La ruta que muestra el mapa se calcula a pedido en `GET /api/sobrevivientes/:id/ruta`, con la misma función de `shared/` que usa `/paso`. La única escritura del motor es el contador de refugios (Pro).
 
@@ -258,7 +260,10 @@ GET  /api/estado                   público (solo lectura, sin secretos)
 
 GET  /api/sobrevivientes/:id/ruta  público (solo lectura)
   200   { "sobrevivienteId": "S-0089", "turno": 142, "refugio": "R-01", "ruta": ["N-0117", "N-0118", "..."] }
-  404   sobreviviente inexistente o fuera de la partida
+  200   sobreviviente a_salvo o mordido → { ..., "ruta": [], "estado": "a_salvo" | "mordido" }
+  200   sin refugio alcanzable este turno → { ..., "refugio": null, "ruta": ["<nodo actual>"], "motivo": "sin_ruta" }
+  404   sobreviviente inexistente en la partida activa
+  Usa el último turno con completo: true (el mismo que muestra /estado), para que ruta y mapa coincidan
   Se pide solo al seleccionar un sobreviviente en el mapa; la calcula la misma función de shared/ que usa /paso
 
 GET  /api/health                   público → { ok: true, service }
