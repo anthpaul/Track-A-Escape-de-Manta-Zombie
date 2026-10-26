@@ -151,7 +151,7 @@ Marcar ✅ en el PR que cierra la tarea.
 
 | Fase 1 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| | ⬜ K1 · ⬜ K2 · ⬜ K3 · ⬜ K6 · ⬜ K4 | ⬜ S1 · ⬜ S2 · ⬜ S3 · ⬜ S4 · ⬜ S5 · ⬜ S6 | ✅ N0 · ⬜ N1 · ⬜ N2 · ⬜ N3 · ⬜ N4 · ⬜ N6 · ⬜ N5 |
+| | ⬜ K1 · ⬜ K2 · ⬜ K3 · ⬜ K6 · ⬜ K4 | ⬜ S1 · ⬜ S2 · ⬜ S3 · ⬜ S4 · ⬜ S5 · ⬜ S6 | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ⬜ N4 · ⬜ N6 · ⬜ N5 |
 
 | Entrega | Estado |
 |---|---|
