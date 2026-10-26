@@ -34,6 +34,18 @@ export const capaCalles: LayerProps = {
   },
 };
 
+// Plain disc under the shelter icon: shelters stay visible even if the Lucide image fails to register.
+export const capaRefugiosBase: LayerProps = {
+  id: "refugios-base",
+  type: "circle",
+  paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 7, 16, 13],
+    "circle-color": COLOR_REFUGIO,
+    "circle-stroke-color": "#0a0a0a",
+    "circle-stroke-width": 2,
+  },
+};
+
 export const capaRefugios: LayerProps = {
   id: "refugios",
   type: "symbol",

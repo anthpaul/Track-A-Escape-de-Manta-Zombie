@@ -16,7 +16,7 @@ import TarjetaSobreviviente from "./TarjetaSobreviviente";
 const MapaVivo = dynamic(() => import("./MapaVivo"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-neutral-950 text-sm text-neutral-400">
+    <div className="flex h-full w-full items-center justify-center bg-background text-sm text-muted-foreground">
       Cargando mapa de Manta…
     </div>
   ),
@@ -56,7 +56,7 @@ export default function MapaCliente() {
         onSeleccionar={setPreferido}
       />
       {esPrueba && (
-        <span className="absolute left-3 top-3 rounded bg-amber-500/90 px-2 py-1 text-xs font-medium text-black">
+        <span className="absolute left-3 top-3 rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
           Datos de prueba
         </span>
       )}

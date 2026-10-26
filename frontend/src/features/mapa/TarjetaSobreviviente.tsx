@@ -22,7 +22,7 @@ export default function TarjetaSobreviviente({ grafo, sobreviviente, ruta, elegi
       className="absolute bottom-8 left-3 right-3 bg-card/85 backdrop-blur sm:left-auto sm:w-64"
     >
       <CardHeader>
-        <CardTitle className="flex items-center gap-1.5 text-base">
+        <CardTitle className="flex items-center gap-1.5 text-base text-primary">
           <UserRound className="size-4" style={{ color: COLOR_RUTA }} aria-hidden />
           {sobreviviente.id}
         </CardTitle>

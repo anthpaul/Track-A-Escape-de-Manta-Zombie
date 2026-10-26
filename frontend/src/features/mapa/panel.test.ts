@@ -66,6 +66,11 @@ test("one bitten survivor out of many never shows as 100%", () => {
   assert.equal(resumenPanel(grafo, casi).supervivenciaPct, 99);
 });
 
+test("survival rate is not lowered by floating point error", () => {
+  const r = { ...snapshot(null), metricas: { vivos: 57, aSalvo: 0, mordidos: 43, p95ms: null } };
+  assert.equal(resumenPanel(grafo, r).supervivenciaPct, 57);
+});
+
 test("an empty round reports 100% survival instead of dividing by zero", () => {
   const vacio = { ...snapshot(null), metricas: { vivos: 0, aSalvo: 0, mordidos: 0, p95ms: null } };
   assert.equal(resumenPanel(grafo, vacio).supervivenciaPct, 100);

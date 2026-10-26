@@ -41,8 +41,8 @@ export function resumenPanel(grafo: Grafo, snapshot: Snapshot): ResumenPanel {
     aSalvo,
     mordidos,
     total,
-    // Floor, so 100% only shows when nobody was bitten.
-    supervivenciaPct: total === 0 ? 100 : Math.floor(((total - mordidos) / total) * 100),
+    // Floor, so 100% only shows when nobody was bitten. Multiply first: (57 / 100) * 100 is 56.999…
+    supervivenciaPct: total === 0 ? 100 : Math.floor(((total - mordidos) * 100) / total),
     p95ms,
     latencia: nivelLatencia(p95ms),
     callesBloqueadas: snapshot.aristasBloqueadas.length,
