@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { callesAGeoJSON, refugiosAGeoJSON } from "../geojson";
 import type { Grafo } from "../tipos";
-import { capaCalles, capaRefugios, capaRefugiosEtiquetas } from "./estilos";
+import { capaCalles, capaRefugios, capaRefugiosBase, capaRefugiosEtiquetas } from "./estilos";
 
 type Props = { grafo: Grafo; aristasBloqueadas?: ReadonlySet<string> };
 
@@ -19,6 +19,7 @@ export default function CapaGrafo({ grafo, aristasBloqueadas }: Props) {
         <Layer {...capaCalles} />
       </Source>
       <Source id="refugios" type="geojson" data={refugios}>
+        <Layer {...capaRefugiosBase} />
         <Layer {...capaRefugios} />
         <Layer {...capaRefugiosEtiquetas} />
       </Source>
