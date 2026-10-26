@@ -70,6 +70,8 @@ Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`)
 | **Mar 13–18** | Ajuste de costos según dónde mueren | S6 simulador como Lambda + Scheduler | N5 landing · pulido de producto | **18:00** R2 y R3 de punta a punta con el mapa en vivo |
 | **Mar 18–24** | **Prueba de fuego propia (los tres):** R1→R2→R3 contra AWS, 3 corridas · ajustes · latencia | | | p95 de R3 ≤ 150 ms y errores < 0,5 % |
 | **Mié 07–10** | Sección del README | README, diagrama, `docs/costos.md` | README, pitch, revisión final de secretos | **08:00** repo revisado · **10:00** entrega |
+| **Jue 29** | Ensayo de preguntas del motor | Ensayo de preguntas de infra y simulador | **Ensayo completo de la demo en la laptop** (sección 8) + video de respaldo | La demo corre de punta a punta desde la laptop, con el hotspot del celular |
+| **Vie 30** | Pitch en la ULEAM (5 min + 3 de preguntas) | | **Lleva la laptop y opera la demo** | — |
 
 Si un punto de control falla, **se para y se resuelve entre los tres** antes de seguir (`AGENTS.md` §9). Lo Pro (K5 predicción, capacidad de refugios, flota) **solo** si el control de las 18:00 del martes está en verde.
 
@@ -119,6 +121,8 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 | 7 | `feat/n6-auto-seleccion` | Auto-selección al cargar (pasa a otro si llega o lo muerden) + flecha al `siguienteNodo` de cada sobreviviente | 4 | Sin tocar nada, siempre hay una ruta planificada visible |
 | 8 | `feat/n5-landing` | Landing: qué es, cómo se usa, enlace al mapa | — | — |
 | 9 | (miércoles) | README: qué hace, uso del mapa, `docs/mapa.png`; pitch (PDF/PPT/PPTX ≤ 20 MB); revisión final de secretos en el historial | 8 | Entregables enviados antes de las 10:00 |
+| 10 | `docs/demo-runbook` | `docs/DEMO.md`: guion de la demo con los comandos exactos (sección 8), preparado con Alex | — | Ensayado el jueves en la laptop |
+| 11 | (jueves) | Ensayo completo en la laptop y grabación del video de respaldo | — | Video guardado en la laptop y en la nube |
 
 > **Carga de Alex:** es la zona con más tareas. Si a las 23:00 del lunes S2/S3 no están, Kevin toma las reglas puras de zombies y mordidas en `shared/` (su zona) y Alex solo las conecta al loop del simulador.
 
@@ -157,11 +161,48 @@ Marcar ✅ en el PR que cierra la tarea.
 | `docs/costos.md` | ⬜ |
 | URL pública funcionando | ⬜ |
 | Pitch (≤ 20 MB) | ⬜ |
+| `docs/DEMO.md` + ensayo en la laptop | ⬜ |
+| Video de respaldo de la demo | ⬜ |
 | Revisión de secretos en el historial | ⬜ |
 
 ---
 
-## 7. Reglas rápidas
+## 7. Demo en vivo — viernes 30 en la ULEAM (laptop de Anthony)
+
+Anthony lleva la laptop y opera la demo. Eso define cómo se prepara:
+
+**La laptop solo muestra y dispara; todo corre en AWS.** El mapa se abre desde la URL pública de CloudFront y las rondas las juega la Lambda del simulador (S6). Nada depende de `npm run dev` ni de un servidor local: si la laptop se reinicia, la demo sigue.
+
+### Lo que tiene que tener la laptop (listo el miércoles a la noche)
+
+| Qué | Para qué | Estado |
+|---|---|---|
+| Perfil AWS `spookython` con el usuario de Anthony | Lanzar rondas y prender o apagar el Scheduler | ✅ ya configurado |
+| API key de `/paso` en el gestor de contraseñas | Mostrar un `curl` a `/paso` en vivo si el jurado lo pide | ⬜ |
+| Comandos de `docs/DEMO.md` probados | Lanzar R1, R2 o R3 con su semilla en un solo comando | ⬜ |
+| Pitch (PDF) **descargado** en la laptop | No depender de internet para las diapositivas | ⬜ |
+| Video de respaldo **descargado** en la laptop | Plan B si falla la red o AWS | ⬜ |
+| Pestañas preabiertas: mapa en vivo, README en GitHub, CloudWatch con la latencia | Mostrar cada cosa sin buscarla | ⬜ |
+| Navegador actualizado con WebGL activo | MapLibre dibuja con la GPU | ⬜ |
+| Cargador y adaptador HDMI | El proyector | ⬜ |
+
+### Plan B por si algo falla en vivo
+
+| Falla | Respuesta |
+|---|---|
+| El wifi de la ULEAM no anda | Hotspot del celular (probarlo el jueves con el mismo navegador) |
+| Sin internet ni hotspot | Video de respaldo + capturas del README |
+| La ronda no arranca | El Scheduler de demo mantiene una ronda corriendo: mostrar esa |
+| Pregunta sobre una parte que no es de Anthony | La contesta su dueño (Kevin: motor; Alex: infra y simulador). Ensayado el jueves |
+
+### Guion sugerido de la demo (dentro de los 5 minutos del pitch)
+
+1. Mapa en vivo con la R3 corriendo: 200 sobrevivientes, zombies por tipo, refugios y el panel con p95 en vivo.
+2. Un sobreviviente seleccionado y su ruta planificada.
+3. Una calle se bloquea o aparece una horda: la ruta se recalcula con el *flash* y el tramo en rojo.
+4. Cierre con los números de nuestra prueba de fuego (tabla del README) y el costo.
+
+## 8. Reglas rápidas
 
 - Partir siempre de `main` actualizado: `git switch main && git pull && git switch -c <rama>`.
 - PR chico y el mismo día. Avisar en el grupo cuando se abre, porque necesita la aprobación de otro.
