@@ -40,7 +40,7 @@ export default function CapaVivo({ grafo, snapshot }: Props) {
   return (
     <>
       <Source id="zonas-horda" type="geojson" data={zonas}>
-        <Layer {...capaZonasHorda} beforeId="calles" />
+        <Layer {...capaZonasHorda} />
       </Source>
       <Source id="sobrevivientes" type="geojson" data={sobrevivientes}>
         <Layer {...capaSobrevivientes} />

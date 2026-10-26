@@ -101,9 +101,10 @@ export function crearSimulacion(grafo: Grafo, config: ConfigSimulacion, ahora: s
   return completar(grafo, { turno: 0, ronda: 3, zombies, aristasBloqueadas: [], sobrevivientes, generadoEn: ahora });
 }
 
-export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string): Snapshot {
+export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semilla = 0): Snapshot {
   const turno = snap.turno + 1;
-  const rng = mulberry32(turno * 7919 + snap.sobrevivientes.length);
+  // Seed + turn: the same seed replays the same round, a different seed plays a different one.
+  const rng = mulberry32(semilla * 100_003 + turno * 7919 + snap.sobrevivientes.length);
   const adyacencia = vecinos(grafo);
 
   const aristasBloqueadas = [...snap.aristasBloqueadas];

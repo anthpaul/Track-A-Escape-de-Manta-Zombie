@@ -13,6 +13,13 @@ test("the same seed produces the same rounds", () => {
   assert.deepEqual(a, b);
 });
 
+test("a different seed plays a different round", () => {
+  const inicio = crearSimulacion(grafoMini, config, AHORA);
+  const a = avanzarTurno(grafoMini, avanzarTurno(grafoMini, inicio, AHORA, 1), AHORA, 1);
+  const b = avanzarTurno(grafoMini, avanzarTurno(grafoMini, inicio, AHORA, 2), AHORA, 2);
+  assert.notDeepEqual(a.zombies, b.zombies);
+});
+
 test("everyone only moves to a neighbor or stays, and never through a blocked street", () => {
   const adyacencia = vecinos(grafoMini);
   let snap = crearSimulacion(grafoMini, config, AHORA);
