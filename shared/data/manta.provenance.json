@@ -1,0 +1,4842 @@
+{
+  "version": "manta-osm-bbfc2fa1d247",
+  "config": {
+    "target_nodes": 300,
+    "node_tolerance": 30,
+    "max_snap_m": 300,
+    "barrio_radius_m": 600,
+    "radii_m": [
+      0,
+      100,
+      125,
+      150,
+      175,
+      200,
+      225,
+      250,
+      275,
+      300,
+      350,
+      400,
+      450,
+      500,
+      600,
+      700
+    ],
+    "barrios": [
+      {
+        "id": "tarqui",
+        "osm_node": 10213104581
+      },
+      {
+        "id": "los_esteros",
+        "osm_node": 10213104582
+      },
+      {
+        "id": "barbasquillo",
+        "osm_node": 12066773600
+      },
+      {
+        "id": "jocay",
+        "osm_node": 13111139050
+      }
+    ],
+    "refugios": [
+      {
+        "id": "R-01",
+        "nombre": "Universidad ULEAM",
+        "osm_way": 851414676,
+        "capacidad": 200
+      },
+      {
+        "id": "R-02",
+        "nombre": "Faro de Manta",
+        "lat": -0.9301625,
+        "lng": -80.721953125,
+        "capacidad": 200,
+        "source": "User-selected short Plus Code 379H+W6R, Manta; full code 66FX379H+W6R"
+      },
+      {
+        "id": "R-03",
+        "nombre": "Faro de Jaramijó",
+        "lat": -0.928775,
+        "lng": -80.65666666666667,
+        "capacidad": 200,
+        "source": "https://www.inocar.mil.ec/boletin/ALN/2014/ALN_042014.pdf, page 9: 00°55’43.59”S, 080°39’24.00”W"
+      },
+      {
+        "id": "R-04",
+        "nombre": "Aeropuerto Eloy Alfaro",
+        "osm_way": 219062422,
+        "capacidad": 200
+      }
+    ],
+    "capacity_note": "Alex approved provisional 200 per refuge; no Pro occupancy enforcement. Refuges are fictional game destinations, not certified emergency shelters."
+  },
+  "source_files": [
+    {
+      "file": "tile-0.osm",
+      "bbox": [
+        -80.8,
+        -1.03,
+        -80.725,
+        -0.9750000000000001
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.8%2C-1.03%2C-80.725%2C-0.9750000000000001",
+      "bytes": 5616307,
+      "sha256": "7ef0c653c39e62a96c47ec7ef7a81d96a0b22450a1eb68f8b9cd73fad1e10bee",
+      "retrieved_at": "2026-10-26T21:59:00.800535+00:00"
+    },
+    {
+      "file": "tile-1-0.osm",
+      "bbox": [
+        -80.725,
+        -1.03,
+        -80.6875,
+        -1.0025
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-1.03%2C-80.6875%2C-1.0025",
+      "bytes": 4291771,
+      "sha256": "0dc4ace450fcba537475f0b5ca2fdab1773c06c68616fc08448b89c17dc25b9a",
+      "retrieved_at": "2026-10-26T21:59:04.278335+00:00"
+    },
+    {
+      "file": "tile-1-1.osm",
+      "bbox": [
+        -80.6875,
+        -1.03,
+        -80.65,
+        -1.0025
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.6875%2C-1.03%2C-80.65%2C-1.0025",
+      "bytes": 3054441,
+      "sha256": "df619e3fcd1137f2ad7a9fab198560e5b820d4eb7a050773d89d7884adea1793",
+      "retrieved_at": "2026-10-26T21:59:05.348565+00:00"
+    },
+    {
+      "file": "tile-1-2-0.osm",
+      "bbox": [
+        -80.725,
+        -1.0025,
+        -80.70625,
+        -0.98875
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-1.0025%2C-80.70625%2C-0.98875",
+      "bytes": 3157286,
+      "sha256": "3ba7c98ce4fc9212c46cd778e2785b01fc98731e1b5888f5614e5f7ab1b99e08",
+      "retrieved_at": "2026-10-26T21:59:08.941003+00:00"
+    },
+    {
+      "file": "tile-1-2-1.osm",
+      "bbox": [
+        -80.70625,
+        -1.0025,
+        -80.6875,
+        -0.98875
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.70625%2C-1.0025%2C-80.6875%2C-0.98875",
+      "bytes": 5775152,
+      "sha256": "089bfb457df3f52685c377e80ba2544e3164f604ecb98b969d1b27eb7a8f62e7",
+      "retrieved_at": "2026-10-26T21:59:10.499004+00:00"
+    },
+    {
+      "file": "tile-1-2-2.osm",
+      "bbox": [
+        -80.725,
+        -0.98875,
+        -80.70625,
+        -0.9750000000000001
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-0.98875%2C-80.70625%2C-0.9750000000000001",
+      "bytes": 5984383,
+      "sha256": "d1e5ecc66fef8a3e7358980384a3d5ef55c0164c6a436ce9afa6878d03268929",
+      "retrieved_at": "2026-10-26T21:59:12.110900+00:00"
+    },
+    {
+      "file": "tile-1-2-3.osm",
+      "bbox": [
+        -80.70625,
+        -0.98875,
+        -80.6875,
+        -0.9750000000000001
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.70625%2C-0.98875%2C-80.6875%2C-0.9750000000000001",
+      "bytes": 8633714,
+      "sha256": "077ab02a351341fc7cf91cb2b13c52e1e45bde0a7ab0fbc1ffc9602fffff01de",
+      "retrieved_at": "2026-10-26T21:59:14.378270+00:00"
+    },
+    {
+      "file": "tile-1-3.osm",
+      "bbox": [
+        -80.6875,
+        -1.0025,
+        -80.65,
+        -0.9750000000000001
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.6875%2C-1.0025%2C-80.65%2C-0.9750000000000001",
+      "bytes": 4947030,
+      "sha256": "8e4b53a5d10ac17722676a6c36af641c1231d7c449a8c736ec5fdb1a5b12bc3d",
+      "retrieved_at": "2026-10-26T21:59:15.929017+00:00"
+    },
+    {
+      "file": "tile-2-0.osm",
+      "bbox": [
+        -80.8,
+        -0.9750000000000001,
+        -80.76249999999999,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.8%2C-0.9750000000000001%2C-80.76249999999999%2C-0.9475",
+      "bytes": 2321973,
+      "sha256": "f94502afa01aeab86fa5ca03f97b4571b28e908fbd003add8b9d9cfd01c7793a",
+      "retrieved_at": "2026-10-26T21:59:19.806010+00:00"
+    },
+    {
+      "file": "tile-2-1-0.osm",
+      "bbox": [
+        -80.76249999999999,
+        -0.9750000000000001,
+        -80.74374999999999,
+        -0.96125
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.76249999999999%2C-0.9750000000000001%2C-80.74374999999999%2C-0.96125",
+      "bytes": 1655130,
+      "sha256": "8221e57f5051dd8c9ffa28da65631e13c78f0d05b31d5ba30eb03c7b1b825da9",
+      "retrieved_at": "2026-10-26T21:59:22.595264+00:00"
+    },
+    {
+      "file": "tile-2-1-1.osm",
+      "bbox": [
+        -80.74374999999999,
+        -0.9750000000000001,
+        -80.725,
+        -0.96125
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.74374999999999%2C-0.9750000000000001%2C-80.725%2C-0.96125",
+      "bytes": 1672284,
+      "sha256": "d2fc3b3a688d0a5652ba7a4775b88b8b7d9eed404e03312370f3983e6f800624",
+      "retrieved_at": "2026-10-26T21:59:23.273872+00:00"
+    },
+    {
+      "file": "tile-2-1-2.osm",
+      "bbox": [
+        -80.76249999999999,
+        -0.96125,
+        -80.74374999999999,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.76249999999999%2C-0.96125%2C-80.74374999999999%2C-0.9475",
+      "bytes": 5296721,
+      "sha256": "4348f4dd8540f28d954c844ded8ae27680cce88730c9720fc4ea0a4a5b5bfe69",
+      "retrieved_at": "2026-10-26T21:59:24.932238+00:00"
+    },
+    {
+      "file": "tile-2-1-3.osm",
+      "bbox": [
+        -80.74374999999999,
+        -0.96125,
+        -80.725,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.74374999999999%2C-0.96125%2C-80.725%2C-0.9475",
+      "bytes": 6928589,
+      "sha256": "6788e02b98143b8ac86259eee3e89c74edfd3df3d952c72c4b84dbfec386b5fa",
+      "retrieved_at": "2026-10-26T21:59:26.864596+00:00"
+    },
+    {
+      "file": "tile-2-2.osm",
+      "bbox": [
+        -80.8,
+        -0.9475,
+        -80.76249999999999,
+        -0.92
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.8%2C-0.9475%2C-80.76249999999999%2C-0.92",
+      "bytes": 251911,
+      "sha256": "2e98fdf97a0bc47d88c81529d4541c11400dc08f9c478c2579661772ccd2468a",
+      "retrieved_at": "2026-10-26T21:59:27.512020+00:00"
+    },
+    {
+      "file": "tile-2-3.osm",
+      "bbox": [
+        -80.76249999999999,
+        -0.9475,
+        -80.725,
+        -0.92
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.76249999999999%2C-0.9475%2C-80.725%2C-0.92",
+      "bytes": 5191708,
+      "sha256": "a6963c6ff07ff480be17f5531a627b2542dfa2dab8476b4abc23fc25e0914f0a",
+      "retrieved_at": "2026-10-26T21:59:29.023619+00:00"
+    },
+    {
+      "file": "tile-3-0-0.osm",
+      "bbox": [
+        -80.725,
+        -0.9750000000000001,
+        -80.70625,
+        -0.96125
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-0.9750000000000001%2C-80.70625%2C-0.96125",
+      "bytes": 5417966,
+      "sha256": "4be31b17b4bb87867e8fb19e59394688dd73b1965ba601c536ac342f76b3de97",
+      "retrieved_at": "2026-10-26T21:59:35.407743+00:00"
+    },
+    {
+      "file": "tile-3-0-1.osm",
+      "bbox": [
+        -80.70625,
+        -0.9750000000000001,
+        -80.6875,
+        -0.96125
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.70625%2C-0.9750000000000001%2C-80.6875%2C-0.96125",
+      "bytes": 5367808,
+      "sha256": "15d4b0ae42c152c6b2191cb5655b23473744f23138604142ac31cf6c766bd6aa",
+      "retrieved_at": "2026-10-26T21:59:37.163404+00:00"
+    },
+    {
+      "file": "tile-3-0-2.osm",
+      "bbox": [
+        -80.725,
+        -0.96125,
+        -80.70625,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-0.96125%2C-80.70625%2C-0.9475",
+      "bytes": 7650989,
+      "sha256": "568a5fe7bccac3562ef60c606ff8fd22c16ba9772f8087e6830e99270933ec08",
+      "retrieved_at": "2026-10-26T21:59:39.298574+00:00"
+    },
+    {
+      "file": "tile-3-0-3.osm",
+      "bbox": [
+        -80.70625,
+        -0.96125,
+        -80.6875,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.70625%2C-0.96125%2C-80.6875%2C-0.9475",
+      "bytes": 4378432,
+      "sha256": "06ee7a31fb901cf6817339d58376e775511cee4ef7cb7876ef914bc8202f7506",
+      "retrieved_at": "2026-10-26T21:59:40.531553+00:00"
+    },
+    {
+      "file": "tile-3-1.osm",
+      "bbox": [
+        -80.6875,
+        -0.9750000000000001,
+        -80.65,
+        -0.9475
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.6875%2C-0.9750000000000001%2C-80.65%2C-0.9475",
+      "bytes": 6200635,
+      "sha256": "a045d3fdb2250d8a741bca37453ad0677df4fd0262653bda757a7a1b6c50a189",
+      "retrieved_at": "2026-10-26T21:59:42.289853+00:00"
+    },
+    {
+      "file": "tile-3-2.osm",
+      "bbox": [
+        -80.725,
+        -0.9475,
+        -80.6875,
+        -0.92
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.725%2C-0.9475%2C-80.6875%2C-0.92",
+      "bytes": 955746,
+      "sha256": "341de3c2d7dbe750bfac38ff2092f03410489aedaebfc08212cb82cd22e47315",
+      "retrieved_at": "2026-10-26T21:59:42.798282+00:00"
+    },
+    {
+      "file": "tile-3-3.osm",
+      "bbox": [
+        -80.6875,
+        -0.9475,
+        -80.65,
+        -0.92
+      ],
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=-80.6875%2C-0.9475%2C-80.65%2C-0.92",
+      "bytes": 1303367,
+      "sha256": "02de7e4eeda7f40ee3c1e3d18bac866cdfcee42bccd0bac26082a18c90d7e505",
+      "retrieved_at": "2026-10-26T21:59:43.346893+00:00"
+    }
+  ],
+  "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "attribution": "© OpenStreetMap contributors",
+  "osmnx_version": "2.1.1",
+  "networkx_version": "3.7",
+  "anchors": [
+    {
+      "id": "tarqui",
+      "osm_node": 11991192650,
+      "category": "barrios",
+      "target": [
+        -80.7140282,
+        -0.9636764
+      ],
+      "snap_m": 11.89
+    },
+    {
+      "id": "los_esteros",
+      "osm_node": 4130376271,
+      "category": "barrios",
+      "target": [
+        -80.6922764,
+        -0.9621547
+      ],
+      "snap_m": 101.2
+    },
+    {
+      "id": "barbasquillo",
+      "osm_node": 13031449491,
+      "category": "barrios",
+      "target": [
+        -80.7527254,
+        -0.9515404
+      ],
+      "snap_m": 53.64
+    },
+    {
+      "id": "jocay",
+      "osm_node": 363647886,
+      "category": "barrios",
+      "target": [
+        -80.7161161,
+        -0.9598756
+      ],
+      "snap_m": 4.45
+    },
+    {
+      "id": "R-01",
+      "nombre": "Universidad ULEAM",
+      "osm_way": 851414676,
+      "capacidad": 200,
+      "category": "refugios",
+      "osm_node": 12175952838,
+      "target": [
+        -80.74537404671054,
+        -0.9526074
+      ],
+      "snap_m": 34.82
+    },
+    {
+      "id": "R-02",
+      "nombre": "Faro de Manta",
+      "lat": -0.9301625,
+      "lng": -80.721953125,
+      "capacidad": 200,
+      "source": "User-selected short Plus Code 379H+W6R, Manta; full code 66FX379H+W6R",
+      "category": "refugios",
+      "osm_node": 9177263197,
+      "target": [
+        -80.721953125,
+        -0.9301625
+      ],
+      "snap_m": 4.54
+    },
+    {
+      "id": "R-03",
+      "nombre": "Faro de Jaramijó",
+      "lat": -0.928775,
+      "lng": -80.65666666666667,
+      "capacidad": 200,
+      "source": "https://www.inocar.mil.ec/boletin/ALN/2014/ALN_042014.pdf, page 9: 00°55’43.59”S, 080°39’24.00”W",
+      "category": "refugios",
+      "osm_node": 363679408,
+      "target": [
+        -80.65666666666667,
+        -0.928775
+      ],
+      "snap_m": 9.46
+    },
+    {
+      "id": "R-04",
+      "nombre": "Aeropuerto Eloy Alfaro",
+      "osm_way": 219062422,
+      "capacidad": 200,
+      "category": "refugios",
+      "osm_node": 11054988736,
+      "target": [
+        -80.68392107747525,
+        -0.95322375
+      ],
+      "snap_m": 38.04
+    }
+  ],
+  "selection_radius_m": 400,
+  "source_intersections": 13228,
+  "nodes": 284,
+  "streets": 384,
+  "discarded_parallel_candidates": [
+    {
+      "endpoints": [
+        347399444,
+        11107105834
+      ],
+      "candidate_way_ids": [
+        1197002906
+      ]
+    },
+    {
+      "endpoints": [
+        363615539,
+        748779618
+      ],
+      "candidate_way_ids": [
+        1196695841
+      ]
+    },
+    {
+      "endpoints": [
+        363649507,
+        363710427
+      ],
+      "candidate_way_ids": [
+        32308665,
+        187530716
+      ]
+    },
+    {
+      "endpoints": [
+        363662634,
+        8270336259
+      ],
+      "candidate_way_ids": [
+        32310121
+      ]
+    },
+    {
+      "endpoints": [
+        363663715,
+        363709660
+      ],
+      "candidate_way_ids": [
+        32309611,
+        32309618,
+        1301394141
+      ]
+    },
+    {
+      "endpoints": [
+        363701238,
+        365420749
+      ],
+      "candidate_way_ids": [
+        66253571
+      ]
+    },
+    {
+      "endpoints": [
+        363707680,
+        5907176641
+      ],
+      "candidate_way_ids": [
+        859140109,
+        1306460781
+      ]
+    },
+    {
+      "endpoints": [
+        363663715,
+        363709660
+      ],
+      "candidate_way_ids": [
+        32309611,
+        32309618,
+        1301394141
+      ]
+    },
+    {
+      "endpoints": [
+        363649507,
+        363710427
+      ],
+      "candidate_way_ids": [
+        32308665,
+        187530716
+      ]
+    },
+    {
+      "endpoints": [
+        363715513,
+        10996910108
+      ],
+      "candidate_way_ids": [
+        1184171247,
+        1184171248,
+        1184171249
+      ]
+    },
+    {
+      "endpoints": [
+        365280662,
+        365280664
+      ],
+      "candidate_way_ids": [
+        412389361
+      ]
+    },
+    {
+      "endpoints": [
+        365280662,
+        365280664
+      ],
+      "candidate_way_ids": [
+        412389361
+      ]
+    },
+    {
+      "endpoints": [
+        363701238,
+        365420749
+      ],
+      "candidate_way_ids": [
+        66253571
+      ]
+    },
+    {
+      "endpoints": [
+        363615539,
+        748779618
+      ],
+      "candidate_way_ids": [
+        32307142,
+        60257292
+      ]
+    },
+    {
+      "endpoints": [
+        775527689,
+        775527715
+      ],
+      "candidate_way_ids": [
+        32309463,
+        32309503,
+        33517365
+      ]
+    },
+    {
+      "endpoints": [
+        775527689,
+        775527715
+      ],
+      "candidate_way_ids": [
+        32309463,
+        32309503,
+        33517365
+      ]
+    },
+    {
+      "endpoints": [
+        1349122403,
+        10996901903
+      ],
+      "candidate_way_ids": [
+        1184171250,
+        1184171251,
+        1184171252
+      ]
+    },
+    {
+      "endpoints": [
+        1349201193,
+        11099005772
+      ],
+      "candidate_way_ids": [
+        1196013871,
+        1427547768,
+        1427547769
+      ]
+    },
+    {
+      "endpoints": [
+        1349328062,
+        1349328092
+      ],
+      "candidate_way_ids": [
+        625656146
+      ]
+    },
+    {
+      "endpoints": [
+        1349328062,
+        1349328092
+      ],
+      "candidate_way_ids": [
+        120316434
+      ]
+    },
+    {
+      "endpoints": [
+        2499222744,
+        2499222791
+      ],
+      "candidate_way_ids": [
+        242459579
+      ]
+    },
+    {
+      "endpoints": [
+        2499222744,
+        2499222791
+      ],
+      "candidate_way_ids": [
+        242459579
+      ]
+    },
+    {
+      "endpoints": [
+        2499223889,
+        2499223938
+      ],
+      "candidate_way_ids": [
+        242459494,
+        242459506
+      ]
+    },
+    {
+      "endpoints": [
+        2499223889,
+        2499223938
+      ],
+      "candidate_way_ids": [
+        242459494,
+        242459506
+      ]
+    },
+    {
+      "endpoints": [
+        2499224277,
+        2499224343
+      ],
+      "candidate_way_ids": [
+        242459590
+      ]
+    },
+    {
+      "endpoints": [
+        2499224277,
+        2499224343
+      ],
+      "candidate_way_ids": [
+        242459590
+      ]
+    },
+    {
+      "endpoints": [
+        2499224487,
+        2499224516
+      ],
+      "candidate_way_ids": [
+        411520176,
+        411520179
+      ]
+    },
+    {
+      "endpoints": [
+        2499224487,
+        2499224516
+      ],
+      "candidate_way_ids": [
+        411520176,
+        411520179
+      ]
+    },
+    {
+      "endpoints": [
+        3749540137,
+        11096461386
+      ],
+      "candidate_way_ids": [
+        889239001
+      ]
+    },
+    {
+      "endpoints": [
+        3749920484,
+        3749920494
+      ],
+      "candidate_way_ids": [
+        371431261,
+        606190050,
+        738658290
+      ]
+    },
+    {
+      "endpoints": [
+        3749920484,
+        3749920494
+      ],
+      "candidate_way_ids": [
+        371431261,
+        606190050,
+        738658290
+      ]
+    },
+    {
+      "endpoints": [
+        3749920619,
+        3749920635
+      ],
+      "candidate_way_ids": [
+        371431278,
+        610387285
+      ]
+    },
+    {
+      "endpoints": [
+        3749920619,
+        3749920635
+      ],
+      "candidate_way_ids": [
+        371431278,
+        610387285
+      ]
+    },
+    {
+      "endpoints": [
+        3749920694,
+        3749920708
+      ],
+      "candidate_way_ids": [
+        371431237,
+        371431259
+      ]
+    },
+    {
+      "endpoints": [
+        3749920694,
+        3749920708
+      ],
+      "candidate_way_ids": [
+        371431237,
+        371431259
+      ]
+    },
+    {
+      "endpoints": [
+        3749947838,
+        3749947846
+      ],
+      "candidate_way_ids": [
+        371434072,
+        371434089,
+        889492859
+      ]
+    },
+    {
+      "endpoints": [
+        3749947838,
+        3749947846
+      ],
+      "candidate_way_ids": [
+        371434072,
+        371434089,
+        889492859
+      ]
+    },
+    {
+      "endpoints": [
+        3753263480,
+        8267352027
+      ],
+      "candidate_way_ids": [
+        371778932,
+        889281802
+      ]
+    },
+    {
+      "endpoints": [
+        4129193253,
+        11101021039
+      ],
+      "candidate_way_ids": [
+        411187440
+      ]
+    },
+    {
+      "endpoints": [
+        4129304996,
+        11098793306
+      ],
+      "candidate_way_ids": [
+        1196724979
+      ]
+    },
+    {
+      "endpoints": [
+        4130763158,
+        4130763191
+      ],
+      "candidate_way_ids": [
+        411399488
+      ]
+    },
+    {
+      "endpoints": [
+        4130763158,
+        4130763191
+      ],
+      "candidate_way_ids": [
+        411399477
+      ]
+    },
+    {
+      "endpoints": [
+        4130951294,
+        4130951304
+      ],
+      "candidate_way_ids": [
+        411422804
+      ]
+    },
+    {
+      "endpoints": [
+        4130951294,
+        4130951304
+      ],
+      "candidate_way_ids": [
+        411422802
+      ]
+    },
+    {
+      "endpoints": [
+        4131060422,
+        4131060426
+      ],
+      "candidate_way_ids": [
+        411436252
+      ]
+    },
+    {
+      "endpoints": [
+        4131060422,
+        4131060426
+      ],
+      "candidate_way_ids": [
+        411436251
+      ]
+    },
+    {
+      "endpoints": [
+        4131662437,
+        8266370320
+      ],
+      "candidate_way_ids": [
+        889161448
+      ]
+    },
+    {
+      "endpoints": [
+        4132018588,
+        11100657375
+      ],
+      "candidate_way_ids": [
+        1196244550
+      ]
+    },
+    {
+      "endpoints": [
+        4132030048,
+        4136342219
+      ],
+      "candidate_way_ids": [
+        411566950,
+        412099720
+      ]
+    },
+    {
+      "endpoints": [
+        4133730632,
+        4133730634
+      ],
+      "candidate_way_ids": [
+        411765663,
+        1010010276
+      ]
+    },
+    {
+      "endpoints": [
+        4133730632,
+        4133730634
+      ],
+      "candidate_way_ids": [
+        411765663,
+        1010010276
+      ]
+    },
+    {
+      "endpoints": [
+        4132030048,
+        4136342219
+      ],
+      "candidate_way_ids": [
+        411566949,
+        412099722
+      ]
+    },
+    {
+      "endpoints": [
+        4138209554,
+        4138209555
+      ],
+      "candidate_way_ids": [
+        32314855,
+        412103605,
+        1182340237
+      ]
+    },
+    {
+      "endpoints": [
+        4138209554,
+        4138209555
+      ],
+      "candidate_way_ids": [
+        32314855,
+        412103605,
+        1182340237
+      ]
+    },
+    {
+      "endpoints": [
+        4297789024,
+        4297789028
+      ],
+      "candidate_way_ids": [
+        430359667
+      ]
+    },
+    {
+      "endpoints": [
+        4297789024,
+        4297789028
+      ],
+      "candidate_way_ids": [
+        430359667
+      ]
+    },
+    {
+      "endpoints": [
+        4332786951,
+        4332786956
+      ],
+      "candidate_way_ids": [
+        1195946806
+      ]
+    },
+    {
+      "endpoints": [
+        4332786951,
+        4332786956
+      ],
+      "candidate_way_ids": [
+        1195946806
+      ]
+    },
+    {
+      "endpoints": [
+        4350142114,
+        4350142122
+      ],
+      "candidate_way_ids": [
+        437195266
+      ]
+    },
+    {
+      "endpoints": [
+        4350142114,
+        4350142122
+      ],
+      "candidate_way_ids": [
+        437194839,
+        437195295
+      ]
+    },
+    {
+      "endpoints": [
+        4384867369,
+        8269710057
+      ],
+      "candidate_way_ids": [
+        606193642
+      ]
+    },
+    {
+      "endpoints": [
+        4416643320,
+        4416643331
+      ],
+      "candidate_way_ids": [
+        444177272
+      ]
+    },
+    {
+      "endpoints": [
+        4416643320,
+        4416643331
+      ],
+      "candidate_way_ids": [
+        444177272
+      ]
+    },
+    {
+      "endpoints": [
+        4665848804,
+        4665848808
+      ],
+      "candidate_way_ids": [
+        1184370371
+      ]
+    },
+    {
+      "endpoints": [
+        4665848804,
+        4665848808
+      ],
+      "candidate_way_ids": [
+        1184370371
+      ]
+    },
+    {
+      "endpoints": [
+        5703197501,
+        5703197502
+      ],
+      "candidate_way_ids": [
+        599462041
+      ]
+    },
+    {
+      "endpoints": [
+        5703197501,
+        5703197502
+      ],
+      "candidate_way_ids": [
+        599462041
+      ]
+    },
+    {
+      "endpoints": [
+        5748234360,
+        5748234363
+      ],
+      "candidate_way_ids": [
+        411428385,
+        606208612
+      ]
+    },
+    {
+      "endpoints": [
+        5748234360,
+        5748234363
+      ],
+      "candidate_way_ids": [
+        606208610
+      ]
+    },
+    {
+      "endpoints": [
+        5904879663,
+        12043756360
+      ],
+      "candidate_way_ids": [
+        1300266802,
+        1300266803,
+        1300266804
+      ]
+    },
+    {
+      "endpoints": [
+        363707680,
+        5907176641
+      ],
+      "candidate_way_ids": [
+        859140108,
+        1306460782
+      ]
+    },
+    {
+      "endpoints": [
+        6914536696,
+        6914536699
+      ],
+      "candidate_way_ids": [
+        738418161,
+        1009673230,
+        1009673231
+      ]
+    },
+    {
+      "endpoints": [
+        6914536696,
+        6914536699
+      ],
+      "candidate_way_ids": [
+        738418161,
+        1009673231,
+        1009673232
+      ]
+    },
+    {
+      "endpoints": [
+        6914536696,
+        6914536699
+      ],
+      "candidate_way_ids": [
+        738418161,
+        1009673231,
+        1009673232
+      ]
+    },
+    {
+      "endpoints": [
+        6914536696,
+        6914536699
+      ],
+      "candidate_way_ids": [
+        738418161,
+        1009673230,
+        1009673231
+      ]
+    },
+    {
+      "endpoints": [
+        6914536702,
+        6914536705
+      ],
+      "candidate_way_ids": [
+        738418162,
+        1009673227,
+        1009673228
+      ]
+    },
+    {
+      "endpoints": [
+        6914536702,
+        6914536705
+      ],
+      "candidate_way_ids": [
+        738418162,
+        1009673228,
+        1009673229
+      ]
+    },
+    {
+      "endpoints": [
+        6914536702,
+        6914536705
+      ],
+      "candidate_way_ids": [
+        738418162,
+        1009673228,
+        1009673229
+      ]
+    },
+    {
+      "endpoints": [
+        6914536702,
+        6914536705
+      ],
+      "candidate_way_ids": [
+        738418162,
+        1009673227,
+        1009673228
+      ]
+    },
+    {
+      "endpoints": [
+        6914536708,
+        6914536711
+      ],
+      "candidate_way_ids": [
+        738418163,
+        1009673224,
+        1009673225
+      ]
+    },
+    {
+      "endpoints": [
+        6914536708,
+        6914536711
+      ],
+      "candidate_way_ids": [
+        738418163,
+        1009673225,
+        1009673226
+      ]
+    },
+    {
+      "endpoints": [
+        6914536708,
+        6914536711
+      ],
+      "candidate_way_ids": [
+        738418163,
+        1009673225,
+        1009673226
+      ]
+    },
+    {
+      "endpoints": [
+        6914536708,
+        6914536711
+      ],
+      "candidate_way_ids": [
+        738418163,
+        1009673224,
+        1009673225
+      ]
+    },
+    {
+      "endpoints": [
+        6914536717,
+        6914536720
+      ],
+      "candidate_way_ids": [
+        738418165,
+        1009673233,
+        1009673234
+      ]
+    },
+    {
+      "endpoints": [
+        6914536717,
+        6914536720
+      ],
+      "candidate_way_ids": [
+        1009673233,
+        1009673234,
+        1009673235
+      ]
+    },
+    {
+      "endpoints": [
+        6914536717,
+        6914536720
+      ],
+      "candidate_way_ids": [
+        1009673233,
+        1009673234,
+        1009673235
+      ]
+    },
+    {
+      "endpoints": [
+        6914536717,
+        6914536720
+      ],
+      "candidate_way_ids": [
+        738418165,
+        1009673233,
+        1009673234
+      ]
+    },
+    {
+      "endpoints": [
+        6914536723,
+        6914536726
+      ],
+      "candidate_way_ids": [
+        738418166,
+        1009673237,
+        1009673238
+      ]
+    },
+    {
+      "endpoints": [
+        6914536723,
+        6914536726
+      ],
+      "candidate_way_ids": [
+        738418166,
+        1009673236,
+        1009673237
+      ]
+    },
+    {
+      "endpoints": [
+        6914536723,
+        6914536726
+      ],
+      "candidate_way_ids": [
+        738418166,
+        1009673236,
+        1009673237
+      ]
+    },
+    {
+      "endpoints": [
+        6914536723,
+        6914536726
+      ],
+      "candidate_way_ids": [
+        738418166,
+        1009673237,
+        1009673238
+      ]
+    },
+    {
+      "endpoints": [
+        6914536729,
+        6914536732
+      ],
+      "candidate_way_ids": [
+        738418167,
+        1009673240,
+        1009673241
+      ]
+    },
+    {
+      "endpoints": [
+        6914536729,
+        6914536732
+      ],
+      "candidate_way_ids": [
+        738418167,
+        1009673239,
+        1009673240
+      ]
+    },
+    {
+      "endpoints": [
+        6914536729,
+        6914536732
+      ],
+      "candidate_way_ids": [
+        738418167,
+        1009673239,
+        1009673240
+      ]
+    },
+    {
+      "endpoints": [
+        6914536729,
+        6914536732
+      ],
+      "candidate_way_ids": [
+        738418167,
+        1009673240,
+        1009673241
+      ]
+    },
+    {
+      "endpoints": [
+        6988574030,
+        11095253752
+      ],
+      "candidate_way_ids": [
+        1195433494
+      ]
+    },
+    {
+      "endpoints": [
+        7352692285,
+        12400611312
+      ],
+      "candidate_way_ids": [
+        786370951,
+        1315457656,
+        1315457657
+      ]
+    },
+    {
+      "endpoints": [
+        7986997302,
+        7986997304
+      ],
+      "candidate_way_ids": [
+        856632538
+      ]
+    },
+    {
+      "endpoints": [
+        7986997302,
+        7986997304
+      ],
+      "candidate_way_ids": [
+        856632538
+      ]
+    },
+    {
+      "endpoints": [
+        7986997310,
+        12063925683
+      ],
+      "candidate_way_ids": [
+        1302596608,
+        1302596609
+      ]
+    },
+    {
+      "endpoints": [
+        8001868396,
+        8001868397
+      ],
+      "candidate_way_ids": [
+        858361929
+      ]
+    },
+    {
+      "endpoints": [
+        8001868396,
+        8001868397
+      ],
+      "candidate_way_ids": [
+        858361929
+      ]
+    },
+    {
+      "endpoints": [
+        8001957993,
+        12161181361
+      ],
+      "candidate_way_ids": [
+        1308706713,
+        1313290114
+      ]
+    },
+    {
+      "endpoints": [
+        8070214112,
+        8070214118
+      ],
+      "candidate_way_ids": [
+        865796586,
+        1305112006
+      ]
+    },
+    {
+      "endpoints": [
+        8070214112,
+        8070214118
+      ],
+      "candidate_way_ids": [
+        865796586,
+        1305112006
+      ]
+    },
+    {
+      "endpoints": [
+        4131662437,
+        8266370320
+      ],
+      "candidate_way_ids": [
+        889161408,
+        889161409,
+        889161410
+      ]
+    },
+    {
+      "endpoints": [
+        8266370367,
+        8266370370
+      ],
+      "candidate_way_ids": [
+        889161482
+      ]
+    },
+    {
+      "endpoints": [
+        8266370367,
+        8266370370
+      ],
+      "candidate_way_ids": [
+        889161482
+      ]
+    },
+    {
+      "endpoints": [
+        8266370435,
+        14158901355
+      ],
+      "candidate_way_ids": [
+        889161454
+      ]
+    },
+    {
+      "endpoints": [
+        8266450216,
+        8266450727
+      ],
+      "candidate_way_ids": [
+        889172133
+      ]
+    },
+    {
+      "endpoints": [
+        8266450216,
+        8266450727
+      ],
+      "candidate_way_ids": [
+        889172133
+      ]
+    },
+    {
+      "endpoints": [
+        8266450773,
+        11096423020
+      ],
+      "candidate_way_ids": [
+        1195526125
+      ]
+    },
+    {
+      "endpoints": [
+        8266994828,
+        8266995001
+      ],
+      "candidate_way_ids": [
+        889239014
+      ]
+    },
+    {
+      "endpoints": [
+        8266994828,
+        8266995001
+      ],
+      "candidate_way_ids": [
+        889238963
+      ]
+    },
+    {
+      "endpoints": [
+        3753263480,
+        8267352027
+      ],
+      "candidate_way_ids": [
+        32308858
+      ]
+    },
+    {
+      "endpoints": [
+        8269415825,
+        8269415827
+      ],
+      "candidate_way_ids": [
+        889478036
+      ]
+    },
+    {
+      "endpoints": [
+        8269415825,
+        8269415827
+      ],
+      "candidate_way_ids": [
+        889478036
+      ]
+    },
+    {
+      "endpoints": [
+        8269415984,
+        8269415987
+      ],
+      "candidate_way_ids": [
+        889478076,
+        889478077,
+        889478078,
+        889478079
+      ]
+    },
+    {
+      "endpoints": [
+        8269415984,
+        8269415987
+      ],
+      "candidate_way_ids": [
+        889478076,
+        889478077,
+        889478078,
+        889478079
+      ]
+    },
+    {
+      "endpoints": [
+        8269416001,
+        8269416002
+      ],
+      "candidate_way_ids": [
+        889478082
+      ]
+    },
+    {
+      "endpoints": [
+        8269416001,
+        8269416002
+      ],
+      "candidate_way_ids": [
+        889478082
+      ]
+    },
+    {
+      "endpoints": [
+        8269583433,
+        8269583442
+      ],
+      "candidate_way_ids": [
+        889496768
+      ]
+    },
+    {
+      "endpoints": [
+        8269583433,
+        8269583442
+      ],
+      "candidate_way_ids": [
+        889496768
+      ]
+    },
+    {
+      "endpoints": [
+        4384867369,
+        8269710057
+      ],
+      "candidate_way_ids": [
+        440706332
+      ]
+    },
+    {
+      "endpoints": [
+        8269721619,
+        8269721630
+      ],
+      "candidate_way_ids": [
+        889512877
+      ]
+    },
+    {
+      "endpoints": [
+        8269721619,
+        8269721630
+      ],
+      "candidate_way_ids": [
+        889512876
+      ]
+    },
+    {
+      "endpoints": [
+        8269823820,
+        8269823821
+      ],
+      "candidate_way_ids": [
+        889524431
+      ]
+    },
+    {
+      "endpoints": [
+        8269823820,
+        8269823821
+      ],
+      "candidate_way_ids": [
+        889524431
+      ]
+    },
+    {
+      "endpoints": [
+        363662634,
+        8270336259
+      ],
+      "candidate_way_ids": [
+        32310079,
+        889584945
+      ]
+    },
+    {
+      "endpoints": [
+        8360924368,
+        8360924369
+      ],
+      "candidate_way_ids": [
+        899888225,
+        899888226,
+        899888227
+      ]
+    },
+    {
+      "endpoints": [
+        8360924368,
+        8360924369
+      ],
+      "candidate_way_ids": [
+        899888225,
+        899888226,
+        899888227
+      ]
+    },
+    {
+      "endpoints": [
+        9177280845,
+        11002559562
+      ],
+      "candidate_way_ids": [
+        1184569529
+      ]
+    },
+    {
+      "endpoints": [
+        10929581816,
+        10929581819
+      ],
+      "candidate_way_ids": [
+        1176328216
+      ]
+    },
+    {
+      "endpoints": [
+        10929581816,
+        10929581819
+      ],
+      "candidate_way_ids": [
+        1176328216
+      ]
+    },
+    {
+      "endpoints": [
+        1349122403,
+        10996901903
+      ],
+      "candidate_way_ids": [
+        1184171250,
+        1184171251,
+        1184171252
+      ]
+    },
+    {
+      "endpoints": [
+        363715513,
+        10996910108
+      ],
+      "candidate_way_ids": [
+        1184171247,
+        1184171248,
+        1184171249
+      ]
+    },
+    {
+      "endpoints": [
+        11001015636,
+        11001015637
+      ],
+      "candidate_way_ids": [
+        1184375411,
+        1191956291,
+        1304548750
+      ]
+    },
+    {
+      "endpoints": [
+        11001015636,
+        11001015637
+      ],
+      "candidate_way_ids": [
+        1184375411,
+        1191956291,
+        1304548750
+      ]
+    },
+    {
+      "endpoints": [
+        9177280845,
+        11002559562
+      ],
+      "candidate_way_ids": [
+        1184569529
+      ]
+    },
+    {
+      "endpoints": [
+        11002633966,
+        11002633967
+      ],
+      "candidate_way_ids": [
+        1184577069
+      ]
+    },
+    {
+      "endpoints": [
+        11002633966,
+        11002633967
+      ],
+      "candidate_way_ids": [
+        1184577069
+      ]
+    },
+    {
+      "endpoints": [
+        11002863351,
+        11002863352
+      ],
+      "candidate_way_ids": [
+        242459588
+      ]
+    },
+    {
+      "endpoints": [
+        11002863351,
+        11002863352
+      ],
+      "candidate_way_ids": [
+        242459588
+      ]
+    },
+    {
+      "endpoints": [
+        11031444740,
+        11031444745
+      ],
+      "candidate_way_ids": [
+        1187968804
+      ]
+    },
+    {
+      "endpoints": [
+        11031444740,
+        11031444745
+      ],
+      "candidate_way_ids": [
+        1187968804
+      ]
+    },
+    {
+      "endpoints": [
+        11050599538,
+        11050599544
+      ],
+      "candidate_way_ids": [
+        1190120228,
+        1190120230
+      ]
+    },
+    {
+      "endpoints": [
+        11050599538,
+        11050599544
+      ],
+      "candidate_way_ids": [
+        1190120228,
+        1190120230
+      ]
+    },
+    {
+      "endpoints": [
+        11054009616,
+        11054009623
+      ],
+      "candidate_way_ids": [
+        1190501917
+      ]
+    },
+    {
+      "endpoints": [
+        11054009616,
+        11054009623
+      ],
+      "candidate_way_ids": [
+        1190501917
+      ]
+    },
+    {
+      "endpoints": [
+        11084704198,
+        11084758712
+      ],
+      "candidate_way_ids": [
+        1194161387
+      ]
+    },
+    {
+      "endpoints": [
+        11084704198,
+        11084758712
+      ],
+      "candidate_way_ids": [
+        1194161387
+      ]
+    },
+    {
+      "endpoints": [
+        11084997536,
+        11084997539
+      ],
+      "candidate_way_ids": [
+        1194192827
+      ]
+    },
+    {
+      "endpoints": [
+        11084997536,
+        11084997539
+      ],
+      "candidate_way_ids": [
+        1194192827
+      ]
+    },
+    {
+      "endpoints": [
+        11088275059,
+        11088275067
+      ],
+      "candidate_way_ids": [
+        1293525613
+      ]
+    },
+    {
+      "endpoints": [
+        11088275059,
+        11088275067
+      ],
+      "candidate_way_ids": [
+        1194622869
+      ]
+    },
+    {
+      "endpoints": [
+        11088582593,
+        11088582600
+      ],
+      "candidate_way_ids": [
+        1552986025
+      ]
+    },
+    {
+      "endpoints": [
+        11088582593,
+        11096621303
+      ],
+      "candidate_way_ids": [
+        1195558871
+      ]
+    },
+    {
+      "endpoints": [
+        11088582593,
+        11088582600
+      ],
+      "candidate_way_ids": [
+        1552986025
+      ]
+    },
+    {
+      "endpoints": [
+        11088708943,
+        11088708947
+      ],
+      "candidate_way_ids": [
+        1194682836
+      ]
+    },
+    {
+      "endpoints": [
+        11088708943,
+        11088708947
+      ],
+      "candidate_way_ids": [
+        1194682836
+      ]
+    },
+    {
+      "endpoints": [
+        11094625737,
+        11094625746
+      ],
+      "candidate_way_ids": [
+        1195402859,
+        1302913421,
+        1302913422
+      ]
+    },
+    {
+      "endpoints": [
+        11094625737,
+        11094625746
+      ],
+      "candidate_way_ids": [
+        1195402859,
+        1302913421,
+        1302913422
+      ]
+    },
+    {
+      "endpoints": [
+        11095102871,
+        11095102883
+      ],
+      "candidate_way_ids": [
+        1195429960
+      ]
+    },
+    {
+      "endpoints": [
+        11095102871,
+        11095102883
+      ],
+      "candidate_way_ids": [
+        411288365
+      ]
+    },
+    {
+      "endpoints": [
+        6988574030,
+        11095253752
+      ],
+      "candidate_way_ids": [
+        1195433494
+      ]
+    },
+    {
+      "endpoints": [
+        8266450773,
+        11096423020
+      ],
+      "candidate_way_ids": [
+        1195526125
+      ]
+    },
+    {
+      "endpoints": [
+        3749540137,
+        11096461386
+      ],
+      "candidate_way_ids": [
+        889239001
+      ]
+    },
+    {
+      "endpoints": [
+        11088582593,
+        11096621303
+      ],
+      "candidate_way_ids": [
+        1195558871
+      ]
+    },
+    {
+      "endpoints": [
+        11098470367,
+        11104053349
+      ],
+      "candidate_way_ids": [
+        1196695953
+      ]
+    },
+    {
+      "endpoints": [
+        11098496120,
+        11098496121
+      ],
+      "candidate_way_ids": [
+        1195949694,
+        1195949696
+      ]
+    },
+    {
+      "endpoints": [
+        11098496120,
+        11098496121
+      ],
+      "candidate_way_ids": [
+        1195949694,
+        1195949696
+      ]
+    },
+    {
+      "endpoints": [
+        11098496146,
+        11098496150
+      ],
+      "candidate_way_ids": [
+        1195949702,
+        1195949703,
+        1195949704
+      ]
+    },
+    {
+      "endpoints": [
+        11098496146,
+        11098496150
+      ],
+      "candidate_way_ids": [
+        1195949701,
+        1289170230,
+        1289170231
+      ]
+    },
+    {
+      "endpoints": [
+        11098718904,
+        11104344026
+      ],
+      "candidate_way_ids": [
+        1196724978
+      ]
+    },
+    {
+      "endpoints": [
+        4129304996,
+        11098793306
+      ],
+      "candidate_way_ids": [
+        1196724979
+      ]
+    },
+    {
+      "endpoints": [
+        11098921157,
+        11098921172
+      ],
+      "candidate_way_ids": [
+        1196007244,
+        1196007245
+      ]
+    },
+    {
+      "endpoints": [
+        11098921157,
+        11098921172
+      ],
+      "candidate_way_ids": [
+        1196007244,
+        1196007245
+      ]
+    },
+    {
+      "endpoints": [
+        1349201193,
+        11099005772
+      ],
+      "candidate_way_ids": [
+        1196013871,
+        1427547768,
+        1427547769
+      ]
+    },
+    {
+      "endpoints": [
+        11099088406,
+        11099088407
+      ],
+      "candidate_way_ids": [
+        1196020643
+      ]
+    },
+    {
+      "endpoints": [
+        11099088406,
+        11099088407
+      ],
+      "candidate_way_ids": [
+        1196020643
+      ]
+    },
+    {
+      "endpoints": [
+        4132018588,
+        11100657375
+      ],
+      "candidate_way_ids": [
+        1196244550
+      ]
+    },
+    {
+      "endpoints": [
+        11100763876,
+        11100763877
+      ],
+      "candidate_way_ids": [
+        1196248710
+      ]
+    },
+    {
+      "endpoints": [
+        11100763876,
+        11100763877
+      ],
+      "candidate_way_ids": [
+        1196248710
+      ]
+    },
+    {
+      "endpoints": [
+        11100791970,
+        11100791985
+      ],
+      "candidate_way_ids": [
+        1196256075
+      ]
+    },
+    {
+      "endpoints": [
+        11100791970,
+        11100791985
+      ],
+      "candidate_way_ids": [
+        1196256075
+      ]
+    },
+    {
+      "endpoints": [
+        11100937431,
+        11100937432
+      ],
+      "candidate_way_ids": [
+        1196268023
+      ]
+    },
+    {
+      "endpoints": [
+        11100937431,
+        11100937432
+      ],
+      "candidate_way_ids": [
+        1196268023
+      ]
+    },
+    {
+      "endpoints": [
+        4129193253,
+        11101021039
+      ],
+      "candidate_way_ids": [
+        411187440
+      ]
+    },
+    {
+      "endpoints": [
+        11098470367,
+        11104053349
+      ],
+      "candidate_way_ids": [
+        1196695953
+      ]
+    },
+    {
+      "endpoints": [
+        11098718904,
+        11104344026
+      ],
+      "candidate_way_ids": [
+        620114796,
+        889512864
+      ]
+    },
+    {
+      "endpoints": [
+        347399444,
+        11107105834
+      ],
+      "candidate_way_ids": [
+        1197002906
+      ]
+    },
+    {
+      "endpoints": [
+        11107106450,
+        11107106456
+      ],
+      "candidate_way_ids": [
+        1197002539
+      ]
+    },
+    {
+      "endpoints": [
+        11107106450,
+        11107106456
+      ],
+      "candidate_way_ids": [
+        1197002539
+      ]
+    },
+    {
+      "endpoints": [
+        11113130499,
+        11113134009
+      ],
+      "candidate_way_ids": [
+        1197848488,
+        1218528266,
+        1218528267
+      ]
+    },
+    {
+      "endpoints": [
+        11113130499,
+        11113134009
+      ],
+      "candidate_way_ids": [
+        1197848488,
+        1218528266,
+        1218528267
+      ]
+    },
+    {
+      "endpoints": [
+        11121670237,
+        11121670245
+      ],
+      "candidate_way_ids": [
+        1198909150
+      ]
+    },
+    {
+      "endpoints": [
+        11121670237,
+        11121670245
+      ],
+      "candidate_way_ids": [
+        1198909150
+      ]
+    },
+    {
+      "endpoints": [
+        12029546944,
+        12029546947
+      ],
+      "candidate_way_ids": [
+        1298607385
+      ]
+    },
+    {
+      "endpoints": [
+        12029546944,
+        12029546947
+      ],
+      "candidate_way_ids": [
+        1298607385
+      ]
+    },
+    {
+      "endpoints": [
+        12043756342,
+        12043756343
+      ],
+      "candidate_way_ids": [
+        876376340
+      ]
+    },
+    {
+      "endpoints": [
+        12043756342,
+        12043756343
+      ],
+      "candidate_way_ids": [
+        876376340
+      ]
+    },
+    {
+      "endpoints": [
+        5904879663,
+        12043756360
+      ],
+      "candidate_way_ids": [
+        1300266802,
+        1300266803,
+        1300266804
+      ]
+    },
+    {
+      "endpoints": [
+        12060192219,
+        12060192220
+      ],
+      "candidate_way_ids": [
+        876376340
+      ]
+    },
+    {
+      "endpoints": [
+        12060192219,
+        12060192220
+      ],
+      "candidate_way_ids": [
+        876376340
+      ]
+    },
+    {
+      "endpoints": [
+        12060493794,
+        12060493795
+      ],
+      "candidate_way_ids": [
+        1302174904,
+        1302174905,
+        1302174906
+      ]
+    },
+    {
+      "endpoints": [
+        12060493794,
+        12060493795
+      ],
+      "candidate_way_ids": [
+        1302174904,
+        1302174905,
+        1302174906
+      ]
+    },
+    {
+      "endpoints": [
+        7986997310,
+        12063925683
+      ],
+      "candidate_way_ids": [
+        1302596608,
+        1302596609
+      ]
+    },
+    {
+      "endpoints": [
+        12067450989,
+        12067450992
+      ],
+      "candidate_way_ids": [
+        1302995247
+      ]
+    },
+    {
+      "endpoints": [
+        12067450989,
+        12067450992
+      ],
+      "candidate_way_ids": [
+        1302995247
+      ]
+    },
+    {
+      "endpoints": [
+        12094202001,
+        12094202002
+      ],
+      "candidate_way_ids": [
+        1193912981,
+        1302417099,
+        1302417100
+      ]
+    },
+    {
+      "endpoints": [
+        12094202001,
+        12094202002
+      ],
+      "candidate_way_ids": [
+        1193912981,
+        1302417099,
+        1302417100
+      ]
+    },
+    {
+      "endpoints": [
+        12110786185,
+        12110786198
+      ],
+      "candidate_way_ids": [
+        1307806937,
+        1307806938,
+        1307806939,
+        1307806940,
+        1307806941
+      ]
+    },
+    {
+      "endpoints": [
+        12110786185,
+        12110786198
+      ],
+      "candidate_way_ids": [
+        1307806937,
+        1307806938
+      ]
+    },
+    {
+      "endpoints": [
+        12110786185,
+        12110786198
+      ],
+      "candidate_way_ids": [
+        1307806937,
+        1307806938
+      ]
+    },
+    {
+      "endpoints": [
+        12110786185,
+        12110786198
+      ],
+      "candidate_way_ids": [
+        1307806937,
+        1307806938,
+        1307806939,
+        1307806940,
+        1307806941
+      ]
+    },
+    {
+      "endpoints": [
+        12111579928,
+        12111579934
+      ],
+      "candidate_way_ids": [
+        1307853643,
+        1307853645,
+        1307853646,
+        1307853647
+      ]
+    },
+    {
+      "endpoints": [
+        12111579928,
+        12111579934
+      ],
+      "candidate_way_ids": [
+        1307853643,
+        1307853645,
+        1307853646,
+        1307853647
+      ]
+    },
+    {
+      "endpoints": [
+        12111579946,
+        12111579947
+      ],
+      "candidate_way_ids": [
+        1307853649
+      ]
+    },
+    {
+      "endpoints": [
+        12111579946,
+        12111579947
+      ],
+      "candidate_way_ids": [
+        1307853649
+      ]
+    },
+    {
+      "endpoints": [
+        12111579952,
+        12111579953
+      ],
+      "candidate_way_ids": [
+        1307853650
+      ]
+    },
+    {
+      "endpoints": [
+        12111579952,
+        12111579953
+      ],
+      "candidate_way_ids": [
+        1307853650
+      ]
+    },
+    {
+      "endpoints": [
+        12111579971,
+        12111579973
+      ],
+      "candidate_way_ids": [
+        1307853653
+      ]
+    },
+    {
+      "endpoints": [
+        12111579971,
+        12111579973
+      ],
+      "candidate_way_ids": [
+        1307853651,
+        1307853652,
+        1307853653,
+        1307853654
+      ]
+    },
+    {
+      "endpoints": [
+        12111579971,
+        12111579973
+      ],
+      "candidate_way_ids": [
+        1307853651,
+        1307853652,
+        1307853653,
+        1307853654
+      ]
+    },
+    {
+      "endpoints": [
+        12111579971,
+        12111579973
+      ],
+      "candidate_way_ids": [
+        1307853653
+      ]
+    },
+    {
+      "endpoints": [
+        12111579990,
+        12111579993
+      ],
+      "candidate_way_ids": [
+        1307853659
+      ]
+    },
+    {
+      "endpoints": [
+        12111579990,
+        12111579993
+      ],
+      "candidate_way_ids": [
+        1307853659
+      ]
+    },
+    {
+      "endpoints": [
+        12111580001,
+        12111580004
+      ],
+      "candidate_way_ids": [
+        1307853660
+      ]
+    },
+    {
+      "endpoints": [
+        12111580001,
+        12111580004
+      ],
+      "candidate_way_ids": [
+        1307853660
+      ]
+    },
+    {
+      "endpoints": [
+        12111580058,
+        12111580060
+      ],
+      "candidate_way_ids": [
+        1307853671
+      ]
+    },
+    {
+      "endpoints": [
+        12111580058,
+        12111580060
+      ],
+      "candidate_way_ids": [
+        1307853668,
+        1307853669,
+        1307853670,
+        1307853671
+      ]
+    },
+    {
+      "endpoints": [
+        12111580058,
+        12111580060
+      ],
+      "candidate_way_ids": [
+        1307853668,
+        1307853669,
+        1307853670,
+        1307853671
+      ]
+    },
+    {
+      "endpoints": [
+        12111580058,
+        12111580060
+      ],
+      "candidate_way_ids": [
+        1307853671
+      ]
+    },
+    {
+      "endpoints": [
+        12118364696,
+        12148704103
+      ],
+      "candidate_way_ids": [
+        1312509857
+      ]
+    },
+    {
+      "endpoints": [
+        12120667194,
+        12120667196
+      ],
+      "candidate_way_ids": [
+        859916406,
+        859916437,
+        1308857870
+      ]
+    },
+    {
+      "endpoints": [
+        12120667194,
+        12120667196
+      ],
+      "candidate_way_ids": [
+        859916406,
+        859916437,
+        1308857870
+      ]
+    },
+    {
+      "endpoints": [
+        12145033376,
+        12145033387
+      ],
+      "candidate_way_ids": [
+        1312112913,
+        1312112914
+      ]
+    },
+    {
+      "endpoints": [
+        12145033376,
+        12145033387
+      ],
+      "candidate_way_ids": [
+        1312112913,
+        1312112914
+      ]
+    },
+    {
+      "endpoints": [
+        12145033393,
+        12145094002
+      ],
+      "candidate_way_ids": [
+        1312112915,
+        1312112916,
+        1312112917
+      ]
+    },
+    {
+      "endpoints": [
+        12145033393,
+        12145094002
+      ],
+      "candidate_way_ids": [
+        1312112915,
+        1312112916,
+        1312112917
+      ]
+    },
+    {
+      "endpoints": [
+        12146869102,
+        12146869103
+      ],
+      "candidate_way_ids": [
+        1312322772
+      ]
+    },
+    {
+      "endpoints": [
+        12146869102,
+        12146869103
+      ],
+      "candidate_way_ids": [
+        1312322772
+      ]
+    },
+    {
+      "endpoints": [
+        12118364696,
+        12148704103
+      ],
+      "candidate_way_ids": [
+        1312509857
+      ]
+    },
+    {
+      "endpoints": [
+        12155946075,
+        12155978713
+      ],
+      "candidate_way_ids": [
+        1313302169,
+        1313302170,
+        1313302171,
+        1313302172
+      ]
+    },
+    {
+      "endpoints": [
+        12155946080,
+        12155978714
+      ],
+      "candidate_way_ids": [
+        1313302174,
+        1313302175
+      ]
+    },
+    {
+      "endpoints": [
+        12155946075,
+        12155978713
+      ],
+      "candidate_way_ids": [
+        1313302169,
+        1313302170,
+        1313302171,
+        1313302172
+      ]
+    },
+    {
+      "endpoints": [
+        12155946080,
+        12155978714
+      ],
+      "candidate_way_ids": [
+        1313302174,
+        1313302175,
+        1313302176
+      ]
+    },
+    {
+      "endpoints": [
+        12158705122,
+        12158705124
+      ],
+      "candidate_way_ids": [
+        1313601286,
+        1313601287
+      ]
+    },
+    {
+      "endpoints": [
+        12158705122,
+        12158705124
+      ],
+      "candidate_way_ids": [
+        1313601285,
+        1313601286,
+        1313601287
+      ]
+    },
+    {
+      "endpoints": [
+        12158705193,
+        12158705196
+      ],
+      "candidate_way_ids": [
+        1313601297,
+        1313601299,
+        1313601301,
+        1313601303
+      ]
+    },
+    {
+      "endpoints": [
+        12158705193,
+        12158705196
+      ],
+      "candidate_way_ids": [
+        1313601298,
+        1313601299,
+        1313601300,
+        1313601302,
+        1313601303,
+        1313601305
+      ]
+    },
+    {
+      "endpoints": [
+        12158705193,
+        12158705196
+      ],
+      "candidate_way_ids": [
+        1313601298,
+        1313601299,
+        1313601300,
+        1313601302,
+        1313601303,
+        1313601305
+      ]
+    },
+    {
+      "endpoints": [
+        12158705193,
+        12158705196
+      ],
+      "candidate_way_ids": [
+        1313601297,
+        1313601299,
+        1313601301,
+        1313601303
+      ]
+    },
+    {
+      "endpoints": [
+        8001957993,
+        12161181361
+      ],
+      "candidate_way_ids": [
+        858371915,
+        1308706712,
+        1308706713
+      ]
+    },
+    {
+      "endpoints": [
+        12176039655,
+        12176039657
+      ],
+      "candidate_way_ids": [
+        1315454672
+      ]
+    },
+    {
+      "endpoints": [
+        12176039655,
+        12176039657
+      ],
+      "candidate_way_ids": [
+        858371920,
+        858371921,
+        1315450619
+      ]
+    },
+    {
+      "endpoints": [
+        7352692285,
+        12400611312
+      ],
+      "candidate_way_ids": [
+        786370951,
+        1315457656,
+        1315457657
+      ]
+    },
+    {
+      "endpoints": [
+        12434984529,
+        12434984530
+      ],
+      "candidate_way_ids": [
+        1343939537
+      ]
+    },
+    {
+      "endpoints": [
+        12434984529,
+        12434984530
+      ],
+      "candidate_way_ids": [
+        1343939537
+      ]
+    },
+    {
+      "endpoints": [
+        12846365787,
+        12846365788
+      ],
+      "candidate_way_ids": [
+        1310898935,
+        1310898936
+      ]
+    },
+    {
+      "endpoints": [
+        12846365787,
+        12846365788
+      ],
+      "candidate_way_ids": [
+        1310898935,
+        1310898936
+      ]
+    },
+    {
+      "endpoints": [
+        13160869826,
+        13160869829
+      ],
+      "candidate_way_ids": [
+        1431821714
+      ]
+    },
+    {
+      "endpoints": [
+        13160869826,
+        13160869829
+      ],
+      "candidate_way_ids": [
+        1431821714
+      ]
+    },
+    {
+      "endpoints": [
+        13194612039,
+        13194612050
+      ],
+      "candidate_way_ids": [
+        1435538726
+      ]
+    },
+    {
+      "endpoints": [
+        13194612039,
+        13194612050
+      ],
+      "candidate_way_ids": [
+        1435538726
+      ]
+    },
+    {
+      "endpoints": [
+        13195172025,
+        13195178186
+      ],
+      "candidate_way_ids": [
+        1435587881,
+        1435587882
+      ]
+    },
+    {
+      "endpoints": [
+        13195172025,
+        13195178186
+      ],
+      "candidate_way_ids": [
+        1435587875,
+        1435587881,
+        1435587882
+      ]
+    },
+    {
+      "endpoints": [
+        13316116414,
+        13316116415
+      ],
+      "candidate_way_ids": [
+        1457895948
+      ]
+    },
+    {
+      "endpoints": [
+        13316116414,
+        13316116415
+      ],
+      "candidate_way_ids": [
+        1457895948
+      ]
+    },
+    {
+      "endpoints": [
+        13674938299,
+        13674938300
+      ],
+      "candidate_way_ids": [
+        1195528284
+      ]
+    },
+    {
+      "endpoints": [
+        13674938299,
+        13674938300
+      ],
+      "candidate_way_ids": [
+        1195528284
+      ]
+    },
+    {
+      "endpoints": [
+        13677875849,
+        13677875857
+      ],
+      "candidate_way_ids": [
+        1492630915
+      ]
+    },
+    {
+      "endpoints": [
+        13677875849,
+        13677875857
+      ],
+      "candidate_way_ids": [
+        1492630915
+      ]
+    },
+    {
+      "endpoints": [
+        13999668380,
+        13999668387
+      ],
+      "candidate_way_ids": [
+        1536792881
+      ]
+    },
+    {
+      "endpoints": [
+        13999668380,
+        13999668387
+      ],
+      "candidate_way_ids": [
+        1536792881
+      ]
+    },
+    {
+      "endpoints": [
+        14104380104,
+        14104380107
+      ],
+      "candidate_way_ids": [
+        1550710419
+      ]
+    },
+    {
+      "endpoints": [
+        14104380104,
+        14104380107
+      ],
+      "candidate_way_ids": [
+        1550710419
+      ]
+    },
+    {
+      "endpoints": [
+        8266370435,
+        14158901355
+      ],
+      "candidate_way_ids": [
+        889161454
+      ]
+    }
+  ],
+  "node_osm_ids": {
+    "N-0001": 337215945,
+    "N-0002": 360735950,
+    "N-0003": 360742276,
+    "N-0004": 363647203,
+    "N-0005": 363647214,
+    "N-0006": 363647226,
+    "N-0007": 363647247,
+    "N-0008": 363647266,
+    "N-0009": 363647271,
+    "N-0010": 363647389,
+    "N-0011": 363647535,
+    "N-0012": 363647547,
+    "N-0013": 363647554,
+    "N-0014": 363647576,
+    "N-0015": 363647608,
+    "N-0016": 363647635,
+    "N-0017": 363647655,
+    "N-0018": 363647664,
+    "N-0019": 363647699,
+    "N-0020": 363647706,
+    "N-0021": 363647731,
+    "N-0022": 363647737,
+    "N-0023": 363647789,
+    "N-0024": 363647835,
+    "N-0025": 363647838,
+    "N-0026": 363647862,
+    "N-0027": 363647886,
+    "N-0028": 363647955,
+    "N-0029": 363647967,
+    "N-0030": 363647979,
+    "N-0031": 363647993,
+    "N-0032": 363648054,
+    "N-0033": 363648109,
+    "N-0034": 363648118,
+    "N-0035": 363648123,
+    "N-0036": 363648136,
+    "N-0037": 363648600,
+    "N-0038": 363648711,
+    "N-0039": 363648725,
+    "N-0040": 363648913,
+    "N-0041": 363649030,
+    "N-0042": 363649039,
+    "N-0043": 363649101,
+    "N-0044": 363649126,
+    "N-0045": 363649131,
+    "N-0046": 363649154,
+    "N-0047": 363649185,
+    "N-0048": 363649191,
+    "N-0049": 363649203,
+    "N-0050": 363649223,
+    "N-0051": 363649229,
+    "N-0052": 363649237,
+    "N-0053": 363649247,
+    "N-0054": 363649262,
+    "N-0055": 363649282,
+    "N-0056": 363649304,
+    "N-0057": 363649426,
+    "N-0058": 363649507,
+    "N-0059": 363650277,
+    "N-0060": 363650403,
+    "N-0061": 363650409,
+    "N-0062": 363661004,
+    "N-0063": 363661316,
+    "N-0064": 363662600,
+    "N-0065": 363663637,
+    "N-0066": 363666813,
+    "N-0067": 363666842,
+    "N-0068": 363667357,
+    "N-0069": 363667369,
+    "N-0070": 363667534,
+    "N-0071": 363667541,
+    "N-0072": 363668025,
+    "N-0073": 363668182,
+    "N-0074": 363668558,
+    "N-0075": 363668694,
+    "N-0076": 363669409,
+    "N-0077": 363669432,
+    "N-0078": 363669472,
+    "N-0079": 363669483,
+    "N-0080": 363669524,
+    "N-0081": 363669526,
+    "N-0082": 363669554,
+    "N-0083": 363669576,
+    "N-0084": 363669598,
+    "N-0085": 363669614,
+    "N-0086": 363669650,
+    "N-0087": 363669676,
+    "N-0088": 363669754,
+    "N-0089": 363676294,
+    "N-0090": 363679408,
+    "N-0091": 363680450,
+    "N-0092": 363680538,
+    "N-0093": 363680562,
+    "N-0094": 363702631,
+    "N-0095": 363707778,
+    "N-0096": 363708019,
+    "N-0097": 363709351,
+    "N-0098": 363710305,
+    "N-0099": 363712845,
+    "N-0100": 363712848,
+    "N-0101": 363712864,
+    "N-0102": 363715491,
+    "N-0103": 363715517,
+    "N-0104": 365234335,
+    "N-0105": 365290965,
+    "N-0106": 365300488,
+    "N-0107": 365300491,
+    "N-0108": 365300914,
+    "N-0109": 365303721,
+    "N-0110": 365405261,
+    "N-0111": 365405480,
+    "N-0112": 365405845,
+    "N-0113": 365406126,
+    "N-0114": 365424490,
+    "N-0115": 367838663,
+    "N-0116": 367838719,
+    "N-0117": 367841982,
+    "N-0118": 382216219,
+    "N-0119": 382441308,
+    "N-0120": 775527699,
+    "N-0121": 775527746,
+    "N-0122": 776165997,
+    "N-0123": 776172866,
+    "N-0124": 803395173,
+    "N-0125": 803712073,
+    "N-0126": 803712094,
+    "N-0127": 803712100,
+    "N-0128": 803712102,
+    "N-0129": 803712106,
+    "N-0130": 803712167,
+    "N-0131": 1734711959,
+    "N-0132": 1734712926,
+    "N-0133": 1734726658,
+    "N-0134": 1734762887,
+    "N-0135": 1744972050,
+    "N-0136": 1871969039,
+    "N-0137": 2499222328,
+    "N-0138": 3182036687,
+    "N-0139": 3753251331,
+    "N-0140": 4130376258,
+    "N-0141": 4130376259,
+    "N-0142": 4130376261,
+    "N-0143": 4130376269,
+    "N-0144": 4130376271,
+    "N-0145": 4130380300,
+    "N-0146": 4130380304,
+    "N-0147": 4130380309,
+    "N-0148": 4130380314,
+    "N-0149": 4130380319,
+    "N-0150": 4130380332,
+    "N-0151": 4131814274,
+    "N-0152": 4135495383,
+    "N-0153": 4135495384,
+    "N-0154": 4135495385,
+    "N-0155": 4135495386,
+    "N-0156": 4135498591,
+    "N-0157": 4135498598,
+    "N-0158": 4135769916,
+    "N-0159": 4135769919,
+    "N-0160": 4135769933,
+    "N-0161": 4135769939,
+    "N-0162": 4135769940,
+    "N-0163": 4135769941,
+    "N-0164": 4135769942,
+    "N-0165": 4136405142,
+    "N-0166": 4136405143,
+    "N-0167": 4136405160,
+    "N-0168": 4136501007,
+    "N-0169": 4136942952,
+    "N-0170": 4136942966,
+    "N-0171": 4137417077,
+    "N-0172": 4137417078,
+    "N-0173": 4137417081,
+    "N-0174": 4137417082,
+    "N-0175": 4137420942,
+    "N-0176": 4137420945,
+    "N-0177": 4137420946,
+    "N-0178": 4137420947,
+    "N-0179": 4137953717,
+    "N-0180": 4138398576,
+    "N-0181": 4138398578,
+    "N-0182": 4138398579,
+    "N-0183": 4138398580,
+    "N-0184": 4138398581,
+    "N-0185": 4138398585,
+    "N-0186": 4138398586,
+    "N-0187": 4138640284,
+    "N-0188": 4138871922,
+    "N-0189": 4140216628,
+    "N-0190": 4159797231,
+    "N-0191": 4578574165,
+    "N-0192": 4591615324,
+    "N-0193": 5189385207,
+    "N-0194": 5390686435,
+    "N-0195": 5390686443,
+    "N-0196": 5390686451,
+    "N-0197": 5399417801,
+    "N-0198": 5399417803,
+    "N-0199": 5400126228,
+    "N-0200": 5521623487,
+    "N-0201": 5521623489,
+    "N-0202": 5529055184,
+    "N-0203": 5703148592,
+    "N-0204": 5703200232,
+    "N-0205": 5703200233,
+    "N-0206": 5703200239,
+    "N-0207": 5703200241,
+    "N-0208": 5703200242,
+    "N-0209": 5703250742,
+    "N-0210": 5703250744,
+    "N-0211": 5703250745,
+    "N-0212": 5703250746,
+    "N-0213": 5703250764,
+    "N-0214": 5703250767,
+    "N-0215": 5907176654,
+    "N-0216": 6318508304,
+    "N-0217": 6352840801,
+    "N-0218": 6352905703,
+    "N-0219": 7120437428,
+    "N-0220": 7120437429,
+    "N-0221": 7154729298,
+    "N-0222": 7194172219,
+    "N-0223": 7231751268,
+    "N-0224": 7332098851,
+    "N-0225": 7335048154,
+    "N-0226": 7335318636,
+    "N-0227": 7335318640,
+    "N-0228": 7335318641,
+    "N-0229": 7468678907,
+    "N-0230": 7589157990,
+    "N-0231": 7589269150,
+    "N-0232": 7589269151,
+    "N-0233": 7914592203,
+    "N-0234": 7940651626,
+    "N-0235": 7941331751,
+    "N-0236": 8112199793,
+    "N-0237": 8269413943,
+    "N-0238": 8269413948,
+    "N-0239": 8270336144,
+    "N-0240": 8270336378,
+    "N-0241": 9177263197,
+    "N-0242": 9859397700,
+    "N-0243": 10926751808,
+    "N-0244": 10929170868,
+    "N-0245": 10929170869,
+    "N-0246": 10929377410,
+    "N-0247": 10979396268,
+    "N-0248": 11040597078,
+    "N-0249": 11054988736,
+    "N-0250": 11055036911,
+    "N-0251": 11055036912,
+    "N-0252": 11055226217,
+    "N-0253": 11085047217,
+    "N-0254": 11085047223,
+    "N-0255": 11088595647,
+    "N-0256": 11088623650,
+    "N-0257": 11104122221,
+    "N-0258": 11118587131,
+    "N-0259": 11121030670,
+    "N-0260": 11979530528,
+    "N-0261": 11991192650,
+    "N-0262": 11991192651,
+    "N-0263": 11991192652,
+    "N-0264": 12033889076,
+    "N-0265": 12034829816,
+    "N-0266": 12038298017,
+    "N-0267": 12076408106,
+    "N-0268": 12117656726,
+    "N-0269": 12118364658,
+    "N-0270": 12118364688,
+    "N-0271": 12118364689,
+    "N-0272": 12118364690,
+    "N-0273": 12175952838,
+    "N-0274": 12175952844,
+    "N-0275": 12176038402,
+    "N-0276": 12202173865,
+    "N-0277": 12202173866,
+    "N-0278": 12202173867,
+    "N-0279": 12324808887,
+    "N-0280": 12324808897,
+    "N-0281": 12481936084,
+    "N-0282": 13031449491,
+    "N-0283": 13349845602,
+    "N-0284": 14127605466
+  },
+  "street_osm_way_ids": {
+    "C-0001": [
+      66297712
+    ],
+    "C-0002": [
+      785120745
+    ],
+    "C-0003": [
+      66297712
+    ],
+    "C-0004": [
+      32134910
+    ],
+    "C-0005": [
+      32134910
+    ],
+    "C-0006": [
+      120315072
+    ],
+    "C-0007": [
+      312353750
+    ],
+    "C-0008": [
+      62218673
+    ],
+    "C-0009": [
+      32314185
+    ],
+    "C-0010": [
+      411993882
+    ],
+    "C-0011": [
+      32308624,
+      411540604
+    ],
+    "C-0012": [
+      32308625
+    ],
+    "C-0013": [
+      970769476
+    ],
+    "C-0014": [
+      32308625
+    ],
+    "C-0015": [
+      1332096524
+    ],
+    "C-0016": [
+      32308398
+    ],
+    "C-0017": [
+      411993882
+    ],
+    "C-0018": [
+      32308398
+    ],
+    "C-0019": [
+      411540605
+    ],
+    "C-0020": [
+      411540605
+    ],
+    "C-0021": [
+      32308629
+    ],
+    "C-0022": [
+      411993882
+    ],
+    "C-0023": [
+      32308629
+    ],
+    "C-0024": [
+      1293546729
+    ],
+    "C-0025": [
+      32308487
+    ],
+    "C-0026": [
+      32308652
+    ],
+    "C-0027": [
+      32308652
+    ],
+    "C-0028": [
+      412375703
+    ],
+    "C-0029": [
+      412375703
+    ],
+    "C-0030": [
+      32308652
+    ],
+    "C-0031": [
+      32308749
+    ],
+    "C-0032": [
+      32308749
+    ],
+    "C-0033": [
+      32308760
+    ],
+    "C-0034": [
+      32308652
+    ],
+    "C-0035": [
+      32308760
+    ],
+    "C-0036": [
+      32308764
+    ],
+    "C-0037": [
+      32308820,
+      411993884
+    ],
+    "C-0038": [
+      411993884
+    ],
+    "C-0039": [
+      411993877
+    ],
+    "C-0040": [
+      412375703
+    ],
+    "C-0041": [
+      411993877
+    ],
+    "C-0042": [
+      32308749
+    ],
+    "C-0043": [
+      32308760
+    ],
+    "C-0044": [
+      411993877
+    ],
+    "C-0045": [
+      611702723
+    ],
+    "C-0046": [
+      1163454107
+    ],
+    "C-0047": [
+      678469405
+    ],
+    "C-0048": [
+      611702723
+    ],
+    "C-0049": [
+      412375703
+    ],
+    "C-0050": [
+      611702723
+    ],
+    "C-0051": [
+      32308749
+    ],
+    "C-0052": [
+      32308760
+    ],
+    "C-0053": [
+      611702723
+    ],
+    "C-0054": [
+      411993875
+    ],
+    "C-0055": [
+      32308787,
+      411993875
+    ],
+    "C-0056": [
+      32314194
+    ],
+    "C-0057": [
+      611702705
+    ],
+    "C-0058": [
+      32308721
+    ],
+    "C-0059": [
+      32308678
+    ],
+    "C-0060": [
+      611702705
+    ],
+    "C-0061": [
+      412375703
+    ],
+    "C-0062": [
+      611702705
+    ],
+    "C-0063": [
+      32308749
+    ],
+    "C-0064": [
+      32308760
+    ],
+    "C-0065": [
+      611702705
+    ],
+    "C-0066": [
+      32308721
+    ],
+    "C-0067": [
+      611702688
+    ],
+    "C-0068": [
+      32308691
+    ],
+    "C-0069": [
+      412027557
+    ],
+    "C-0070": [
+      412027557
+    ],
+    "C-0071": [
+      32308691
+    ],
+    "C-0072": [
+      412027559
+    ],
+    "C-0073": [
+      412027559
+    ],
+    "C-0074": [
+      32308760
+    ],
+    "C-0075": [
+      32308691
+    ],
+    "C-0076": [
+      32308691
+    ],
+    "C-0077": [
+      32308709,
+      32314195
+    ],
+    "C-0078": [
+      32308691,
+      32308787
+    ],
+    "C-0079": [
+      32314195
+    ],
+    "C-0080": [
+      32310537
+    ],
+    "C-0081": [
+      32310537
+    ],
+    "C-0082": [
+      32310537
+    ],
+    "C-0083": [
+      32308712,
+      412027559
+    ],
+    "C-0084": [
+      32310537
+    ],
+    "C-0085": [
+      32308760
+    ],
+    "C-0086": [
+      32308487
+    ],
+    "C-0087": [
+      412375703
+    ],
+    "C-0088": [
+      412375703
+    ],
+    "C-0089": [
+      32308749
+    ],
+    "C-0090": [
+      411993881
+    ],
+    "C-0091": [
+      32687707
+    ],
+    "C-0092": [
+      32687707
+    ],
+    "C-0093": [
+      32308760
+    ],
+    "C-0094": [
+      32308760
+    ],
+    "C-0095": [
+      32308764
+    ],
+    "C-0096": [
+      32314135
+    ],
+    "C-0097": [
+      32308764
+    ],
+    "C-0098": [
+      889478022
+    ],
+    "C-0099": [
+      32308764
+    ],
+    "C-0100": [
+      411993875
+    ],
+    "C-0101": [
+      678478127
+    ],
+    "C-0102": [
+      611702705
+    ],
+    "C-0103": [
+      678478128
+    ],
+    "C-0104": [
+      678478127
+    ],
+    "C-0105": [
+      32308691
+    ],
+    "C-0106": [
+      32308705
+    ],
+    "C-0107": [
+      1485294106
+    ],
+    "C-0108": [
+      411993883
+    ],
+    "C-0109": [
+      411993879
+    ],
+    "C-0110": [
+      411993877
+    ],
+    "C-0111": [
+      611702723
+    ],
+    "C-0112": [
+      32308779
+    ],
+    "C-0113": [
+      32308779
+    ],
+    "C-0114": [
+      32308779
+    ],
+    "C-0115": [
+      32308714,
+      32308779
+    ],
+    "C-0116": [
+      625358050
+    ],
+    "C-0117": [
+      625358050
+    ],
+    "C-0118": [
+      32308791
+    ],
+    "C-0119": [
+      625358050
+    ],
+    "C-0120": [
+      32308791
+    ],
+    "C-0121": [
+      970769476
+    ],
+    "C-0122": [
+      32308908
+    ],
+    "C-0123": [
+      32308911,
+      32308925,
+      32308934,
+      32314817,
+      32315040,
+      32315041
+    ],
+    "C-0124": [
+      784826777
+    ],
+    "C-0125": [
+      32308991
+    ],
+    "C-0126": [
+      678917916,
+      678917918,
+      678917920,
+      850651492,
+      1418063924
+    ],
+    "C-0127": [
+      32309945,
+      32314768,
+      1306460777,
+      1315450614
+    ],
+    "C-0128": [
+      1315455241
+    ],
+    "C-0129": [
+      32314674
+    ],
+    "C-0130": [
+      32309983
+    ],
+    "C-0131": [
+      786370952,
+      1188033863,
+      1188033864,
+      1218364136,
+      1315436647,
+      1315456470,
+      1340595726
+    ],
+    "C-0132": [
+      32314375,
+      32314387,
+      32314390,
+      678917929,
+      678917930,
+      678917934,
+      1180210618,
+      1180210620,
+      1349886866
+    ],
+    "C-0133": [
+      32309924,
+      32490135,
+      627851835,
+      1426487301
+    ],
+    "C-0134": [
+      32489933,
+      857047344,
+      859140105,
+      1305818277,
+      1305818278
+    ],
+    "C-0135": [
+      32309611,
+      120302855,
+      678917900,
+      767983128
+    ],
+    "C-0136": [
+      1182321745
+    ],
+    "C-0137": [
+      32308678,
+      32310522,
+      32310612,
+      32310626,
+      32310664,
+      32310748,
+      32310749,
+      32310750,
+      32311397,
+      411993888,
+      678474441,
+      1298217710
+    ],
+    "C-0138": [
+      678461341
+    ],
+    "C-0139": [
+      678461341
+    ],
+    "C-0140": [
+      32310626
+    ],
+    "C-0141": [
+      791553854
+    ],
+    "C-0142": [
+      791553854
+    ],
+    "C-0143": [
+      32310698
+    ],
+    "C-0144": [
+      32310698
+    ],
+    "C-0145": [
+      412107821
+    ],
+    "C-0146": [
+      32310832
+    ],
+    "C-0147": [
+      32134941
+    ],
+    "C-0148": [
+      32134941
+    ],
+    "C-0149": [
+      631124255
+    ],
+    "C-0150": [
+      412027554
+    ],
+    "C-0151": [
+      32685967,
+      791553854
+    ],
+    "C-0152": [
+      120302827
+    ],
+    "C-0153": [
+      32687975
+    ],
+    "C-0154": [
+      32310698
+    ],
+    "C-0155": [
+      32310789
+    ],
+    "C-0156": [
+      32310831
+    ],
+    "C-0157": [
+      32310798,
+      32310829
+    ],
+    "C-0158": [
+      32134941
+    ],
+    "C-0159": [
+      32134941
+    ],
+    "C-0160": [
+      32310795
+    ],
+    "C-0161": [
+      32310800
+    ],
+    "C-0162": [
+      412107859
+    ],
+    "C-0163": [
+      32134941
+    ],
+    "C-0164": [
+      32310802
+    ],
+    "C-0165": [
+      412107859
+    ],
+    "C-0166": [
+      32134941
+    ],
+    "C-0167": [
+      32310804
+    ],
+    "C-0168": [
+      412107859
+    ],
+    "C-0169": [
+      32134941
+    ],
+    "C-0170": [
+      32134941
+    ],
+    "C-0171": [
+      32310810
+    ],
+    "C-0172": [
+      32310811
+    ],
+    "C-0173": [
+      32134941
+    ],
+    "C-0174": [
+      412107859
+    ],
+    "C-0175": [
+      412107859
+    ],
+    "C-0176": [
+      32311427,
+      993353598
+    ],
+    "C-0177": [
+      32311431
+    ],
+    "C-0178": [
+      32311438
+    ],
+    "C-0179": [
+      32311717,
+      32311719,
+      32312235,
+      32314605,
+      32314606,
+      32314617,
+      32314619,
+      32315206,
+      411485923,
+      674540693,
+      674540706
+    ],
+    "C-0180": [
+      411349302
+    ],
+    "C-0181": [
+      32311264
+    ],
+    "C-0182": [
+      876370443,
+      889478018,
+      1094967147,
+      1094967148
+    ],
+    "C-0183": [
+      32311856
+    ],
+    "C-0184": [
+      32311849
+    ],
+    "C-0185": [
+      785097481
+    ],
+    "C-0186": [
+      32311850
+    ],
+    "C-0187": [
+      32311856
+    ],
+    "C-0188": [
+      770743534
+    ],
+    "C-0189": [
+      1315450615
+    ],
+    "C-0190": [
+      32314768
+    ],
+    "C-0191": [
+      32491006,
+      66297712
+    ],
+    "C-0192": [
+      66297712
+    ],
+    "C-0193": [
+      32314688,
+      599467144
+    ],
+    "C-0194": [
+      625656164,
+      1306460779,
+      1315450616
+    ],
+    "C-0195": [
+      32308714
+    ],
+    "C-0196": [
+      678917895
+    ],
+    "C-0197": [
+      32315043
+    ],
+    "C-0198": [
+      412027566
+    ],
+    "C-0199": [
+      32491400
+    ],
+    "C-0200": [
+      625358042
+    ],
+    "C-0201": [
+      1175967679
+    ],
+    "C-0202": [
+      412029655
+    ],
+    "C-0203": [
+      32491427
+    ],
+    "C-0204": [
+      120291287
+    ],
+    "C-0205": [
+      120291284,
+      120291287,
+      286673866,
+      559581509,
+      559581510,
+      658571134,
+      1293525610,
+      1377956808
+    ],
+    "C-0206": [
+      32309031
+    ],
+    "C-0207": [
+      32491427
+    ],
+    "C-0208": [
+      412027555
+    ],
+    "C-0209": [
+      798545930
+    ],
+    "C-0210": [
+      714067963,
+      1189022634
+    ],
+    "C-0211": [
+      32491006
+    ],
+    "C-0212": [
+      32311283
+    ],
+    "C-0213": [
+      785097480
+    ],
+    "C-0214": [
+      32311849
+    ],
+    "C-0215": [
+      32311283
+    ],
+    "C-0216": [
+      66297712
+    ],
+    "C-0217": [
+      785097478
+    ],
+    "C-0218": [
+      1029427656
+    ],
+    "C-0219": [
+      32308629
+    ],
+    "C-0220": [
+      371777595,
+      411540609
+    ],
+    "C-0221": [
+      32308441,
+      32308638,
+      32310515,
+      32310516,
+      412375703,
+      611702552,
+      631124254,
+      889281861,
+      895241837,
+      1292739448,
+      1292739449
+    ],
+    "C-0222": [
+      411540612
+    ],
+    "C-0223": [
+      678469404
+    ],
+    "C-0224": [
+      1181490133,
+      1424924380,
+      1424924381
+    ],
+    "C-0225": [
+      32134902,
+      120315078,
+      1181490134
+    ],
+    "C-0226": [
+      120315070,
+      288631571
+    ],
+    "C-0227": [
+      40017828,
+      120302858,
+      579361260,
+      625358052,
+      625684868
+    ],
+    "C-0228": [
+      32491180,
+      32491204
+    ],
+    "C-0229": [
+      32491180
+    ],
+    "C-0230": [
+      219062852
+    ],
+    "C-0231": [
+      411486518,
+      1424924381
+    ],
+    "C-0232": [
+      66297722
+    ],
+    "C-0233": [
+      1286906240
+    ],
+    "C-0234": [
+      66297702
+    ],
+    "C-0235": [
+      120315079
+    ],
+    "C-0236": [
+      66297705
+    ],
+    "C-0237": [
+      120315079,
+      329393483,
+      1288199506
+    ],
+    "C-0238": [
+      120315079
+    ],
+    "C-0239": [
+      66297721
+    ],
+    "C-0240": [
+      66297712
+    ],
+    "C-0241": [
+      120315071
+    ],
+    "C-0242": [
+      1288199504
+    ],
+    "C-0243": [
+      329393482,
+      766067178,
+      1288199503,
+      1288199505
+    ],
+    "C-0244": [
+      161498961,
+      161499506,
+      851414685,
+      859473445,
+      1305852568
+    ],
+    "C-0245": [
+      161499471,
+      678917923,
+      858371941
+    ],
+    "C-0246": [
+      678917917,
+      767992763
+    ],
+    "C-0247": [
+      161500172,
+      847825457,
+      1120647898,
+      1349341061
+    ],
+    "C-0248": [
+      161500301,
+      847434350,
+      847838975,
+      851401558,
+      1307865110,
+      1308857874,
+      1308857875
+    ],
+    "C-0249": [
+      32309924,
+      32309926
+    ],
+    "C-0250": [
+      32309926
+    ],
+    "C-0251": [
+      1116642784
+    ],
+    "C-0252": [
+      625684878
+    ],
+    "C-0253": [
+      625684879
+    ],
+    "C-0254": [
+      1180214414
+    ],
+    "C-0255": [
+      32314185
+    ],
+    "C-0256": [
+      32308398
+    ],
+    "C-0257": [
+      32491006,
+      32491065
+    ],
+    "C-0258": [
+      411993884
+    ],
+    "C-0259": [
+      32311823
+    ],
+    "C-0260": [
+      66297712
+    ],
+    "C-0261": [
+      32311823
+    ],
+    "C-0262": [
+      32311263
+    ],
+    "C-0263": [
+      32311823
+    ],
+    "C-0264": [
+      411350801
+    ],
+    "C-0265": [
+      32311284
+    ],
+    "C-0266": [
+      412741449
+    ],
+    "C-0267": [
+      32311823,
+      1094967149
+    ],
+    "C-0268": [
+      411349289
+    ],
+    "C-0269": [
+      411349302
+    ],
+    "C-0270": [
+      411349304
+    ],
+    "C-0271": [
+      411349304
+    ],
+    "C-0272": [
+      411349302
+    ],
+    "C-0273": [
+      411349304
+    ],
+    "C-0274": [
+      411349299
+    ],
+    "C-0275": [
+      32311894
+    ],
+    "C-0276": [
+      411349301
+    ],
+    "C-0277": [
+      411993874
+    ],
+    "C-0278": [
+      411993876
+    ],
+    "C-0279": [
+      1175967680
+    ],
+    "C-0280": [
+      412027574
+    ],
+    "C-0281": [
+      412027586,
+      575425270
+    ],
+    "C-0282": [
+      412027556
+    ],
+    "C-0283": [
+      412027558
+    ],
+    "C-0284": [
+      412107864
+    ],
+    "C-0285": [
+      32134941
+    ],
+    "C-0286": [
+      412118103
+    ],
+    "C-0287": [
+      1293546729
+    ],
+    "C-0288": [
+      1293546730
+    ],
+    "C-0289": [
+      32311285
+    ],
+    "C-0290": [
+      32311856
+    ],
+    "C-0291": [
+      32311856
+    ],
+    "C-0292": [
+      32311283
+    ],
+    "C-0293": [
+      32311283
+    ],
+    "C-0294": [
+      411349290
+    ],
+    "C-0295": [
+      32311856
+    ],
+    "C-0296": [
+      32311856
+    ],
+    "C-0297": [
+      32311283
+    ],
+    "C-0298": [
+      32311283
+    ],
+    "C-0299": [
+      32311856
+    ],
+    "C-0300": [
+      32311856
+    ],
+    "C-0301": [
+      411350801
+    ],
+    "C-0302": [
+      32311283
+    ],
+    "C-0303": [
+      32311283
+    ],
+    "C-0304": [
+      785097479
+    ],
+    "C-0305": [
+      32311283
+    ],
+    "C-0306": [
+      411350798
+    ],
+    "C-0307": [
+      1094967149
+    ],
+    "C-0308": [
+      32311283
+    ],
+    "C-0309": [
+      32311283
+    ],
+    "C-0310": [
+      32311835
+    ],
+    "C-0311": [
+      412469382,
+      1292237407
+    ],
+    "C-0312": [
+      412437639
+    ],
+    "C-0313": [
+      32134910,
+      412647802,
+      674682673
+    ],
+    "C-0314": [
+      786370958
+    ],
+    "C-0315": [
+      1308525855
+    ],
+    "C-0316": [
+      1288199504
+    ],
+    "C-0317": [
+      558880204
+    ],
+    "C-0318": [
+      625684880
+    ],
+    "C-0319": [
+      67919645,
+      229268568,
+      576062548,
+      625684875,
+      625684877,
+      1176316755,
+      1312287855,
+      1312287856,
+      1427027127
+    ],
+    "C-0320": [
+      558880205
+    ],
+    "C-0321": [
+      558880207
+    ],
+    "C-0322": [
+      1288199504
+    ],
+    "C-0323": [
+      32134908,
+      559925537,
+      625656144,
+      625656152
+    ],
+    "C-0324": [
+      1286949361
+    ],
+    "C-0325": [
+      32314205
+    ],
+    "C-0326": [
+      766067177
+    ],
+    "C-0327": [
+      766067178
+    ],
+    "C-0328": [
+      599462053
+    ],
+    "C-0329": [
+      599462053
+    ],
+    "C-0330": [
+      599462053
+    ],
+    "C-0331": [
+      785120748
+    ],
+    "C-0332": [
+      599462053
+    ],
+    "C-0333": [
+      599467144
+    ],
+    "C-0334": [
+      785120746
+    ],
+    "C-0335": [
+      1286906218
+    ],
+    "C-0336": [
+      785120746
+    ],
+    "C-0337": [
+      785120746
+    ],
+    "C-0338": [
+      599467145
+    ],
+    "C-0339": [
+      599467145
+    ],
+    "C-0340": [
+      599467145
+    ],
+    "C-0341": [
+      785120747
+    ],
+    "C-0342": [
+      1286906217
+    ],
+    "C-0343": [
+      411486518
+    ],
+    "C-0344": [
+      762117664
+    ],
+    "C-0345": [
+      625684866
+    ],
+    "C-0346": [
+      766067178
+    ],
+    "C-0347": [
+      1381877933
+    ],
+    "C-0348": [
+      32308625
+    ],
+    "C-0349": [
+      857621929
+    ],
+    "C-0350": [
+      775143366
+    ],
+    "C-0351": [
+      785120744
+    ],
+    "C-0352": [
+      1190623104,
+      1190623105,
+      1190623106
+    ],
+    "C-0353": [
+      219062405,
+      219062408,
+      870496664,
+      1190623119
+    ],
+    "C-0354": [
+      219062405,
+      870496663,
+      870496671
+    ],
+    "C-0355": [
+      812535384
+    ],
+    "C-0356": [
+      870496671
+    ],
+    "C-0357": [
+      870496664
+    ],
+    "C-0358": [
+      850651492
+    ],
+    "C-0359": [
+      850328404
+    ],
+    "C-0360": [
+      32311430,
+      32490516
+    ],
+    "C-0361": [
+      32311431
+    ],
+    "C-0362": [
+      851414684,
+      851414688,
+      851414690,
+      1306454870,
+      1315453554,
+      1315454951
+    ],
+    "C-0363": [
+      32491406,
+      870855633,
+      1175967682
+    ],
+    "C-0364": [
+      576062544,
+      625358042,
+      625358054,
+      625684866
+    ],
+    "C-0365": [
+      1190646149
+    ],
+    "C-0366": [
+      766067178
+    ],
+    "C-0367": [
+      449263883,
+      850651492
+    ],
+    "C-0368": [
+      162592037
+    ],
+    "C-0369": [
+      1176293788
+    ],
+    "C-0370": [
+      851336210,
+      851336211,
+      851336215,
+      1176312235,
+      1304020771,
+      1304020780,
+      1304020781,
+      1305826952,
+      1305826955,
+      1306277706,
+      1433638898,
+      1433638899
+    ],
+    "C-0371": [
+      1190623120
+    ],
+    "C-0372": [
+      120315079
+    ],
+    "C-0373": [
+      162592037,
+      1198588402
+    ],
+    "C-0374": [
+      1116642784,
+      1198845340,
+      1198845343
+    ],
+    "C-0375": [
+      1293546731
+    ],
+    "C-0376": [
+      1308589530,
+      1308589532,
+      1308589535,
+      1312509858
+    ],
+    "C-0377": [
+      775143365
+    ],
+    "C-0378": [
+      850651492
+    ],
+    "C-0379": [
+      1308589524,
+      1308589533
+    ],
+    "C-0380": [
+      1308589531,
+      1308589532
+    ],
+    "C-0381": [
+      1308589531,
+      1308589533,
+      1308589534
+    ],
+    "C-0382": [
+      1315450617
+    ],
+    "C-0383": [
+      1318470313
+    ],
+    "C-0384": [
+      1318470314
+    ]
+  },
+  "demo_bridge_id": "C-0199",
+  "sha256": "a2d3987bfa4427f6235084c0a296d9a9443dbc33d8ce0facff8b3a3246f6aa41",
+  "checks": {
+    "connected": true,
+    "demo_bridge_has_detour": true
+  },
+  "limitations": [
+    "Neighborhood tags approximate proximity, not official boundaries.",
+    "Refuge access is snapped to connected OSM roads, not certified entrances.",
+    "Port/military polygon access restrictions require manual review.",
+    "Only selected corridors and local streets are retained, not all city streets.",
+    "Capacity 200 is provisional; Pro occupancy enforcement is not enabled."
+  ]
+}

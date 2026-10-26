@@ -110,6 +110,8 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 | 8 | `feat/s6-simulador-lambda` | Simulador empaquetado como Lambda (ronda completa por invocación) + EventBridge Scheduler para demo, en Terraform con rol de mínimo privilegio | 7 | `aws lambda invoke` corre una ronda; la URL pública nunca muestra un mapa congelado |
 | 9 | `docs/arquitectura-costos` | `docs/arquitectura.drawio` + `.png`, `docs/costos.md` con cálculo visible y gasto real | 8 | Sin `TODO (Alex)` en el README ni en `docs/costos.md` |
 
+**T0.3 verificada (26 de octubre):** C/D generaron 284 nodos, 384 calles y los cuatro refugios aprobados por Alex con capacidad provisional de 200. E comprobó geometrías originales, distancias, conectividad, desvío del puente, regeneración idéntica e inspección visual. Resultado y limitaciones en `shared/data/README.md`; datos en `manta.json` y trazabilidad en `manta.provenance.json`. No prueba integración con el motor ni despliegue. Los tipos de T0.2 siguen siendo responsabilidad de Kevin.
+
 ### 4.3 Anthony — mapa en vivo y coordinación (`frontend/`)
 
 | # | Rama | Qué hacer | Prompt | Listo cuando |
@@ -149,7 +151,7 @@ Marcar ✅ en el PR que cierra la tarea.
 
 | Fase 0 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ⬜ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
+| ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ✅ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
 
 | Fase 1 | Kevin | Alex | Anthony |
 |---|---|---|---|

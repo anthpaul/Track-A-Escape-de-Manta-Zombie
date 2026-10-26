@@ -186,6 +186,8 @@ type Refugio = { id: string; nodo: string; nombre: string; capacidad: number }  
 
 Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · callejon 1.0`. Tiempo de una calle = `distancia_m / velocidad`.
 
+**Acuerdo de exportación del grafo (Alex, 26 de octubre):** ver `docs/CONTRATO_GRAFO.md`. Para el juego se usan calles bidireccionales y una sola conexión por pareja de nodos (la más corta si hay paralelas), conservando geometrías reales. Los refugios elegidos son ULEAM, Faro de Manta (`379H+W6R`), Faro de Jaramijó y aeropuerto Eloy Alfaro, con capacidad **provisional de 200 cada uno**, sin activar el límite Pro ni dar Q4 por respondida. La selección de corredores, la verificación E del grafo estático y las limitaciones geográficas se documentan en `shared/data/README.md`. La integración con el motor y el simulador sigue pendiente.
+
 **Por qué no está en DynamoDB:** no cambia durante la partida. Leerlo en cada `/paso` sumaría latencia sin aportar nada. Cargarlo en memoria de la Lambda **no** es la trampa del jurado: la trampa es guardar en memoria el estado **que cambia** (zombies, sobrevivientes).
 
 ### 4.2 Estado del mundo (DynamoDB, tabla `spookython_mundo`)
