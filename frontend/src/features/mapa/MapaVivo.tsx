@@ -21,8 +21,10 @@ export default function MapaVivo({ grafo, snapshot, aristasBloqueadas, seguidoId
   return (
     <MapaBase
       capasInteractivas={["sobrevivientes"]}
-      onClickEntidad={(_, propiedades) => {
-        if (typeof propiedades.id === "string") onSeleccionar(propiedades.id);
+      onClickEntidad={(entidades) => {
+        // Bitten survivors share nodes with on-road ones; only an on-road survivor has a route to follow.
+        const enRuta = entidades.find((e) => e.propiedades.estado === "en_ruta");
+        if (typeof enRuta?.propiedades.id === "string") onSeleccionar(enRuta.propiedades.id);
       }}
     >
       <CapaGrafo grafo={grafo} aristasBloqueadas={aristasBloqueadas} />

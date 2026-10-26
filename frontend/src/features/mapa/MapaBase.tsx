@@ -14,7 +14,8 @@ type Props = {
   children?: React.ReactNode;
   // Layers whose features react to clicks (pointer cursor on hover).
   capasInteractivas?: string[];
-  onClickEntidad?: (capa: string, propiedades: Record<string, unknown>) => void;
+  // Receives every interactive feature under the pointer (they often overlap on one node).
+  onClickEntidad?: (entidades: { capa: string; propiedades: Record<string, unknown> }[]) => void;
 };
 
 export default function MapaBase({ children, capasInteractivas, onClickEntidad }: Props) {
@@ -22,8 +23,8 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
   const [sobreEntidad, setSobreEntidad] = useState(false);
 
   const alHacerClick = (e: MapLayerMouseEvent) => {
-    const f = e.features?.[0];
-    if (f && onClickEntidad) onClickEntidad(f.layer.id, f.properties ?? {});
+    const entidades = (e.features ?? []).map((f) => ({ capa: f.layer.id, propiedades: f.properties ?? {} }));
+    if (entidades.length > 0 && onClickEntidad) onClickEntidad(entidades);
   };
 
   return (

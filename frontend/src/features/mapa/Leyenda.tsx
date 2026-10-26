@@ -26,7 +26,7 @@ export default function Leyenda() {
   return (
     <details
       open
-      className="absolute bottom-8 left-3 max-w-[15rem] rounded-lg border border-white/10 bg-neutral-950/85 p-3 text-xs text-neutral-200 shadow-lg backdrop-blur"
+      className="absolute bottom-48 left-3 max-w-[15rem] sm:bottom-8 rounded-lg border border-white/10 bg-neutral-950/85 p-3 text-xs text-neutral-200 shadow-lg backdrop-blur"
     >
       <summary className="cursor-pointer select-none font-semibold text-white">Leyenda</summary>
       <ul className="mt-2 space-y-1">

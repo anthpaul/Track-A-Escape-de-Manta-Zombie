@@ -62,7 +62,8 @@ export function rutaAGeoJSON(grafo: Grafo, ruta: string[]): FeatureCollection<Li
   for (let i = 1; i < ruta.length; i++) {
     const a = nodos.get(ruta[i - 1]);
     const b = nodos.get(ruta[i]);
-    if (!a || !b) continue;
+    // An unknown node breaks the route: stop there instead of drawing a straight jump across it.
+    if (!a || !b) break;
     const calle = grafo.calles.find(
       (c) => (c.desde === a.id && c.hasta === b.id) || (c.desde === b.id && c.hasta === a.id),
     );

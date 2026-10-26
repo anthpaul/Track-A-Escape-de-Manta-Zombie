@@ -16,7 +16,7 @@ export default function TarjetaSobreviviente({ grafo, sobreviviente, ruta, elegi
   return (
     <section
       aria-label="Sobreviviente seguido"
-      className="absolute bottom-8 right-3 w-60 rounded-lg border border-white/10 bg-neutral-950/85 p-3 text-xs text-neutral-200 shadow-lg backdrop-blur"
+      className="absolute bottom-8 left-3 right-3 rounded-lg sm:left-auto sm:w-60 border border-white/10 bg-neutral-950/85 p-3 text-xs text-neutral-200 shadow-lg backdrop-blur"
     >
       <header className="mb-1 flex items-center justify-between">
         <h2 className="flex items-center gap-1.5 font-semibold text-white">

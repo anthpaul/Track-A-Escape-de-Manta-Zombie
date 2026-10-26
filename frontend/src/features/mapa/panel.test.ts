@@ -49,7 +49,7 @@ test("the summary carries round, turn, totals and survival rate", () => {
     { enRuta: 50, aSalvo: 20, mordidos: 10, total: 80 },
   );
   // Survival = everyone not bitten (on the road or safe) over the total.
-  assert.equal(r.supervivenciaPct, 88);
+  assert.equal(r.supervivenciaPct, 87);
   assert.equal(r.callesBloqueadas, 1);
 });
 
@@ -59,6 +59,11 @@ test("shelters show their name, occupancy and whether they are full", () => {
     { id: "R-01", nombre: "Estadio Jocay", ocupacion: 10, capacidad: 50, lleno: false },
     { id: "R-02", nombre: "ULEAM", ocupacion: 40, capacidad: 40, lleno: true },
   ]);
+});
+
+test("one bitten survivor out of many never shows as 100%", () => {
+  const casi = { ...snapshot(null), metricas: { vivos: 299, aSalvo: 0, mordidos: 1, p95ms: null } };
+  assert.equal(resumenPanel(grafo, casi).supervivenciaPct, 99);
 });
 
 test("an empty round reports 100% survival instead of dividing by zero", () => {

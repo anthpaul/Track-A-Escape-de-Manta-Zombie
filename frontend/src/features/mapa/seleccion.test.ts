@@ -58,6 +58,11 @@ test("a route follows street geometry, reoriented to the walking direction", () 
   ]);
 });
 
+test("a route stops at an unknown node instead of jumping across it", () => {
+  const fc = rutaAGeoJSON(grafo, ["N-0001", "N-0002", "N-9999", "N-0003"]);
+  assert.deepEqual(fc.features[0].geometry.coordinates.at(-1), [-80.71, -0.95]);
+});
+
 test("a route with fewer than two nodes draws nothing", () => {
   assert.equal(rutaAGeoJSON(grafo, ["N-0001"]).features.length, 0);
 });
