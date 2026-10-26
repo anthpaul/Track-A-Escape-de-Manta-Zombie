@@ -51,7 +51,7 @@ export default function Leyenda() {
           aria-expanded={abierta}
           className="flex w-full items-center justify-between"
         >
-          <CardTitle className="flex items-center gap-1.5 text-base">
+          <CardTitle className="flex items-center gap-1.5 text-base text-primary">
             <List className="size-4" aria-hidden />
             Leyenda
           </CardTitle>

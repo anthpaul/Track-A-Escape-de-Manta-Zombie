@@ -49,7 +49,7 @@ export default function PanelMetricas({ resumen }: { resumen: ResumenPanel }) {
       className="absolute left-3 right-3 top-12 bg-card/85 backdrop-blur sm:left-auto sm:top-3 sm:w-72"
     >
       <CardHeader className="flex items-baseline justify-between">
-        <CardTitle className="text-xl">Ronda {resumen.ronda}</CardTitle>
+        <CardTitle className="text-xl text-primary">Ronda {resumen.ronda}</CardTitle>
         <span className="tabular-nums text-muted-foreground">Turno {resumen.turno}</span>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -72,7 +72,7 @@ export default function PanelMetricas({ resumen }: { resumen: ResumenPanel }) {
         </dl>
 
         <div>
-          <h3 className="mb-1 font-heading text-sm">Refugios</h3>
+          <h3 className="mb-1 font-heading text-sm text-primary">Refugios</h3>
           <ul className="space-y-1.5">
             {resumen.refugios.map((r) => (
               <li key={r.id}>
