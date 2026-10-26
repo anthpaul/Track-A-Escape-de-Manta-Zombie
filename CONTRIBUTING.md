@@ -13,7 +13,7 @@ npm test -w shared
 
 ### Credenciales AWS: siempre con el perfil `spookython`
 
-Cada integrante usa **su propio** usuario IAM (`anthony-dev`, `kevin-dev`, `Alex-dev`). Nunca se comparten access keys.
+Cada integrante usa **su propio** usuario IAM (`<nombre>-dev`). Nunca se comparten access keys. Los nombres reales de usuarios no van en el repo (`AGENTS.md`).
 
 Usamos un perfil con nombre para no mezclar esta cuenta con otras que tengas configuradas (por ejemplo, la del hackathon de práctica):
 
