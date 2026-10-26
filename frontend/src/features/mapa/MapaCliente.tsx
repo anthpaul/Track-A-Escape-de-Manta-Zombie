@@ -6,6 +6,9 @@ import { grafoMini } from "./mocks/grafo-mini";
 import { useSimulacionMock } from "./mocks/useSimulacionMock";
 import type { ConfigSimulacion } from "./mocks/simulacion";
 import MedidorFps from "./MedidorFps";
+import PanelMetricas from "./PanelMetricas";
+import Leyenda from "./Leyenda";
+import { resumenPanel } from "./panel";
 
 // MapLibre needs window and WebGL, so it is never prerendered (ssr: false only works in Client Components).
 const MapaVivo = dynamic(() => import("./MapaVivo"), {
@@ -30,15 +33,18 @@ export default function MapaCliente() {
   // Same Set instance while the blocked list is unchanged, so street GeoJSON is not rebuilt every turn.
   const clave = snapshot.aristasBloqueadas.join(",");
   const aristasBloqueadas = useMemo(() => new Set(clave ? clave.split(",") : []), [clave]);
+  const resumen = useMemo(() => resumenPanel(grafo, snapshot), [grafo, snapshot]);
 
   return (
     <div className="relative h-full w-full">
       <MapaVivo grafo={grafo} snapshot={snapshot} aristasBloqueadas={aristasBloqueadas} />
       {esPrueba && (
         <span className="absolute left-3 top-3 rounded bg-amber-500/90 px-2 py-1 text-xs font-medium text-black">
-          Datos de prueba · turno {snapshot.turno}
+          Datos de prueba
         </span>
       )}
+      <PanelMetricas resumen={resumen} />
+      <Leyenda />
       <MedidorFps />
     </div>
   );

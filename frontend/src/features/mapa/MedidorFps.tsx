@@ -29,7 +29,7 @@ export default function MedidorFps() {
 
   if (!visible) return null;
   return (
-    <span className="absolute bottom-8 left-3 rounded bg-black/80 px-2 py-1 font-mono text-xs text-lime-300">
+    <span className="absolute left-3 top-12 rounded bg-black/80 px-2 py-1 font-mono text-xs text-lime-300">
       {fps} FPS
     </span>
   );
