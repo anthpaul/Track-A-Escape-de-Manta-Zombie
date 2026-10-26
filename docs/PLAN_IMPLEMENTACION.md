@@ -20,6 +20,8 @@
 
 El cambio de Leaflet a MapLibre de la sección 9 **ya está aplicado** en `AGENTS.md` §§2, 3, 6 y 9.
 
+**Precisiones del grafo, sin cambio de alcance:** para ejecutar T0.2 y T0.3, consultar `docs/CONTRATO_GRAFO.md`, sección «Aplicación en las tareas existentes»: geometrías válidas también en fixtures, extremos normalizados con validación exacta y comprobación del puente real de R2 después de simplificar. Q4 permanece pendiente; no se asignan capacidades finales ni se activa el límite Pro. Se mantienen las tareas, responsables, dependencias, prioridades y arquitectura de este plan. Esta actualización es documental; no implementa schemas, modifica mocks ni autoriza la extracción OSM.
+
 ## 0. Objetivo y alcance
 
 Construir una **plataforma de simulación y monitoreo de evacuación en tiempo real** desplegada en AWS. El simulador mueve zombies y administra el estado del mundo; por cada sobreviviente y turno consulta `POST /paso`, y el motor devuelve un siguiente nodo válido hacia un refugio. El dashboard permite observar el estado general y explorar individuos sin saturar el mapa.

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import MapaCliente from "@/features/mapa/MapaCliente";
+import { PantallaMapa } from "@/features/mapa";
 
 export const metadata: Metadata = {
   title: "Mapa en vivo · Escape de Manta Zombie",
@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function MapaPage() {
   return (
-    <main className="h-dvh w-full bg-neutral-950">
-      <MapaCliente />
+    <main className="h-dvh w-full bg-background">
+      <PantallaMapa />
     </main>
   );
 }

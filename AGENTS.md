@@ -160,7 +160,7 @@ Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con expor
 ```
 ├── shared/       data/manta.json (grafo estático) · grafo.ts (A*, vecinos) · reglas.ts (zombies, mordidas) · schemas.ts · errors.ts
 ├── backend/src/  handler.ts · app.ts · dev.ts · routes/paso.ts · routes/estado.ts · motor/ (costos de peligro, refugios) · db/
-├── frontend/src/ app/ (/, /mapa) · features/mapa/ (MapLibre, fuentes y capas GeoJSON, polling) · lib/
+├── frontend/src/ app/ (/, /mapa) · features/mapa/ (domain/ · map/ · data/ · ui/, ver su README) · components/ui/ · lib/
 ├── tools/        osm/ (extracción del grafo) · simulador/ (rondas, métricas)
 ├── infra/        *.tf
 ├── docs/         arquitectura.png + .drawio · costos.md · budget.png
@@ -185,6 +185,8 @@ type Refugio = { id: string; nodo: string; nombre: string; capacidad: number }  
 ```
 
 Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · callejon 1.0`. Tiempo de una calle = `distancia_m / velocidad`.
+
+**Acuerdo de exportación del grafo (Alex, 26 de octubre):** ver `docs/CONTRATO_GRAFO.md`. Para el juego se usan calles bidireccionales y una sola conexión por pareja de nodos (la más corta si hay paralelas), conservando geometrías reales. Los refugios elegidos son ULEAM, Faro de Manta (`379H+W6R`), Faro de Jaramijó y aeropuerto Eloy Alfaro, con capacidad **provisional de 200 cada uno**, sin activar el límite Pro ni dar Q4 por respondida. La selección de corredores, la verificación E del grafo estático y las limitaciones geográficas se documentan en `shared/data/README.md`. La integración con el motor y el simulador sigue pendiente.
 
 **Por qué no está en DynamoDB:** no cambia durante la partida. Leerlo en cada `/paso` sumaría latencia sin aportar nada. Cargarlo en memoria de la Lambda **no** es la trampa del jurado: la trampa es guardar en memoria el estado **que cambia** (zombies, sobrevivientes).
 
@@ -312,6 +314,7 @@ GET  /api/health                   público → { ok: true, service }
 - **Rendimiento de `/paso`:** nada de `await` innecesarios, una sola lectura a DynamoDB por turno y por instancia, A* con cola de prioridad (binary heap) y vecinos precalculados en un `Map` al cargar el grafo.
 - Bundle de la Lambda chico (sin dependencias pesadas) para que el arranque en frío quede lejos de 500 ms. Memoria de la Lambda: **1024 MB** (más CPU = A* más rápido y arranque más corto).
 - Las reglas del juego en `shared/`, con tests: movimiento de cada tipo de zombie, mordida por nodo, mordida por cruce, horda que bloquea vecinos, dormido que despierta a 2 nodos o menos.
+- **Regla de oro de UI:** nada de emojis en ningún lado (código, UI, íconos del mapa). Todos los íconos son de **Lucide** (`lucide-react`); los del mapa se generan desde los mismos componentes Lucide (`capas/RegistroIconos.tsx`). Antes de crear un componente visual, reutilizar los de `frontend/src/components/ui/` (`Card`, `Button`, `Dialog`, `Select`…). Tipografía: **Griffy** para títulos (`font-heading`) y **Nunito** para texto y números (`font-sans`); tema oscuro en todo el sitio. **Colores de la interfaz:** siempre por tokens del tema (`bg-background`, `bg-card`, `text-primary`, `text-muted-foreground`…), definidos en `globals.css` con la paleta Halloween (violetas `dark_amethyst`/`indigo_ink`/`royal_violet` y un solo naranja, `deep_saffron` `#ff9100`, como acento). Nada de colores sueltos como `bg-neutral-950`. Los colores de las **capas del mapa** no son del tema: tienen significado (rojo peligro, verde refugio, azul sobreviviente, amarillo ruta) y viven en `features/mapa/simbologia/colores.ts`.
 - Front: TanStack Query con `refetchInterval: 2000` para `/estado`. MapLibre solo en client components (`"use client"` + `dynamic(..., { ssr: false })`, porque usa `window` y WebGL). Reglas del mapa en §2.
 
 ## 7. Flujo de trabajo con Git

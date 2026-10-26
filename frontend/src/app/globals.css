@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-nunito);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-griffy);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -83,38 +83,41 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Halloween theme (dark): purples for surfaces, one orange accent. Map layer colors are NOT
+   theme tokens: they carry meaning (danger, shelter, survivor, route) and live in capas/estilos.ts.
+   Palette: dark_amethyst, indigo_ink, royal_violet, lavender_purple, deep_saffron. Every text pair ≥ 7:1. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0f001d; /* dark_amethyst 200 */
+  --foreground: #ecdcf8; /* lavender_purple 900 */
+  --card: #18042b; /* indigo_ink 200 */
+  --card-foreground: #ecdcf8;
+  --popover: #18042b;
+  --popover-foreground: #ecdcf8;
+  --primary: #ff9100; /* deep_saffron 500 */
+  --primary-foreground: #07000e; /* dark_amethyst 100 */
+  --secondary: #31114c; /* royal_violet 200 */
+  --secondary-foreground: #ecdcf8;
+  --muted: #240541; /* indigo_ink 300 */
+  --muted-foreground: #c596eb; /* lavender_purple 700 */
+  --accent: #491a73; /* royal_violet 300 */
+  --accent-foreground: #ecdcf8;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgb(157 78 221 / 25%); /* lavender_purple 500 */
+  --input: rgb(157 78 221 / 30%);
+  --ring: #ff9100;
+  --chart-1: #ff9100;
+  --chart-2: #9d4edd;
+  --chart-3: #ffbd66;
+  --chart-4: #7b2cbf;
+  --chart-5: #c596eb;
+  --sidebar: #18042b;
+  --sidebar-foreground: #ecdcf8;
+  --sidebar-primary: #ff9100;
+  --sidebar-primary-foreground: #07000e;
+  --sidebar-accent: #491a73;
+  --sidebar-accent-foreground: #ecdcf8;
+  --sidebar-border: rgb(157 78 221 / 25%);
+  --sidebar-ring: #ff9100;
 }
 
 @layer base {
