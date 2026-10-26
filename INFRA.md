@@ -103,7 +103,7 @@ El modelo concreto (ítems, claves y access patterns) está en `AGENTS.md` §4.2
 
 - **Primero las preguntas, después las claves.** Cada endpoint o pantalla → una pregunta concreta → una operación (`GetItem` o `Query`). Si se empieza por las tablas, se termina en `Scan`.
 - **Una partición por partida** (`PK = PARTIDA#<id>`): todo lo de una partida sale con un `Query`.
-- **Prefijos en `SK`** (`TURNO#`, `RUTA#`, `REFUGIO#`): un `begins_with` responde "todos los X".
+- **Prefijos en `SK`** (`TURNO#`, `REFUGIO#`): un `begins_with` responde "todos los X".
 - **Números con ceros a la izquierda en claves** (`TURNO#000142`): ordenan bien como texto.
 - **`data` como map** con el payload validado por Zod; las claves quedan afuera.
 - **Prohibido `Scan`** en producción. Si un patrón lo necesita, el diseño está mal.

@@ -21,7 +21,7 @@ Motor de rutas en tiempo real sobre AWS. Cada 2 segundos los zombies se mueven p
 - **Grafo de Manta:** ~300 intersecciones y sus calles (avenida, calle, callejón, puente), extraídas de OpenStreetMap, con 4 refugios.
 - **Simulador del apocalipsis:** turnos de 2 s; caminantes, corredores, hordas y dormidos; puentes que colapsan y calles que se bloquean.
 - **`POST /paso`:** recalcula la ruta de cada sobreviviente en cada turno con los zombies de ese turno.
-- **Mapa en vivo:** zombies (un ícono por tipo), sobrevivientes, rutas planificadas y refugios, actualizado cada turno.
+- **Mapa en vivo:** zombies (un ícono por tipo), sobrevivientes, refugios, calles bloqueadas y zonas de horda, actualizado cada turno; al seleccionar un sobreviviente se ve su ruta planificada.
 
 ## Cómo se usa el mapa
 
@@ -152,7 +152,7 @@ Costo mensual estimado y gasto real del evento: `docs/costos.md`.
 ```text
 shared/     grafo, reglas del juego y schemas compartidos por el motor y el simulador
 backend/    Lambda con Hono: /api/paso, /api/estado, /api/health
-frontend/   mapa en vivo (Next.js + Leaflet)
+frontend/   mapa en vivo (Next.js + MapLibre GL)
 tools/      extracción del grafo desde OSM y simulador
 infra/      Terraform
 docs/       arquitectura, costos y captura del Budget
