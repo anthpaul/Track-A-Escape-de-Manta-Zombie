@@ -36,12 +36,12 @@ export const capaCalles: LayerProps = {
 
 export const capaRefugios: LayerProps = {
   id: "refugios",
-  type: "circle",
-  paint: {
-    "circle-radius": 9,
-    "circle-color": COLOR_REFUGIO,
-    "circle-stroke-color": "#ffffff",
-    "circle-stroke-width": 2,
+  type: "symbol",
+  layout: {
+    "icon-image": "refugio",
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.45, 16, 0.8],
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
   },
 };
 

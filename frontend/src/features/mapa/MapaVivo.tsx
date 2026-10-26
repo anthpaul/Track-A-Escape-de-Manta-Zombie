@@ -4,6 +4,7 @@ import MapaBase from "./MapaBase";
 import CapaGrafo from "./capas/CapaGrafo";
 import CapaVivo from "./capas/CapaVivo";
 import CapaSeleccion from "./capas/CapaSeleccion";
+import RegistroIconos from "./capas/RegistroIconos";
 import type { Grafo, Snapshot } from "./tipos";
 
 type Props = {
@@ -27,6 +28,7 @@ export default function MapaVivo({ grafo, snapshot, aristasBloqueadas, seguidoId
         if (typeof enRuta?.propiedades.id === "string") onSeleccionar(enRuta.propiedades.id);
       }}
     >
+      <RegistroIconos />
       <CapaGrafo grafo={grafo} aristasBloqueadas={aristasBloqueadas} />
       <CapaSeleccion grafo={grafo} snapshot={snapshot} seguidoId={seguidoId} ruta={ruta} />
       <CapaVivo grafo={grafo} snapshot={snapshot} />

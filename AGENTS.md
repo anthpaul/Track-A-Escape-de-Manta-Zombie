@@ -312,6 +312,7 @@ GET  /api/health                   público → { ok: true, service }
 - **Rendimiento de `/paso`:** nada de `await` innecesarios, una sola lectura a DynamoDB por turno y por instancia, A* con cola de prioridad (binary heap) y vecinos precalculados en un `Map` al cargar el grafo.
 - Bundle de la Lambda chico (sin dependencias pesadas) para que el arranque en frío quede lejos de 500 ms. Memoria de la Lambda: **1024 MB** (más CPU = A* más rápido y arranque más corto).
 - Las reglas del juego en `shared/`, con tests: movimiento de cada tipo de zombie, mordida por nodo, mordida por cruce, horda que bloquea vecinos, dormido que despierta a 2 nodos o menos.
+- **Regla de oro de UI:** nada de emojis en ningún lado (código, UI, íconos del mapa). Todos los íconos son de **Lucide** (`lucide-react`); los del mapa se generan desde los mismos componentes Lucide (`capas/RegistroIconos.tsx`). Antes de crear un componente visual, reutilizar los de `frontend/src/components/ui/` (`Card`, `Button`, `Dialog`, `Select`…). Tipografía: **Griffy** para títulos (`font-heading`) y **Nunito** para texto y números (`font-sans`); tema oscuro en todo el sitio.
 - Front: TanStack Query con `refetchInterval: 2000` para `/estado`. MapLibre solo en client components (`"use client"` + `dynamic(..., { ssr: false })`, porque usa `window` y WebGL). Reglas del mapa en §2.
 
 ## 7. Flujo de trabajo con Git
