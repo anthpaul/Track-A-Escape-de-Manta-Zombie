@@ -43,4 +43,10 @@ resource "aws_dynamodb_table" "main" {
   point_in_time_recovery {
     enabled = true
   }
+
+  # Every item carries `ttl` (epoch seconds) so round data expires on its own (AGENTS.md §4.2).
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
 }

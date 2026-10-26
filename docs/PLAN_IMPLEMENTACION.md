@@ -56,6 +56,8 @@ Usar un identificador de simulación, `roundId`, `turn`, `graphVersion` y `snaps
 
 ## 2. Arquitectura propuesta
 
+> ⚠️ **Superado en parte:** el stack es Next.js en `frontend/` (A1), el simulador corre como Lambda (A7) y no hay API administrativa en P0 (A5). Ver la tabla de ajustes y `AGENTS.md` §1–§2.
+
 ```mermaid
 flowchart TD
   A[Panel React + MapLibre] -->|eventos admin / control demo| B[API administrativa]
@@ -75,6 +77,8 @@ flowchart TD
 **Advertencia:** `react-map-gl` usa integración específica de MapLibre y las versiones de sus paquetes deben ser compatibles. Verificar la licencia/uso del estilo CARTO, el origen de tiles y la atribución. MapLibre puede utilizar estilos compatibles de Amazon Location, pero el cambio puede requerir autenticación, configuración y revisión de compatibilidad: no prometer que siempre es solo cambiar una URL.
 
 ## 3. Modelo de datos mínimo
+
+> ⚠️ **Superado:** el modelo vigente está en español en `AGENTS.md` §4 (A2): `Nodo`, `Calle`, `Refugio`, `Zombie`, `Sobreviviente`, `EstadoTurno`. Los nombres en inglés de abajo son solo referencia histórica.
 
 ```text
 Node { id, lat, lng }
@@ -107,6 +111,8 @@ Content-Type: application/json
 **Reglas:** responder en <500 ms; nodo vecino mediante arista no bloqueada o nodo actual. Si respuesta tarda o es inválida, el simulador aplica quedarse quieto. No añadir campos obligatorios a este contrato. Validar `x-api-key`, sin escribir secretos en código o logs.
 
 ### Interfaces internas propuestas (no exigidas)
+
+> ⚠️ **Superado:** los endpoints vigentes son los de `AGENTS.md` §5 (`/api/estado`, `/api/sobrevivientes/:id/ruta`). Los de `/admin/*` son P1 (A5) y no se construyen en P0.
 
 - `GET /estado`: snapshot por turno para simulador/dashboard, o WebSocket equivalente.
 - `GET /survivors/:id/route`: ruta planificada solo para el sobreviviente seleccionado, indicando turno/versión; puede resolverse localmente si existe información suficiente.
