@@ -160,7 +160,7 @@ Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con expor
 ```
 ├── shared/       data/manta.json (grafo estático) · grafo.ts (A*, vecinos) · reglas.ts (zombies, mordidas) · schemas.ts · errors.ts
 ├── backend/src/  handler.ts · app.ts · dev.ts · routes/paso.ts · routes/estado.ts · motor/ (costos de peligro, refugios) · db/
-├── frontend/src/ app/ (/, /mapa) · features/mapa/ (MapLibre, fuentes y capas GeoJSON, polling) · lib/
+├── frontend/src/ app/ (/, /mapa) · features/mapa/ (domain/ · map/ · data/ · ui/, ver su README) · components/ui/ · lib/
 ├── tools/        osm/ (extracción del grafo) · simulador/ (rondas, métricas)
 ├── infra/        *.tf
 ├── docs/         arquitectura.png + .drawio · costos.md · budget.png
