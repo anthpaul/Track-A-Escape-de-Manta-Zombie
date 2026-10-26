@@ -3,8 +3,8 @@ import type { LayerProps } from "react-map-gl/maplibre";
 // Colors are data-driven expressions, so one layer styles every street without per-feature loops.
 export const COLOR_CALLE = {
   avenida: "#f59e0b",
-  calle: "#a3a3a3",
-  callejon: "#525252",
+  calle: "#d4d4d4",
+  callejon: "#8a8a8a",
   puente: "#38bdf8",
   bloqueada: "#ef4444",
 } as const;
@@ -52,8 +52,10 @@ export const capaRefugiosEtiquetas: LayerProps = {
     "text-field": ["get", "nombre"],
     "text-font": FUENTE_ETIQUETAS,
     "text-size": 12,
-    "text-offset": [0, 1.4],
-    "text-anchor": "top",
+    // Moves the label to whichever side fits, so it is never cut at the screen edge.
+    "text-variable-anchor": ["top", "bottom", "left", "right"],
+    "text-radial-offset": 1.2,
+    "text-justify": "auto",
   },
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
