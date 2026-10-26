@@ -5,7 +5,7 @@ import { Layer, Source, useMap } from "react-map-gl/maplibre";
 import { sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "../vivo";
 import type { Grafo, Snapshot } from "../tipos";
 import { capaSobrevivientes, capaZombies, capaZonasHorda } from "./estilos";
-import { ICONOS_ZOMBIE, dibujarIcono, type TipoZombieVisible } from "./iconos";
+import { ICONOS_ZOMBIE, dibujarFlecha, dibujarIcono, type TipoZombieVisible } from "./iconos";
 
 type Props = { grafo: Grafo; snapshot: Snapshot };
 
@@ -21,6 +21,7 @@ export default function CapaVivo({ grafo, snapshot }: Props) {
         const nombre = `zombie-${tipo}`;
         if (!mapa.hasImage(nombre)) mapa.addImage(nombre, dibujarIcono(tipo), { pixelRatio: 2 });
       }
+      if (!mapa.hasImage("flecha")) mapa.addImage("flecha", dibujarFlecha(), { pixelRatio: 2 });
     };
     registrar();
     // A style reload drops custom images; register them again when MapLibre asks for one.

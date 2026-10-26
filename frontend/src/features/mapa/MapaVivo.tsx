@@ -3,16 +3,30 @@
 import MapaBase from "./MapaBase";
 import CapaGrafo from "./capas/CapaGrafo";
 import CapaVivo from "./capas/CapaVivo";
+import CapaSeleccion from "./capas/CapaSeleccion";
 import type { Grafo, Snapshot } from "./tipos";
 
-type Props = { grafo: Grafo; snapshot: Snapshot; aristasBloqueadas: ReadonlySet<string> };
+type Props = {
+  grafo: Grafo;
+  snapshot: Snapshot;
+  aristasBloqueadas: ReadonlySet<string>;
+  seguidoId: string | null;
+  ruta: string[];
+  onSeleccionar: (sobrevivienteId: string) => void;
+};
 
 // Presentational map. Loaded as one client-only chunk; layers draw in mount order
-// (streets, shelters, horde zones, survivors, zombies on top).
-export default function MapaVivo({ grafo, snapshot, aristasBloqueadas }: Props) {
+// (streets, shelters, arrows and route, horde zones, survivors, zombies on top).
+export default function MapaVivo({ grafo, snapshot, aristasBloqueadas, seguidoId, ruta, onSeleccionar }: Props) {
   return (
-    <MapaBase>
+    <MapaBase
+      capasInteractivas={["sobrevivientes"]}
+      onClickEntidad={(_, propiedades) => {
+        if (typeof propiedades.id === "string") onSeleccionar(propiedades.id);
+      }}
+    >
       <CapaGrafo grafo={grafo} aristasBloqueadas={aristasBloqueadas} />
+      <CapaSeleccion grafo={grafo} snapshot={snapshot} seguidoId={seguidoId} ruta={ruta} />
       <CapaVivo grafo={grafo} snapshot={snapshot} />
     </MapaBase>
   );

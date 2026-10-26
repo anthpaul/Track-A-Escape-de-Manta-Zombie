@@ -32,3 +32,21 @@ export function dibujarIcono(tipo: TipoZombieVisible): ImageData {
 
   return ctx.getImageData(0, 0, TAMANO, TAMANO);
 }
+
+// Arrow head for next-step arrows; points north and is rotated by the layer (icon-rotate).
+export function dibujarFlecha(): ImageData {
+  const lado = 32;
+  const canvas = document.createElement("canvas");
+  canvas.width = lado;
+  canvas.height = lado;
+  const ctx = canvas.getContext("2d")!;
+  ctx.beginPath();
+  ctx.moveTo(lado / 2, 4);
+  ctx.lineTo(lado - 6, lado - 6);
+  ctx.lineTo(lado / 2, lado - 12);
+  ctx.lineTo(6, lado - 6);
+  ctx.closePath();
+  ctx.fillStyle = "#93c5fd";
+  ctx.fill();
+  return ctx.getImageData(0, 0, lado, lado);
+}

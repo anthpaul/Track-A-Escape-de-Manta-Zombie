@@ -101,3 +101,57 @@ export const capaZombies: LayerProps = {
     "icon-ignore-placement": true,
   },
 };
+
+export const COLOR_RUTA = "#facc15";
+const COLOR_FLECHA = "#93c5fd";
+
+// Next-step arrow per direction; thicker when more survivors take it.
+export const capaFlechasLineas: LayerProps = {
+  id: "flechas-lineas",
+  type: "line",
+  layout: { "line-cap": "round" },
+  paint: {
+    "line-color": COLOR_FLECHA,
+    "line-width": ["interpolate", ["linear"], ["get", "cantidad"], 1, 1.5, 20, 4],
+    "line-opacity": 0.75,
+  },
+};
+
+export const capaFlechasPuntas: LayerProps = {
+  id: "flechas-puntas",
+  type: "symbol",
+  layout: {
+    "icon-image": "flecha",
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.3, 16, 0.6],
+    "icon-rotate": ["get", "rumbo"],
+    "icon-rotation-alignment": "map",
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
+  },
+};
+
+// Planned route of the followed survivor: soft glow under a solid line.
+export const capaRutaHalo: LayerProps = {
+  id: "ruta-halo",
+  type: "line",
+  layout: { "line-cap": "round", "line-join": "round" },
+  paint: { "line-color": COLOR_RUTA, "line-width": 12, "line-opacity": 0.2 },
+};
+
+export const capaRuta: LayerProps = {
+  id: "ruta",
+  type: "line",
+  layout: { "line-cap": "round", "line-join": "round" },
+  paint: { "line-color": COLOR_RUTA, "line-width": 4 },
+};
+
+export const capaSeguido: LayerProps = {
+  id: "seguido",
+  type: "circle",
+  paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 7, 16, 12],
+    "circle-color": "rgba(0,0,0,0)",
+    "circle-stroke-color": COLOR_RUTA,
+    "circle-stroke-width": 3,
+  },
+};

@@ -61,3 +61,21 @@ test("sleepers are never part of the published snapshot", () => {
   const snap = crearSimulacion(grafoMini, config, AHORA);
   assert.ok(snap.zombies.every((z) => z.tipo !== "dormido"));
 });
+
+test("the mock route goes from the survivor to a shelter through neighbors", async () => {
+  const { rutaHaciaRefugio } = await import("./simulacion");
+  const adyacencia = vecinos(grafoMini);
+  const snap = crearSimulacion(grafoMini, config, AHORA);
+  const objetivo = snap.sobrevivientes.find((x) => x.estado === "en_ruta")!;
+  const ruta = rutaHaciaRefugio(grafoMini, snap, objetivo.id);
+  assert.equal(ruta[0], objetivo.nodo);
+  assert.ok(grafoMini.refugios.some((r) => r.nodo === ruta.at(-1)));
+  for (let i = 1; i < ruta.length; i++) assert.ok(adyacencia.get(ruta[i - 1])?.includes(ruta[i]));
+});
+
+test("a survivor who is not on the road has no route", async () => {
+  const { rutaHaciaRefugio } = await import("./simulacion");
+  const snap = crearSimulacion(grafoMini, config, AHORA);
+  const salvado = { ...snap, sobrevivientes: [{ id: "S-0001", nodo: grafoMini.refugios[0].nodo, estado: "a_salvo" as const }] };
+  assert.deepEqual(rutaHaciaRefugio(grafoMini, salvado, "S-0001"), []);
+});
