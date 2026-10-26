@@ -166,4 +166,4 @@ docs/       arquitectura, costos y captura del Budget
 | Kevin | Motor de rutas (`/paso`), reglas de peligro, refugios |
 | Alex | Grafo de Manta, simulador, infraestructura y latencia |
 
-Cómo trabajamos: `CONTRIBUTING.md`.
+Cómo trabajamos: `CONTRIBUTING.md`. Hoja de ruta paso a paso: `docs/HOJA_DE_RUTA.md`.
