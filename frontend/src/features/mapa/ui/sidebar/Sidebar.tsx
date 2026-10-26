@@ -24,7 +24,7 @@ export default function Sidebar({ grafo, resumen, seguido, ruta, elegidoAMano, e
   return (
     <aside
       aria-label="Información de la ronda"
-      className="flex min-h-0 flex-col border-t border-border bg-background md:h-full md:w-[22rem] md:shrink-0 md:border-l md:border-t-0"
+      className="flex min-h-0 w-full flex-col border-t border-border bg-background md:h-full md:w-[22rem] md:shrink-0 md:border-l md:border-t-0"
     >
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="min-w-0">

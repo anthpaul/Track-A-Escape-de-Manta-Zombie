@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 
 // Guards the inward dependency rule documented in README.md, so it cannot erode silently.
 const RAIZ = __dirname;
@@ -14,9 +14,15 @@ function archivos(carpeta: string): string[] {
   });
 }
 
+// Relative imports are resolved to "@/features/mapa/..." so "../../map/x" cannot sneak past the rules.
 function importsDe(ruta: string): string[] {
   const fuente = readFileSync(ruta, "utf-8");
-  return [...fuente.matchAll(/from\s+"([^"]+)"|import\("([^"]+)"\)/g)].map((m) => m[1] ?? m[2]);
+  return [...fuente.matchAll(/from\s+"([^"]+)"|import\("([^"]+)"\)/g)].map((m) => {
+    const spec = m[1] ?? m[2];
+    if (!spec.startsWith(".")) return spec;
+    const absoluto = relative(join(RAIZ, "..", ".."), resolve(dirname(ruta), spec)).split(sep).join("/");
+    return `@/${absoluto}`;
+  });
 }
 
 const capa = (ruta: string) => relative(RAIZ, ruta).split(sep)[0];
