@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/dev.ts",
+    "build": "esbuild src/handler.ts --bundle --platform=node --target=node24 --format=cjs --outfile=dist/handler.js --external:@aws-sdk/*",
+    "clean": "rimraf dist",
+    "typecheck": "tsc",
+    "test": "tsx --test src/**/*.test.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@abcstack/shared": "1.0.0",
+    "@aws-sdk/client-dynamodb": "3.1156.0",
+    "@aws-sdk/lib-dynamodb": "3.1156.0",
+    "@hono/aws-lambda": "1.0.1",
+    "@hono/node-server": "2.1.5",
+    "date-fns": "4.4.0",
+    "hono": "4.13.13",
+    "ulid": "3.0.2",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.164",
+    "@types/node": "26.6.5",
+    "esbuild": "0.28.2",
+    "rimraf": "6.1.3",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2"
+  }
+}
