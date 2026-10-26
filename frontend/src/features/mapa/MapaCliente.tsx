@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { grafoMini } from "./mocks/grafo-mini";
 import { useSimulacionMock } from "./mocks/useSimulacionMock";
-import type { ConfigSimulacion } from "./mocks/simulacion";
+import { rutaHaciaRefugio, type ConfigSimulacion } from "./mocks/simulacion";
 import MedidorFps from "./MedidorFps";
 import PanelMetricas from "./PanelMetricas";
 import Leyenda from "./Leyenda";
 import { resumenPanel } from "./panel";
+import { elegirSeguido } from "./seleccion";
+import TarjetaSobreviviente from "./TarjetaSobreviviente";
 
 // MapLibre needs window and WebGL, so it is never prerendered (ssr: false only works in Client Components).
 const MapaVivo = dynamic(() => import("./MapaVivo"), {
@@ -35,15 +37,31 @@ export default function MapaCliente() {
   const aristasBloqueadas = useMemo(() => new Set(clave ? clave.split(",") : []), [clave]);
   const resumen = useMemo(() => resumenPanel(grafo, snapshot), [grafo, snapshot]);
 
+  // There is always a followed survivor with a visible planned route (plan A9): the one picked
+  // on the map while it is on the road, otherwise the lowest on-road id.
+  const [preferido, setPreferido] = useState<string | null>(null);
+  const seguidoId = useMemo(() => elegirSeguido(snapshot.sobrevivientes, preferido), [snapshot.sobrevivientes, preferido]);
+  // Mock of GET /api/sobrevivientes/:id/ruta (K6); N4 replaces it with the real endpoint.
+  const ruta = useMemo(() => (seguidoId ? rutaHaciaRefugio(grafo, snapshot, seguidoId) : []), [grafo, snapshot, seguidoId]);
+  const seguido = snapshot.sobrevivientes.find((s) => s.id === seguidoId) ?? null;
+
   return (
     <div className="relative h-full w-full">
-      <MapaVivo grafo={grafo} snapshot={snapshot} aristasBloqueadas={aristasBloqueadas} />
+      <MapaVivo
+        grafo={grafo}
+        snapshot={snapshot}
+        aristasBloqueadas={aristasBloqueadas}
+        seguidoId={seguidoId}
+        ruta={ruta}
+        onSeleccionar={setPreferido}
+      />
       {esPrueba && (
         <span className="absolute left-3 top-3 rounded bg-amber-500/90 px-2 py-1 text-xs font-medium text-black">
           Datos de prueba
         </span>
       )}
       <PanelMetricas resumen={resumen} />
+      <TarjetaSobreviviente grafo={grafo} sobreviviente={seguido} ruta={ruta} elegidoAMano={seguidoId !== null && seguidoId === preferido} />
       <Leyenda />
       <MedidorFps />
     </div>

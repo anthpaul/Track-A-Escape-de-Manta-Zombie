@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Map from "react-map-gl/maplibre";
+import Map, { type MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { getVersion, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } from "./config";
@@ -10,8 +10,22 @@ import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } fro
 setWorkerUrl(`/maplibre-gl-worker.js?v=${getVersion()}`);
 
 // Presentational base map. Live layers (streets, zombies, survivors) are passed as children.
-export default function MapaBase({ children }: { children?: React.ReactNode }) {
+type Props = {
+  children?: React.ReactNode;
+  // Layers whose features react to clicks (pointer cursor on hover).
+  capasInteractivas?: string[];
+  // Receives every interactive feature under the pointer (they often overlap on one node).
+  onClickEntidad?: (entidades: { capa: string; propiedades: Record<string, unknown> }[]) => void;
+};
+
+export default function MapaBase({ children, capasInteractivas, onClickEntidad }: Props) {
   const [falloEstilo, setFalloEstilo] = useState(false);
+  const [sobreEntidad, setSobreEntidad] = useState(false);
+
+  const alHacerClick = (e: MapLayerMouseEvent) => {
+    const entidades = (e.features ?? []).map((f) => ({ capa: f.layer.id, propiedades: f.properties ?? {} }));
+    if (entidades.length > 0 && onClickEntidad) onClickEntidad(entidades);
+  };
 
   return (
     <div className="relative h-full w-full">
@@ -28,6 +42,11 @@ export default function MapaBase({ children }: { children?: React.ReactNode }) {
           if (!e.target.isStyleLoaded()) setFalloEstilo(true);
         }}
         onStyleData={() => setFalloEstilo(false)}
+        interactiveLayerIds={capasInteractivas}
+        onClick={alHacerClick}
+        onMouseEnter={() => setSobreEntidad(true)}
+        onMouseLeave={() => setSobreEntidad(false)}
+        cursor={sobreEntidad ? "pointer" : undefined}
       >
         {children}
       </Map>

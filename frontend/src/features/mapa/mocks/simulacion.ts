@@ -140,3 +140,25 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
 
   return completar(grafo, { turno, ronda: snap.ronda, zombies, aristasBloqueadas, sobrevivientes, generadoEn: ahora });
 }
+
+// Mock of GET /api/sobrevivientes/:id/ruta (K6): the node list from the survivor to the nearest
+// reachable shelter under the current snapshot. Same avoidance rules as the mock movement above.
+export function rutaHaciaRefugio(grafo: Grafo, snap: Snapshot, sobrevivienteId: string): string[] {
+  const s = snap.sobrevivientes.find((x) => x.id === sobrevivienteId);
+  if (!s || s.estado !== "en_ruta") return [];
+
+  const bloqueadas = new Set(snap.aristasBloqueadas);
+  const peligro = new Set([...snap.zombies.map((z) => z.nodo), ...nodosBloqueadosPorHordas(grafo, snap.zombies)]);
+  for (const r of grafo.refugios) peligro.delete(r.nodo);
+  const dist = distanciaARefugio(grafo, bloqueadas, peligro);
+
+  const ruta = [s.nodo];
+  // Each step lowers the distance by one, so the walk ends within the node count.
+  for (let i = 0; i < grafo.nodos.length; i++) {
+    const actual = ruta[ruta.length - 1];
+    const siguiente = proximoPaso(grafo, actual, dist, bloqueadas, peligro);
+    if (siguiente === actual) break;
+    ruta.push(siguiente);
+  }
+  return ruta;
+}
