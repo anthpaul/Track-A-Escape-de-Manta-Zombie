@@ -1,6 +1,6 @@
 # Infra — cómo bootstrapear y deployar
 
-Región `us-east-2` (la de la cuenta del equipo; `us-east-1` solo si la organización la exige, `AGENTS.md` Q1). Requisitos: Terraform `~> 1.9` y AWS CLI v2 configurado con **tu propio** usuario IAM (`aws sts get-caller-identity` debe mostrarlo).
+Región `us-east-2` (la de la cuenta del equipo; `us-east-1` solo si la organización la exige, `AGENTS.md` Q1). Requisitos: Terraform `~> 1.9` y AWS CLI v2 con **tu propio** usuario IAM en el perfil `spookython` (`$env:AWS_PROFILE = "spookython"`; ver `CONTRIBUTING.md`). `aws sts get-caller-identity` debe mostrar tu usuario.
 
 ## Qué se crea
 

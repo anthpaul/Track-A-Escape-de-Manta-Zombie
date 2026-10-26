@@ -343,7 +343,7 @@ T0.3 grafo → K1 A* → K3 /paso en AWS → S4 rondas → ajuste de costos → 
 ## 10. Secrets y cuenta
 
 - Nunca se commitean `.env*`, `*.tfvars`, `*.tfstate`, `.terraform/`, `*.csv`, keys ni la API key. Revisar con `git log -p` antes de hacer público el repo.
-- Cada integrante usa su usuario IAM con `aws configure` (región `us-east-2`). Los datos de la cuenta **no** van en este repo: el bucket del state va en `infra/backend.hcl` (gitignored) y la API key en `TF_VAR_api_key`.
+- Cada integrante usa su usuario IAM con `aws configure --profile spookython` y `AWS_PROFILE=spookython` (región `us-east-2`; ver `CONTRIBUTING.md`). Los datos de la cuenta **no** van en este repo: el bucket del state va en `infra/backend.hcl` (gitignored) y la API key en `TF_VAR_api_key`.
 
 ## 11. Lecciones aprendidas
 
