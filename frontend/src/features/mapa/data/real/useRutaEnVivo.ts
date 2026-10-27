@@ -11,7 +11,7 @@ export function useRutaEnVivo(sobrevivienteId: string | null, turno: number): st
   const consulta = useQuery({
     queryKey: ["ruta", sobrevivienteId, turno],
     queryFn: async ({ signal }): Promise<string[] | null> => {
-      const respuesta = await fetch(`${API_URL}/sobrevivientes/${sobrevivienteId}/ruta`, { signal, cache: "no-store" });
+      const respuesta = await fetch(`${API_URL}/sobrevivientes/${encodeURIComponent(sobrevivienteId!)}/ruta`, { signal, cache: "no-store" });
       if (!respuesta.ok) return null;
       return leerRuta(await respuesta.json(), sobrevivienteId!);
     },
