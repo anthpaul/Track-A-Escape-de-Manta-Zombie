@@ -24,8 +24,7 @@
 import type { Grafo, Refugio } from "@abcstack/shared";
 import { VELOCIDADES_M_S, type GrafoIndexado } from "@abcstack/shared";
 import { MinHeap } from "./min-heap";
-import type { MundoTurno } from "./fuente-mundo";
-import { calcularPeligros, costoPeligroArista, type Peligros } from "./peligros";
+import { calcularPeligros, costoPeligroArista, type MundoPeligros, type Peligros } from "./peligros";
 
 // Re-export so callers only need to import from astar.ts
 export type { Peligros };
@@ -136,7 +135,7 @@ interface NodoAstar {
 export function buscarRuta(
   nodoActual: string,
   contexto: ContextoGrafo,
-  mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,
+  mundo: MundoPeligros,
   peligrosPrecomputados?: Peligros,
 ): ResultadoBusqueda {
   const { indexado } = contexto;
