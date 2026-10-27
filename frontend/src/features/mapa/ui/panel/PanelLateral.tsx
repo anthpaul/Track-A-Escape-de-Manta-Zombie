@@ -1,15 +1,16 @@
 "use client";
 
-import { Activity, FlaskConical, HeartPulse } from "lucide-react";
+import { Activity, FlaskConical, HeartPulse, RefreshCw, WifiOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NivelLatencia, ResumenPanel } from "@/features/mapa/domain/resumen";
+import type { Conexion } from "@/features/mapa/domain/tipos";
 import IndicadorEnVivo from "./IndicadorEnVivo";
 
 type Props = {
   titulo: string;
   resumen: ResumenPanel;
   generadoEn: string;
-  esPrueba: boolean;
+  conexion: Conexion;
   children: React.ReactNode;
 };
 
@@ -23,7 +24,17 @@ const CLASE_LATENCIA: Record<NivelLatencia, string> = {
 
 // Side panel: tab title, round and turn, plus the live indicator, p95 and survival rate the
 // challenge cares about, always visible whatever the tab. Bottom sheet on phones.
-export default function PanelLateral({ titulo, resumen, generadoEn, esPrueba, children }: Props) {
+// Why the panel is not showing the live game: the operator must never mistake the simulation for it.
+const AVISO: Record<Exclude<Conexion, "en_vivo">, { texto: string; detalle: string; Icono: LucideIcon; clase: string }> = {
+  simulado: { texto: "SIMULADO", detalle: "Simulación local, sin API", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
+  conectando: { texto: "CONECTANDO · SIMULADO", detalle: "Esperando la primera respuesta de /api/estado", Icono: RefreshCw, clase: "bg-crimson-500 text-calabaza-900" },
+  reconectando: { texto: "RECONECTANDO", detalle: "La última consulta falló: se muestra el último turno real", Icono: RefreshCw, clase: "bg-otono-500 text-crimson-100" },
+  sin_partida: { texto: "SIN PARTIDA · SIMULADO", detalle: "La API responde, pero no hay ninguna ronda en curso", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
+  sin_conexion: { texto: "SIN CONEXIÓN · SIMULADO", detalle: "La API no responde o su respuesta no cumple el contrato", Icono: WifiOff, clase: "bg-sangre-700 text-crimson-100" },
+};
+
+export default function PanelLateral({ titulo, resumen, generadoEn, conexion, children }: Props) {
+  const aviso = conexion === "en_vivo" ? null : AVISO[conexion];
   return (
     <section
       id="panel-mapa"
@@ -48,10 +59,10 @@ export default function PanelLateral({ titulo, resumen, generadoEn, esPrueba, ch
             <Activity className="size-3.5" aria-hidden />
             p95 {resumen.p95ms === null ? "—" : `${Math.round(resumen.p95ms)} ms`}
           </span>
-          {esPrueba && (
-            <span className="inline-flex items-center gap-1 rounded bg-crimson-500 px-1.5 py-0.5 font-pixel text-[9px] text-calabaza-900">
-              <FlaskConical className="size-3" aria-hidden />
-              SIMULADO
+          {aviso && (
+            <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-pixel text-[9px]", aviso.clase)}>
+              <aviso.Icono className="size-3" aria-hidden />
+              {aviso.texto}
             </span>
           )}
         </div>
