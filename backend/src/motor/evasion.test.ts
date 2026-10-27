@@ -69,8 +69,9 @@ describe("escape step when no shelter is reachable", () => {
     // Zombies far east; N-0009 has neighbours N-0005 and N-0010, both closer to them.
     const lejos: Mundo = { zombies: [z(1, "caminante", "N-0001"), z(2, "caminante", "N-0012"), z(3, "corredor", "N-0008")], aristasBloqueadas: [] };
     const p = calcularPeligros(lejos, indexado);
-    const elegido = elegirEscape("N-0009", contexto, lejos, p);
-    assert.ok(distancia(elegido, lejos) >= distancia("N-0009", lejos));
+    // N-0009 and N-0010 are both two streets from the nearest zombie; N-0005 is one. Ties keep the survivor in place.
+    assert.equal(distancia("N-0009", lejos), distancia("N-0010", lejos));
+    assert.equal(elegirEscape("N-0009", contexto, lejos, p), "N-0009");
   });
 
   it("stays put when every exit is blocked", () => {

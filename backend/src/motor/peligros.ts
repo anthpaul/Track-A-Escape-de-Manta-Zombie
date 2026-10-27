@@ -24,7 +24,7 @@
  *     - Sleeper (dormido):   invisible — motor has no data, no cost applied.
  */
 
-import type { GrafoIndexado } from "@abcstack/shared";
+import type { GrafoIndexado, Zombie } from "@abcstack/shared";
 import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
@@ -86,8 +86,17 @@ export interface Peligros {
  * Compute all danger sets for one turn.
  * Called once per /paso request (or shared across survivors for the same turn).
  */
+/**
+ * Sleepers are accepted on purpose: our simulator never publishes them, but a
+ * world read from another source (Q3) might, and they must carry no cost.
+ */
+export type MundoPeligros = {
+  readonly zombies: readonly Zombie[];
+  readonly aristasBloqueadas: MundoTurno["aristasBloqueadas"];
+};
+
 export function calcularPeligros(
-  mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,
+  mundo: MundoPeligros,
   indexado: GrafoIndexado,
 ): Peligros {
   const nodosProhibidos = new Set<string>();

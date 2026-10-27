@@ -27,6 +27,8 @@ import { crearGrafo } from "@abcstack/shared";
 import type { Grafo } from "@abcstack/shared";
 import fixture from "@abcstack/shared/data/fixture-mini.json";
 import { buscarRuta, crearContextoGrafo, type ResultadoBusqueda } from "./astar";
+import { MinHeap } from "./min-heap";
+import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -35,7 +37,8 @@ import { buscarRuta, crearContextoGrafo, type ResultadoBusqueda } from "./astar"
 const grafo = crearGrafo(fixture);
 const contexto = crearContextoGrafo(fixture as Grafo, grafo);
 
-const sinPeligro = { zombies: [], aristasBloqueadas: [] };
+type Mundo = Pick<MundoTurno, "zombies" | "aristasBloqueadas">;
+const sinPeligro: Mundo = { zombies: [], aristasBloqueadas: [] };
 
 function siguiente(nodo: string, mundo = sinPeligro): string {
   const r = buscarRuta(nodo, contexto, mundo);
@@ -285,8 +288,7 @@ describe("safe fallback", () => {
 // ---------------------------------------------------------------------------
 
 describe("MinHeap", () => {
-  it("pops in ascending priority order", async () => {
-    const { MinHeap } = await import("./min-heap");
+  it("pops in ascending priority order", () => {
     const h = new MinHeap<string>();
     h.push(5, "e");
     h.push(1, "a");
@@ -298,16 +300,14 @@ describe("MinHeap", () => {
     assert.deepEqual(order, ["a", "b", "c", "d", "e"]);
   });
 
-  it("handles a single element", async () => {
-    const { MinHeap } = await import("./min-heap");
+  it("handles a single element", () => {
     const h = new MinHeap<number>();
     h.push(42, 1);
     assert.equal(h.pop().value, 1);
     assert.ok(h.isEmpty());
   });
 
-  it("handles duplicate priorities", async () => {
-    const { MinHeap } = await import("./min-heap");
+  it("handles duplicate priorities", () => {
     const h = new MinHeap<string>();
     h.push(1, "x");
     h.push(1, "y");
