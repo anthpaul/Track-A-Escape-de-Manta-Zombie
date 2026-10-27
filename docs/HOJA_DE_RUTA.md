@@ -201,7 +201,7 @@ responde, pero `/api/estado`, `/api/paso` y `/api/sobrevivientes/:id/ruta` dan 4
 | K5: predicción de corredores (penaliza los nodos que un corredor alcanza en su próximo turno) | `backend/src/motor/peligros.ts` | Listo |
 | Escape: si no hay refugio alcanzable, el sobreviviente se aleja de los zombies en vez de quedarse quieto | `backend/src/motor/evasion.ts` | Listo. Medido en local con S4 y 16 semillas: vivos R2 25,2 % → 34,1 %, R3 13,8 % → 17,3 % (detalle en `backend/README.md`) |
 | Calentamiento antes de cada ronda | `tools/simulador/calentar.ts` | Probado contra el backend local; falta correrlo contra AWS |
-| S6: Lambda del simulador + EventBridge Scheduler (una ronda demo R2 cada 6 minutos, motor en proceso) | `tools/simulador/lambda.ts`, `infra/simulador.tf` | Código y `terraform validate` listos; falta `apply` |
+| S6: Lambda del simulador + EventBridge Scheduler (rondas demo R2 casi seguidas: el Scheduler intenta cada minuto; motor en proceso) | `tools/simulador/lambda.ts`, `infra/simulador.tf` | Código y `terraform validate` listos; falta `apply` |
 | p95 en vivo: el simulador en modo http guarda el p95 de `/paso` por turno y `/estado` lo publica en `metricas.p95ms` | `tools/simulador/dynamo-persistencia.ts`, `backend/src/db/estado-repo.ts` | Código listo; aparece cuando corre una ronda `--modo=http` |
 
 **Para seguir desde acá, en este orden:**
@@ -212,7 +212,7 @@ responde, pero `/api/estado`, `/api/paso` y `/api/sobrevivientes/:id/ruta` dan 4
    `terraform plan -out=tfplan` y leerlo. Lo esperado es **8 to add, 1 to change,
    0 to destroy**: los 8 recursos de S6 y la Lambda del API con el código nuevo. Si
    aparece algo para destruir, no aplicar. Después `terraform apply tfplan`.
-   Verificar: `/api/estado` responde, `/api/paso` sin key da 401, y en 6 minutos el
+   Verificar: `/api/estado` responde, `/api/paso` sin key da 401, y en 1 minuto el
    mapa público pasa de SIMULADO a EN VIVO con la primera ronda demo.
 2. **API key:** `TF_VAR_api_key` tiene que ser la key de producción. Si se comparó
    y no coincide, el `apply` la reemplaza: pasar la nueva por privado a quien use
