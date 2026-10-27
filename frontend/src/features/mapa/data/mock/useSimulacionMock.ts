@@ -8,7 +8,8 @@ const TURNO_MS = 2000;
 
 // Emits a fake snapshot every 2 s, like polling GET /api/estado will (N4).
 // When nobody is left on the road, it restarts with the next seed so the demo never freezes.
-export function useSimulacionMock(grafo: Grafo, config: ConfigSimulacion): Snapshot {
+// Paused while real snapshots arrive, so the browser does not simulate a round nobody sees.
+export function useSimulacionMock(grafo: Grafo, config: ConfigSimulacion, activo = true): Snapshot {
   const [snapshot, setSnapshot] = useState(() => crearSimulacion(grafo, config, new Date().toISOString()));
   // Kept outside the state updater: React may run updaters twice in dev (StrictMode),
   // so they must stay pure.
@@ -16,6 +17,7 @@ export function useSimulacionMock(grafo: Grafo, config: ConfigSimulacion): Snaps
   const semillaRef = useRef(config.semilla);
 
   useEffect(() => {
+    if (!activo) return;
     const id = setInterval(() => {
       const actual = actualRef.current;
       const ahora = new Date().toISOString();
@@ -30,7 +32,7 @@ export function useSimulacionMock(grafo: Grafo, config: ConfigSimulacion): Snaps
       setSnapshot(siguiente);
     }, TURNO_MS);
     return () => clearInterval(id);
-  }, [grafo, config]);
+  }, [grafo, config, activo]);
 
   return snapshot;
 }

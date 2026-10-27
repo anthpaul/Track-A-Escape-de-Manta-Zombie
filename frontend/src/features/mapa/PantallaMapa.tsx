@@ -4,6 +4,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { grafoManta } from "@/features/mapa/data/real/grafo-manta";
 import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
+import { USAR_MOCKS, useEstadoEnVivo } from "@/features/mapa/data/real/useEstadoEnVivo";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
 import { derivarAlertas, type Alerta } from "@/features/mapa/domain/alertas";
 import { estadoInicialPanel, reducirPanel, type Tab } from "@/features/mapa/domain/panel";
@@ -36,12 +37,15 @@ const TITULOS: Record<Tab, string> = { ref: "Refugios", surv: "Sobrevivientes", 
 const MAX_ALERTAS = 50;
 
 // Container (the only one in the feature): picks the data sources, holds the panel state and wires
-// map + panel. N4 swaps the mock snapshots for real polling of GET /api/estado.
+// map + panel.
 export default function PantallaMapa() {
-  // Real graph (T0.3) with simulated rounds until GET /api/estado exists (S5).
+  // Real graph (T0.3) with live snapshots from GET /api/estado. While no game is running or the API
+  // is unreachable, the in-browser simulation keeps the map moving and the panel marks it SIMULADO.
   const grafo = grafoManta;
-  const snapshot = useSimulacionMock(grafo, CONFIG_MOCK);
-  const esPrueba = true; // the snapshot is simulated in the browser
+  const vivo = useEstadoEnVivo(grafo, !USAR_MOCKS);
+  const mock = useSimulacionMock(grafo, CONFIG_MOCK, vivo.snapshot === null);
+  const snapshot = vivo.snapshot ?? mock;
+  const esPrueba = vivo.snapshot === null;
 
   const [panel, dispatch] = useReducer(reducirPanel, undefined, estadoInicialPanel);
   const [abierto, setAbierto] = useState(true);
