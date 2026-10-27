@@ -79,3 +79,26 @@ variable "api_throttle_burst" {
   type        = number
   default     = 600
 }
+
+variable "demo_enabled" {
+  description = "Run scheduled demo rounds so the public map is never frozen (S6). Set false before an evaluation round."
+  type        = bool
+  default     = true
+}
+
+variable "demo_schedule" {
+  description = "How often a demo round starts. A round lasts 5 minutes; a busy lock makes the next start skip."
+  type        = string
+  default     = "rate(6 minutes)"
+}
+
+variable "demo_ronda" {
+  description = "Round played by the scheduled demos (1, 2 or 3)."
+  type        = number
+  default     = 2
+
+  validation {
+    condition     = contains([1, 2, 3], var.demo_ronda)
+    error_message = "demo_ronda must be 1, 2 or 3."
+  }
+}
