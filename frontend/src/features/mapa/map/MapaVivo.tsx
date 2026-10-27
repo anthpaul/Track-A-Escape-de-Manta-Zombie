@@ -1,7 +1,6 @@
 "use client";
 
 import MapaBase from "@/features/mapa/map/MapaBase";
-import Brujula from "@/features/mapa/map/Brujula";
 import CapaGrafo from "@/features/mapa/map/layers/CapaGrafo";
 import CapaVivo from "@/features/mapa/map/layers/CapaVivo";
 import CapaSeleccion from "@/features/mapa/map/layers/CapaSeleccion";
@@ -50,7 +49,6 @@ export default function MapaVivo(props: Props) {
         flechasVisibles={capas.sobreviviente}
       />
       <CapaVivo grafo={grafo} snapshot={snapshot} capas={capas} />
-      <Brujula />
     </MapaBase>
   );
 }
