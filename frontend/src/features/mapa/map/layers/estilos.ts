@@ -41,9 +41,15 @@ export const capaCalles: LayerProps = {
       "case",
       ["get", "bloqueada"],
       6,
-      ["match", ["get", "tipo"], "avenida", 4, "puente", 4, "callejon", 1.5, 2.5],
+      ["match", ["get", "tipo"], "avenida", 3.5, "puente", 4, "callejon", 1.2, 2],
     ],
-    "line-opacity": ["case", ["get", "bloqueada"], 1, 0.85],
+    // Quiet network: only blocked streets and bridges are fully opaque.
+    "line-opacity": [
+      "case",
+      ["get", "bloqueada"],
+      1,
+      ["match", ["get", "tipo"], "puente", 0.9, "avenida", 0.7, "callejon", 0.4, 0.6],
+    ],
   },
 };
 
@@ -85,17 +91,26 @@ export const capaRefugiosEtiquetas: LayerProps = {
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
 
-// Horde zone: the horde node and every neighbor (same set the router forbids). Radius grows with zoom.
+// Horde zone: the horde node and every neighbor (same set the router forbids). Only the horde node
+// gets one soft ring; each blocked neighbor is a small solid dot, so overlapping zones never pile
+// up into a red blob and every forbidden node stays readable.
 export const capaZonasHorda: LayerProps = {
   id: "zonas-horda",
   type: "circle",
   paint: {
-    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 14, 26, 16, 70],
-    "circle-color": COLOR_ZONA_HORDA.relleno,
-    "circle-opacity": ["match", ["get", "origen"], "horda", 0.4, 0.25],
+    // MapLibre only accepts zoom at the top-level interpolate, so the per-origin match goes inside each stop.
+    "circle-radius": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      12, ["match", ["get", "origen"], "horda", 12, 2.5],
+      14, ["match", ["get", "origen"], "horda", 18, 3.5],
+      16, ["match", ["get", "origen"], "horda", 30, 5],
+    ],
+    "circle-color": ["match", ["get", "origen"], "horda", COLOR_ZONA_HORDA.relleno, COLOR_ZONA_HORDA.borde],
+    "circle-opacity": ["match", ["get", "origen"], "horda", 0.3, 0.9],
     "circle-stroke-color": COLOR_ZONA_HORDA.borde,
-    "circle-stroke-width": 1.5,
-    "circle-stroke-opacity": 0.8,
+    "circle-stroke-width": ["match", ["get", "origen"], "horda", 2, 0],
   },
 };
 
