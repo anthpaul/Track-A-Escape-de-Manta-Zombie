@@ -1,36 +1,43 @@
-import { Biohazard, Navigation2, ShieldCheck, Skull, Zap, type LucideIcon } from "lucide-react";
+import { Biohazard, Navigation2, ShieldCheck, Skull, Square, Zap, type LucideIcon } from "lucide-react";
+import { COLOR_FLECHA, COLOR_REFUGIO, COLOR_SELECCION, COLOR_ZOMBIE } from "./colores";
 
 // Every icon in the app is a Lucide icon. The map uses the same components, serialized to SVG
 // and registered as MapLibre images (map/layers/RegistroIconos.tsx), so legend and map always match.
 export const ICONOS_ZOMBIE = {
-  caminante: { Icono: Skull, color: "#65a30d" },
-  corredor: { Icono: Zap, color: "#ea580c" },
-  horda: { Icono: Biohazard, color: "#b91c1c" },
+  // Walker and runner colors are close (1.4:1), so they are told apart by their icon shape.
+  caminante: { Icono: Skull, color: COLOR_ZOMBIE.caminante },
+  corredor: { Icono: Zap, color: COLOR_ZOMBIE.corredor },
+  horda: { Icono: Biohazard, color: COLOR_ZOMBIE.horda },
 } as const satisfies Record<string, { Icono: LucideIcon; color: string }>;
 
 export type TipoZombieVisible = keyof typeof ICONOS_ZOMBIE;
 
-export const ICONO_REFUGIO = { Icono: ShieldCheck, color: "#16a34a" } as const;
+export const ICONO_REFUGIO = { Icono: ShieldCheck, color: COLOR_REFUGIO.relleno, borde: COLOR_REFUGIO.borde } as const;
 
-type IconoMapa = { Icono: LucideIcon; fondo: string | null; trazo: string; relleno?: string };
+export type FormaIcono = "disco" | "cuadrado";
+type IconoMapa = { Icono: LucideIcon; fondo: string | null; trazo: string; relleno?: string; forma?: FormaIcono; borde?: string };
 
 // Map image name → how to draw it. Names are referenced by the symbol layers in estilos.ts.
 export const ICONOS_MAPA: Record<string, IconoMapa> = {
   "zombie-caminante": { Icono: ICONOS_ZOMBIE.caminante.Icono, fondo: ICONOS_ZOMBIE.caminante.color, trazo: "#ffffff" },
   "zombie-corredor": { Icono: ICONOS_ZOMBIE.corredor.Icono, fondo: ICONOS_ZOMBIE.corredor.color, trazo: "#ffffff" },
   "zombie-horda": { Icono: ICONOS_ZOMBIE.horda.Icono, fondo: ICONOS_ZOMBIE.horda.color, trazo: "#ffffff" },
-  refugio: { Icono: ICONO_REFUGIO.Icono, fondo: ICONO_REFUGIO.color, trazo: "#ffffff" },
+  refugio: { Icono: ICONO_REFUGIO.Icono, fondo: ICONO_REFUGIO.color, trazo: ICONO_REFUGIO.borde, forma: "cuadrado", borde: ICONO_REFUGIO.borde },
   // Arrow head for next-step arrows: points north, rotated by the layer.
-  flecha: { Icono: Navigation2, fondo: null, trazo: "#93c5fd", relleno: "#93c5fd" },
+  flecha: { Icono: Navigation2, fondo: null, trazo: COLOR_FLECHA, relleno: COLOR_FLECHA },
+  // Ring around the selected shelter.
+  "anillo-refugio": { Icono: Square, fondo: null, trazo: COLOR_SELECCION.refugio },
 };
 
 export const LADO_ICONO = 64; // px, registered at pixelRatio 2
 
-// Wraps a serialized Lucide <svg> in a 64×64 badge (optional colored disc) and returns a data URL.
-export function svgIconoMapa(svgLucide: string, fondo: string | null): string {
-  const disco = fondo
-    ? `<circle cx="32" cy="32" r="29" fill="${fondo}" stroke="#0a0a0a" stroke-width="4"/>`
-    : "";
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LADO_ICONO}" height="${LADO_ICONO}">${disco}<g transform="translate(16 16)">${svgLucide}</g></svg>`;
+// Wraps a serialized Lucide <svg> in a 64×64 badge (disc or square, optional) and returns a data URL.
+export function svgIconoMapa(svgLucide: string, fondo: string | null, forma: FormaIcono = "disco", borde = "#0a0a0a"): string {
+  const base = !fondo
+    ? ""
+    : forma === "cuadrado"
+      ? `<rect x="4" y="4" width="56" height="56" rx="6" fill="${fondo}" stroke="${borde}" stroke-width="5"/>`
+      : `<circle cx="32" cy="32" r="29" fill="${fondo}" stroke="${borde}" stroke-width="4"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${LADO_ICONO}" height="${LADO_ICONO}">${base}<g transform="translate(16 16)">${svgLucide}</g></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
