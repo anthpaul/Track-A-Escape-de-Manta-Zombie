@@ -150,7 +150,7 @@ Al terminar: `terraform destroy` en `infra/` (el bucket del sitio tiene `force_d
 | `file:///C:/Program%20Files/Git/api/...` en la consola | MSYS convirtió `/api` en una ruta de Windows | `MSYS_NO_PATHCONV=1 MSYS2_ENV_CONV_EXCL='*'` en el build |
 | `EBUSY ... rmdir frontend/out` | Una terminal o el explorador está parado dentro de `out/` | Salir de esa carpeta y repetir |
 | `/api/...` da 404 por CloudFront pero `api_url` responde | Hono perdió `basePath('/api')` | Restaurarlo; `npm test -w backend` lo detecta |
-| 404 de `/<ruta>/__next.<algo>.txt` en la consola | Next pide los payloads con puntos y el export los guarda con barras | No rompe (cae a carga completa). Mejora: regla extra en la función de CloudFront |
+| 404 de `/<ruta>/__next.<algo>.txt` en la consola | Next pide los payloads con puntos y el export los guarda con barras | Resuelto en `infra/functions/rewrite-html.js` (tests: `node --test infra/functions/rewrite-html.test.mjs`). Se aplica con `terraform apply` o publicando la función con la CLI |
 | `Missing Authentication Token` (XML de `cloudfront.amazonaws.com`) | Se abrió en el navegador el `Location` de una invalidación | No es un error del sitio: el sitio es `site_url` |
 | `AccessDeniedException ... service control policy` | La cuenta bloquea esa región por SCP | Cambiar `aws_region` (y `region` en `backend.hcl`) a una región permitida |
 | Un push directo a `main` falla con `GH013` | El ruleset funciona | Abrir PR |

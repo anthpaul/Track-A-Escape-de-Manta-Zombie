@@ -36,23 +36,8 @@ resource "aws_cloudfront_function" "rewrite_html" {
   name    = "${local.name_prefix}-rewrite-html"
   runtime = "cloudfront-js-2.0"
   publish = true
-  code    = <<-EOT
-    function handler(event) {
-      var request = event.request;
-      var uri = request.uri;
-      if (uri === '/') {
-        request.uri = '/index.html';
-        return request;
-      }
-      if (uri.endsWith('/')) {
-        uri = uri.slice(0, -1);
-      }
-      if (uri.lastIndexOf('.') < uri.lastIndexOf('/') + 1) {
-        request.uri = uri + '.html';
-      }
-      return request;
-    }
-  EOT
+  # Shared with its tests: node --test infra/functions/rewrite-html.test.mjs
+  code = file("${path.module}/functions/rewrite-html.js")
 }
 
 resource "aws_cloudfront_distribution" "main" {
