@@ -11,7 +11,7 @@ const TURNO_MS = 2000;
 // Build-time switches (AGENTS.md §8): the production build sets NEXT_PUBLIC_USE_MOCKS=false and
 // NEXT_PUBLIC_API_URL=/api. Local dev without them keeps the in-browser simulation.
 export const USAR_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false";
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 // Polls GET /api/estado once per turn. The decision of what to show lives in resolverConexion (pure,
 // tested); this hook only feeds it the latest poll and remembers the last real world.

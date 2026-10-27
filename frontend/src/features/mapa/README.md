@@ -50,4 +50,4 @@ mapa/
 | `NEXT_PUBLIC_USE_MOCKS` | `false` | Pide `GET <API_URL>/estado` cada 2 s. Sin la variable, solo simulación local |
 | `NEXT_PUBLIC_API_URL` | `/api` en producción · `http://localhost:3001/api` con `npm run dev -w backend` | Base de la API |
 
-Si `/estado` responde `{ ok: false }` (no hay partida) o falla, el mapa sigue con la simulación y el panel muestra **SIMULADO**. Si una consulta falla después de recibir datos reales, se conserva el último snapshot y el indicador "EN VIVO" muestra su edad.
+Si `/estado` responde `{ ok: false }` (no hay partida) o falla, el mapa sigue con la simulación y el panel muestra **SIMULADO**. Con partida real, la ruta del sobreviviente seguido sale de `GET /api/sobrevivientes/:id/ruta` (K6), una vez por turno; mientras carga se dibuja un camino local para que siempre haya una ruta visible. Si una consulta falla después de recibir datos reales, se conserva el último snapshot y el indicador "EN VIVO" muestra su edad.
