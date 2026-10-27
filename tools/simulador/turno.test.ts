@@ -7,6 +7,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { crearGrafo } from "@abcstack/shared";
+import type { ZombieInterno } from "@abcstack/shared";
+import type { Sobreviviente } from "@abcstack/shared";
 import { crearMotorFalso } from "./motor-falso";
 import { crearPersistenciaMemoria } from "./persistencia";
 import { crearRelojFake } from "./reloj";
@@ -64,9 +66,8 @@ function grafoMini() {
 
 function configBase(): ConfigTurno {
   const grafo = grafoMini();
-  const zombies = [] as ReturnType<typeof crearGrafo> extends infer G ? never : never;  // appease TS
-  const zs: { id: string; tipo: "caminante" | "corredor" | "horda" | "dormido"; nodo: string }[] = [];
-  const ss: { id: string; nodo: string; estado: "en_ruta" | "a_salvo" | "mordido"; siguienteNodo?: string }[] = [
+  const zs: ZombieInterno[] = [];
+  const ss: Sobreviviente[] = [
     { id: "S-0001", nodo: "N-0001", estado: "en_ruta" },
   ];
   return {
@@ -79,6 +80,8 @@ function configBase(): ConfigTurno {
     reloj: crearRelojFake(),
     partidaId: "test-r1-0",
     ronda: 1,
+    nodosRefugio: new Set(["N-0004"]),
+    aleatorio: () => 0,
   };
 }
 
@@ -188,7 +191,6 @@ test("all active survivors are queried and their moves are applied", async () =>
   const cfg = configBase();
   // Add a second survivor at N-0002.
   cfg.sobrevivientes.push({ id: "S-0002", nodo: "N-0002", estado: "en_ruta" });
-
   const queried = new Set<string>();
   cfg.motor = {
     async pedirPaso({ sobrevivienteId, nodoActual }) {
@@ -218,7 +220,6 @@ test("a_salvo and mordido survivors are not queried", async () => {
     { id: "S-0002", nodo: "N-0002", estado: "a_salvo" },
     { id: "S-0003", nodo: "N-0003", estado: "mordido" },
   );
-
   const queried = new Set<string>();
   cfg.motor = {
     async pedirPaso({ sobrevivienteId }) {
@@ -238,9 +239,8 @@ test("a_salvo and mordido survivors are not queried", async () => {
 // ---------------------------------------------------------------------------
 test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", async () => {
   const grafo = grafoMini();
-  // Start at N-0001, refuge is at N-0004; 3 hops needed.
-  const zombies: ConfigRonda["zombies"] = [];
-  const sobrevivientes: ConfigRonda["sobrevivientes"] = [
+  const zombies: ZombieInterno[] = [];
+  const sobrevivientes: Sobreviviente[] = [
     { id: "S-0001", nodo: "N-0001", estado: "en_ruta" },
   ];
 
@@ -268,6 +268,7 @@ test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", a
     partidaId: "test-r1-round",
     ronda: 1,
     nodosRefugio: new Set(["N-0004"]),
+    aleatorio: () => 0,
     totalTurnos: 10,
   };
 
@@ -285,7 +286,7 @@ test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", a
 // ---------------------------------------------------------------------------
 test("blocked street prevents movement through that edge", async () => {
   const grafo = grafoMini();
-  const ss: ConfigTurno["sobrevivientes"] = [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" }];
+  const ss: Sobreviviente[] = [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" }];
   const cfg: ConfigTurno = {
     grafo,
     zombies: [],
@@ -299,6 +300,8 @@ test("blocked street prevents movement through that edge", async () => {
     reloj: crearRelojFake(),
     partidaId: "test-r1-blocked",
     ronda: 1,
+    nodosRefugio: new Set(["N-0004"]),
+    aleatorio: () => 0,
   };
 
   await ejecutarTurno(cfg, 1);
@@ -311,7 +314,7 @@ test("blocked street prevents movement through that edge", async () => {
 // ---------------------------------------------------------------------------
 test("ResultadoTurno counts are correct", async () => {
   const grafo = grafoMini();
-  const ss: ConfigTurno["sobrevivientes"] = [
+  const ss: Sobreviviente[] = [
     { id: "S-0001", nodo: "N-0001", estado: "en_ruta" },
     { id: "S-0002", nodo: "N-0002", estado: "a_salvo" },
     { id: "S-0003", nodo: "N-0003", estado: "mordido" },
@@ -326,6 +329,8 @@ test("ResultadoTurno counts are correct", async () => {
     reloj: crearRelojFake(),
     partidaId: "test-metrics",
     ronda: 1,
+    nodosRefugio: new Set(["N-0004"]),
+    aleatorio: () => 0,
   };
 
   const resultado = await ejecutarTurno(cfg, 1);
