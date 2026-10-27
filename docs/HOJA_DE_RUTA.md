@@ -184,15 +184,60 @@ correr R1 contra AWS con autorización explícita e imprimir sus métricas.
 Por eso S4 conserva su casilla pendiente; esto no completa S6 ni prueba deploy.
 La verificación independiente y sus resultados se registran en
 `odd/tasks/s4-rondas.md`. El typecheck del backend conserva 13 diagnósticos
-reproducidos en la versión base, sin cambios en esos archivos.
+reproducidos en la versión base, sin cambios en esos archivos. *(Resuelto después
+en el PR #38: el typecheck del monorepo queda en 0.)*
+
+### Traspaso — martes 27 a la noche (Anthony)
+
+**Todo lo de abajo está mergeado en `main` (PR #32 a #40) y en verde:** backend 149,
+shared 50, frontend 101 y simulador 41 pruebas; typecheck del monorepo en 0.
+**Nada de esto está todavía en AWS:** la Lambda desplegada es vieja (`/api/health`
+responde, pero `/api/estado`, `/api/paso` y `/api/sobrevivientes/:id/ruta` dan 404).
+
+| Qué | Dónde | Estado |
+|---|---|---|
+| N4: el mapa pide `/api/estado` cada 2 s; si no hay partida o la API falla, sigue con la simulación y el panel dice por qué (CONECTANDO, RECONECTANDO, SIN PARTIDA, SIN CONEXIÓN) | `frontend/src/features/mapa/data/real/` | Código listo; falta verlo con datos reales |
+| K6: `GET /api/sobrevivientes/:id/ruta` con la ruta completa; el mapa la dibuja para el sobreviviente seguido | `backend/src/routes/sobrevivientes.ts`, `backend/src/motor/ruta.ts` | Código listo; falta deploy |
+| K5: predicción de corredores (penaliza los nodos que un corredor alcanza en su próximo turno) | `backend/src/motor/peligros.ts` | Listo |
+| Escape: si no hay refugio alcanzable, el sobreviviente se aleja de los zombies en vez de quedarse quieto | `backend/src/motor/evasion.ts` | Listo. Medido en local con S4 y 16 semillas: vivos R2 25,2 % → 34,1 %, R3 13,8 % → 17,3 % (detalle en `backend/README.md`) |
+| Calentamiento antes de cada ronda | `tools/simulador/calentar.ts` | Probado contra el backend local; falta correrlo contra AWS |
+| S6: Lambda del simulador + EventBridge Scheduler (una ronda demo R2 cada 6 minutos, motor en proceso) | `tools/simulador/lambda.ts`, `infra/simulador.tf` | Código y `terraform validate` listos; falta `apply` |
+| p95 en vivo: el simulador en modo http guarda el p95 de `/paso` por turno y `/estado` lo publica en `metricas.p95ms` | `tools/simulador/dynamo-persistencia.ts`, `backend/src/db/estado-repo.ts` | Código listo; aparece cuando corre una ronda `--modo=http` |
+
+**Para seguir desde acá, en este orden:**
+
+1. **Deploy (Alex, o Anthony con la key real):** desde `main`,
+   `npm run build -w backend && npm run build:simulador`, después en `infra/`:
+   `terraform init -backend-config=backend.hcl` (sin `-reconfigure` ni `-migrate-state`),
+   `terraform plan -out=tfplan` y leerlo. Lo esperado es **8 to add, 1 to change,
+   0 to destroy**: los 8 recursos de S6 y la Lambda del API con el código nuevo. Si
+   aparece algo para destruir, no aplicar. Después `terraform apply tfplan`.
+   Verificar: `/api/estado` responde, `/api/paso` sin key da 401, y en 6 minutos el
+   mapa público pasa de SIMULADO a EN VIVO con la primera ronda demo.
+2. **API key:** `TF_VAR_api_key` tiene que ser la key de producción. Si se comparó
+   y no coincide, el `apply` la reemplaza: pasar la nueva por privado a quien use
+   `PASO_KEY`. La key quedó expuesta fuera del canal privado durante el traspaso,
+   así que conviene rotarla (`openssl rand -hex 32`) antes de entregarla al jurado.
+3. **Prueba de fuego propia (Fase 2, Alex):** apagar las demos (`demo_enabled = false`
+   y `apply`, o `aws scheduler update-schedule ... --state DISABLED`), esperar a que
+   termine la ronda demo en curso (hasta 5 minutos) y correr
+   `node --import tsx tools/simulador/calentar.ts` y luego las tres rondas
+   `--modo=http` (`tools/simulador/README.md`). Anotar supervivencia, eficiencia, p95 y
+   errores de cada corrida para el README y el pitch. Volver a prender las demos al terminar.
+4. **Kevin:** K4 (capacidad de refugios, Pro) sigue sin empezar: las claves `REFUGIO#`
+   existen en `backend/src/db/keys.ts`, falta la lógica. El simulador tampoco publica
+   todavía los campos opcionales `refugio` y `callesRestantes` de `/estado`.
+5. **Anthony:** README, `docs/arquitectura.png` + `.drawio`, `docs/costos.md` (sumar las
+   demos de S6: unos US$ 1 por día estimado), `docs/DEMO.md`, pitch y la revisión de
+   secretos en el historial (R9). T0.1: preguntas Q1–Q4 a la organización.
 
 | Fase 0 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ✅ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
+| ✅ T0.5 Budget · ✅ T0.7 repo | ✅ T0.2 · ✅ T0.6 | ✅ T0.3 · ⬜ T0.4 (falta deploy: `/paso` da 404) | ⬜ T0.1 |
 
 | Fase 1 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| | ⬜ K1 · ⬜ K2 · ⬜ K3 · ⬜ K6 · ⬜ K4 | ⬜ S1 · ⬜ S2 · ⬜ S3 · ⬜ S4 · ⬜ S5 · ⬜ S6 | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ⬜ N4 · ✅ N6 · ⬜ N5 |
+| | ✅ K1 · ✅ K2 · ✅ K3 · ✅ K6 · ✅ K5 · ⬜ K4 | ✅ S1 · ✅ S2 · ✅ S3 · ⬜ S4 (falta R1 contra AWS) · ✅ S5 · ⬜ S6 (falta `apply`) | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ✅ N4 · ✅ N6 · ⬜ N5 |
 
 | Entrega | Estado |
 |---|---|
