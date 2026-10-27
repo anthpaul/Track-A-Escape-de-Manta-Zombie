@@ -6,17 +6,18 @@ type Capa = { id: string; type: string };
 type PropiedadPintura = "background-color" | "fill-color" | "line-color" | "text-color" | "text-halo-color";
 type Pintura = [propiedad: PropiedadPintura, valor: string];
 
-const FONDO = "#3d1030";
-const AGUA = "#1a0412";
-const SUELO = "#45143a";
-const EDIFICIO = "#521a44";
-const CALLE_BORDE = "#2e0b22";
-const CALLE_MENOR = "#6b2a55";
-const CALLE_MAYOR = "#86386a";
-const VIAS = "#5a2048"; // rail and runways
-const LIMITE = "#8a3a6e";
-const TEXTO = "#e9a6cb";
-const HALO = "#1f0617";
+// Dusty mauve land with lighter streets and dark crimson water, matched to the reference design.
+const FONDO = "#5a2d48";
+const AGUA = "#2b0a20";
+const SUELO = "#5e304c";
+const EDIFICIO = "#683656";
+const CALLE_BORDE = "#4a2139";
+const CALLE_MENOR = "#7c4867";
+const CALLE_MAYOR = "#93587b";
+const VIAS = "#6f3b5c"; // rail and runways
+const LIMITE = "#a06a8a";
+const TEXTO = "#f1cfe0";
+const HALO = "#3b1530";
 
 const esMayor = (id: string) => /_(pri|sec|trunk|mot)_/.test(id);
 
