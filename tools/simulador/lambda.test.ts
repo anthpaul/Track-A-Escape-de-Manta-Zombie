@@ -86,3 +86,17 @@ test("event defaults to R2 with a fresh seed and rejects invalid rounds", () => 
   assert.throws(() => parseEvento({ ronda: 4 }));
   assert.throws(() => parseEvento({ semilla: -1 }));
 });
+
+test("if the round breaks midway, the lock is still released and the error surfaces", async () => {
+  const comandos: Comando[] = [];
+  let escrituras = 0;
+  const cliente = {
+    async send(comando: Comando) {
+      comandos.push(comando);
+      if (comando instanceof TransactWriteCommand && ++escrituras === 4) throw new Error("dynamo down");
+      return {};
+    },
+  };
+  await assert.rejects(crearHandler({ cliente, tabla: "t", reloj: crearRelojFake() })({ ronda: 1, semilla: 1 }), /dynamo down/);
+  assert.ok(comandos.at(-1) instanceof DeleteCommand, "the lock is released even after a failure");
+});

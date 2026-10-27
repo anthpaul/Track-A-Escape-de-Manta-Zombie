@@ -107,8 +107,9 @@ async function main() {
 
 if (require.main === module) {
   main().catch((error: unknown) => {
-    // Never print request details: they could include the URL or the key.
-    console.error(error instanceof Error && error.message.includes("required") ? error.message : "Warm-up failed. Check PASO_URL, PASO_KEY and service availability.");
+    // Request failures are counted per wave and never reach here, so what does is a usage or
+    // configuration error whose message carries no URL or key.
+    console.error(error instanceof Error ? error.message : "Warm-up failed. Use --help for usage.");
     process.exitCode = 1;
   });
 }
