@@ -59,32 +59,6 @@ Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`)
 
 **Aceptación del grafo en T0.2/T0.3:** aplicar `docs/CONTRATO_GRAFO.md`, sección «Aplicación en las tareas existentes». T0.2 incluye fixtures con geometrías válidas y pruebas de extremos exactos; al integrar el fixture común, se adapta el mock del frontend. T0.3 normaliza los extremos y comprueba el puente real de R2 después de simplificar. Q4 sigue pendiente: no se fijan capacidades finales ni se activa el límite Pro. Son precisiones de las tareas actuales, no nuevas fases ni cambios del cronograma.
 
-**T0.2 — implementación local verificada (Kevin):** schemas y tipos derivados en
-`shared/schemas.ts`, funciones indexadas en `shared/grafo.ts` y fixture de 12 nodos,
-15 calles, un puente y dos refugios. Uso documentado en `shared/README.md`.
-`npm test -w shared` pasa 18 pruebas y `npm run typecheck -w shared` pasa en modo
-strict; el schema también acepta el grafo real sin modificarlo. La suite del
-monorepo pasa; el typecheck global sigue fallando por problemas preexistentes
-(backend sin tsconfig y tipos/dependencias del frontend), reproducidos contra la
-versión base. La revisión independiente no encontró regresiones y comparó 20
-casos de los contratos anteriores. **La aprobación del PR por los tres sigue
-pendiente:** T0.2 no se marca completada en la sección 6. En T0.2 no se implementó K1/A*,
-T0.6, persistencia ni integración del frontend.
-
-**T0.6 — implementación local verificada (Kevin):** interfaz `FuenteMundo` en
-`backend/src/motor/fuente-mundo.ts` y adaptador de solo lectura `DynamoFuente` en
-`backend/src/db/dynamo-fuente.ts`, reutilizando `KEYS`. Devuelve el peligro
-inmutable de la partida y el turno real; lee el turno exacto o el último existente
-menor o igual, sin inventar ronda ni devolver un mundo vacío ante fallos. La caché
-separa `(partidaId, turno)`, comparte lecturas simultáneas, respeta TTL y no guarda
-un respaldo anterior bajo el número solicitado. Uso y límites en `backend/README.md`.
-`npm test -w backend` pasa 39 pruebas y `npm run typecheck -w backend` pasa en modo
-strict. La suite del monorepo pasa; el typecheck global conserva 23 diagnósticos
-preexistentes del frontend, reproducidos en la versión base. La verificación
-independiente de concurrencia no encontró regresiones. No se probó contra AWS ni
-se conectó a `/paso`; A*, resolución de partida activa y candado siguen en sus
-tareas posteriores. La revisión y aprobación del PR siguen pendientes.
-
 ---
 
 ## 3. Cronograma con puntos de control
@@ -122,7 +96,7 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 | 7 | `feat/k4-refugios` | Elección del refugio de menor costo; Pro: contador atómico de capacidad (`INFRA.md` §4) | 3 | Test: N asignaciones simultáneas sobre K lugares → exactamente K |
 | 8 | (en el PR de cada tarea) | Secciones del README: motor, costos de peligro, refugios | 8 | Sin `TODO (Kevin)` en el README |
 
-### 4.2 Alex — grafo, simulador e infraestructura (`tools/`, `infra/`, `backend/src/db/`)
+### 4.2 Alex — grafo, simulador e infraestructura (`tools/`, `infra/`, `backend/src/db/`) // vamos a agg este texto de prieba
 
 | # | Rama | Qué hacer | Prompt | Listo cuando |
 |---|---|---|---|---|
