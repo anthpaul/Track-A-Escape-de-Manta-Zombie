@@ -29,6 +29,25 @@ respeta calles bloqueadas y zombies visibles, pero no sustituye al A* real ni
 sirve para evaluar su supervivencia o rendimiento. La latencia local se muestra
 como **no medida**, no como cero milisegundos.
 
+### Calentamiento antes de cada ronda
+
+En la R3 llegan unos 200 `POST /paso` en la misma ventana de 500 ms. Cada instancia
+nueva de Lambda paga un arranque en frío, que sube el p95 y puede pasar de 500 ms.
+Justo antes de cada ronda en AWS, con las mismas `PASO_URL` y `PASO_KEY`:
+
+```powershell
+node --import tsx tools/simulador/calentar.ts --concurrencia=200 --oleadas=3 --pausa=1000
+```
+
+Cada oleada dispara todos los pedidos a la vez; la primera paga los arranques en frío
+y las siguientes miden instancias calientes. Termina con código 0 y `LISTO` si la
+última oleada no tiene errores y su p95 es de 150 ms o menos; si no, `NO LISTO` y
+código 1. Solo llama a `/paso`, que nunca escribe en DynamoDB.
+
+Prueba local contra `npm run dev -w backend`, 50 pedidos por oleada: p95 de 476 ms
+en la primera oleada (arranque en frío) y de 142 y 147 ms en las siguientes. No mide
+AWS: los números reales salen al correrlo contra el despliegue.
+
 ### Evaluación HTTP y DynamoDB
 
 **No ejecutar contra AWS sin autorización del equipo.** Confirmar destino,
