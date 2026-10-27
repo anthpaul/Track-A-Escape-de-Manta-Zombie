@@ -45,6 +45,7 @@ export interface PersistenciaPartida {
   completarTurno(
     turno: number,
     decisiones: ReadonlyMap<string /* sobrevivienteId */, string /* siguienteNodo */>,
+    sobrevivientesFinales?: readonly Sobreviviente[],
   ): Promise<void>;
 
   /**
@@ -86,12 +87,12 @@ export function crearPersistenciaMemoria(): PersistenciaPartida {
       turnos.set(parcial.turno, { ...parcial, completo: false });
     },
 
-    async completarTurno(turno, decisiones) {
+    async completarTurno(turno, decisiones, sobrevivientesFinales) {
       const existing = turnos.get(turno);
       if (!existing) throw new Error(`Turn ${turno} not found — call guardarTurnoIncompleto first`);
 
       // Apply siguienteNodo to each survivor whose ID appears in decisions.
-      const sobrevivientesActualizados: Sobreviviente[] = existing.sobrevivientes.map((s) => {
+      const sobrevivientesActualizados: Sobreviviente[] = (sobrevivientesFinales ?? existing.sobrevivientes).map((s) => {
         const siguiente = decisiones.get(s.id);
         return siguiente !== undefined ? { ...s, siguienteNodo: siguiente } : s;
       });

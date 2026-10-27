@@ -11,6 +11,7 @@
  */
 import type { GrafoIndexado } from "@abcstack/shared";
 import type { Zombie } from "@abcstack/shared";
+import { zombiesVisibles } from "@abcstack/shared";
 
 export interface PedidoPaso {
   sobrevivienteId: string;
@@ -27,7 +28,7 @@ export interface ClienteMotor {
    * Ask the motor for the next step.
    * Must resolve within 500 ms; the turn coordinator enforces this.
    */
-  pedirPaso(pedido: PedidoPaso): Promise<RespuestaPaso>;
+  pedirPaso(pedido: PedidoPaso, signal?: AbortSignal): Promise<RespuestaPaso>;
 }
 
 /**
@@ -40,17 +41,18 @@ export interface ClienteMotor {
 export function crearMotorFalso(
   grafo: GrafoIndexado,
   obtenerZombies: () => readonly Zombie[],
+  obtenerBloqueos: () => readonly string[] = () => [],
 ): ClienteMotor {
   return {
     async pedirPaso({ nodoActual, turno: _turno }) {
-      const zombies = obtenerZombies();
+      const zombies = zombiesVisibles([...obtenerZombies()]);
 
       // Build the set of nodes that are either directly occupied or blocked by a horde.
       const peligrosos = grafo.nodosBloqueadosPorHordas(zombies);
       for (const z of zombies) peligrosos.add(z.nodo);
 
       const vecinos = grafo.vecinos(nodoActual);
-      const aristasBloqueadas: readonly string[] = [];          // no blocked streets yet in S1
+      const aristasBloqueadas = obtenerBloqueos();
 
       for (const vecino of vecinos) {
         if (peligrosos.has(vecino)) continue;

@@ -10,7 +10,10 @@ const ConfigInicialSchema = z.object({
   sobrevivientes: z.array(SobrevivienteSchema.extend({ estado: z.literal("en_ruta") })),
 });
 
-function crearAleatorio(semilla: number): () => number {
+export function crearAleatorio(semilla: number): () => number {
+  if (!Number.isInteger(semilla) || semilla < 0 || semilla > 0xffffffff) {
+    throw new Error("Seed must be an unsigned 32-bit integer");
+  }
   let state = semilla;
   // Mulberry32: reproducible simulation randomness, not cryptographic randomness.
   return () => {

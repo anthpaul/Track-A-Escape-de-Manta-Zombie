@@ -24,6 +24,7 @@ import { Hono } from "hono";
 import type { FuenteMundo, MundoTurno } from "../motor/fuente-mundo";
 import { ErrorFuenteMundo } from "../motor/fuente-mundo";
 import { createRutaPasoParaTests } from "./paso.test-factory";
+import { contextoGrafo } from "../motor/motor";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -101,6 +102,13 @@ describe("K3 authentication", () => {
   it("returns 401 when x-api-key is empty string", async () => {
     const app = makeApp(fuente_safe);
     const res = await post(app, VALID_BODY, { "x-api-key": "" });
+    assert.equal(res.status, 401);
+  });
+
+  it("rejects an incorrect suffix beyond byte 256", async () => {
+    const key = "x".repeat(256) + "correct";
+    const app = makeApp(fuente_safe, key);
+    const res = await post(app, VALID_BODY, { "x-api-key": "x".repeat(256) + "incorre" });
     assert.equal(res.status, 401);
   });
 
@@ -197,6 +205,7 @@ describe("K3 response shape", () => {
     const app = makeApp(fuente_safe);
     const res = await post(app, VALID_BODY, headers);
     assert.equal(res.status, 200);
+    assert.equal(res.headers.get("cache-control"), "no-store");
     const json = await res.json() as Record<string, unknown>;
     const keys = Object.keys(json);
     assert.deepEqual(keys, ["siguienteNodo"],
@@ -211,13 +220,13 @@ describe("K3 response shape", () => {
   });
 
   it("siguienteNodo is the current node when the survivor is already at a shelter", async () => {
-    // N-0001 is a shelter in the fixture (R-01).
+    const nodoRefugio = contextoGrafo.refugios[0]!.nodo;
     const app = makeApp(fuente_safe);
-    const res = await post(app, { ...VALID_BODY, nodoActual: "N-0001" }, headers);
+    const res = await post(app, { ...VALID_BODY, nodoActual: nodoRefugio }, headers);
     assert.equal(res.status, 200);
     const { siguienteNodo } = await res.json() as { siguienteNodo: string };
     // ya_en_refugio → motor returns nodoActual
-    assert.equal(siguienteNodo, "N-0001");
+    assert.equal(siguienteNodo, nodoRefugio);
   });
 });
 
@@ -319,15 +328,16 @@ describe("K3 siguienteNodo is always a reachable neighbour or the same node", ()
       const res = await post(app, { ...VALID_BODY, nodoActual }, headers);
       assert.equal(res.status, 200);
       const { siguienteNodo } = await res.json() as { siguienteNodo: string };
-      assert.match(siguienteNodo, /^N-\d{4}$/, `invalid node ${siguienteNodo}`);
+      assert.ok(contextoGrafo.indexado.esMovimientoValido(nodoActual, siguienteNodo, []));
     }
   });
 
   it("stays at current node when all exits are blocked", async () => {
-    // Block all edges from N-0003: C-0002 and C-0003.
+    const nodoActual = "N-0003";
     const blockedWorld: MundoTurno = {
       ...WORLD_SAFE,
-      aristasBloqueadas: ["C-0002", "C-0003"],
+      aristasBloqueadas: contextoGrafo.indexado.vecinos(nodoActual).map((vecino) =>
+        contextoGrafo.indexado.calleEntre(nodoActual, vecino)!.id),
     };
     const fuente_blocked: FuenteMundo = {
       obtenerTurno: async () => blockedWorld,

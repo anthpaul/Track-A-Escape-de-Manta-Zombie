@@ -6,7 +6,7 @@
  *   Step 1  Awaken sleeping zombies, then move all zombies.
  *   Step 2  Apply city-event blockages for this turn.
  *   Step 3  Write TURNO#N with completo = false.
- *   Step 4  Call POST /paso for each active survivor (concurrently, capped).
+ *   Step 4  Call POST /paso for every active survivor in one concurrent window.
  *   Step 5  Validate each response; fall back to "stay put" on timeout/error.
  *   Step 6  Move survivors, resolve bites (node + crossing), check arrivals,
  *           write completo = true.
@@ -14,10 +14,9 @@
  * Turns never overlap: we call esperarTick at the end to fill the 2-second
  * window, and we do not start turn N+1 until turn N's UpdateItem is done.
  *
- * Concurrency: survivors are queried in parallel batches of at most
- * MAX_CONCURRENCIA to avoid overwhelming the motor with 200 simultaneous
- * requests in R3.  The POST /paso deadline is enforced per-request with
- * Promise.race + a 500 ms timeout.
+ * The round configuration bounds the population to at most 200 survivors.
+ * Sequential batches would turn 200 timeouts into a five-second turn.
+ * Every request instead has a concurrent 500 ms deadline and abort signal.
  */
 import type { GrafoIndexado, Zombie, Sobreviviente } from "@abcstack/shared";
 import {
@@ -27,6 +26,7 @@ import {
   resolverMordidasPorCruce,
   resolverLlegadas,
   zombiesVisibles,
+  aplicarBloqueo,
 } from "@abcstack/shared";
 import type { ZombieInterno } from "@abcstack/shared";
 import type { ClienteMotor } from "./motor-falso";
@@ -39,11 +39,19 @@ import type { Reloj } from "./reloj";
 
 const DURACION_TURNO_MS = 2_000;
 const PASO_TIMEOUT_MS = 500;
-const MAX_CONCURRENCIA = 20;   // concurrent /paso calls per batch
 
 // -------------------------------------------------------------------------
 // Types
 // -------------------------------------------------------------------------
+
+export interface EventoRonda {
+  /** Turn number when the blockage takes effect. */
+  turno: number;
+  /** Street ID to block (AGENTS.md §0 — city events). */
+  calleId: string;
+  /** Human-readable label for logging (e.g. "bridge collapse R2"). */
+  descripcion?: string;
+}
 
 export interface ConfigTurno {
   /** Indexed graph (for movement validation). */
@@ -68,6 +76,8 @@ export interface ConfigTurno {
   nodosRefugio: ReadonlySet<string>;
   /** Seeded random number generator — injected for reproducibility. */
   aleatorio: () => number;
+  /** Scheduled city events — applied at their designated turn (Step 2). */
+  eventos?: readonly EventoRonda[];
 }
 
 /** Summary returned after each turn for metrics / logging. */
@@ -85,25 +95,6 @@ export interface ResultadoTurno {
 // Helpers
 // -------------------------------------------------------------------------
 
-function sleep(ms: number): Promise<never> {
-  return new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("timeout")), ms),
-  );
-}
-
-/** Run an async task per item in bounded parallel batches. */
-async function porLotes<T, R>(
-  items: readonly T[],
-  tamanoLote: number,
-  tarea: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const resultados: R[] = [];
-  for (let i = 0; i < items.length; i += tamanoLote) {
-    const lote = items.slice(i, i + tamanoLote);
-    resultados.push(...(await Promise.all(lote.map(tarea))));
-  }
-  return resultados;
-}
 
 // -------------------------------------------------------------------------
 // Core: advance one turn
@@ -146,12 +137,18 @@ export async function ejecutarTurno(
   }
 
   // -----------------------------------------------------------
-  // Step 2: Apply city events for this turn.
-  //
-  // Events are scheduled externally (R2 bridge collapse, R3 blockages).
-  // The caller updates config.aristasBloqueadas before calling us; we just
-  // read it here.
+  // Step 2: Apply city events scheduled for this turn.
   // -----------------------------------------------------------
+  if (config.eventos) {
+    for (const evento of config.eventos) {
+      if (evento.turno === turno) {
+        config.aristasBloqueadas = aplicarBloqueo(config.aristasBloqueadas, evento.calleId);
+        if (evento.descripcion) {
+          console.log(`[turno ${turno}] Evento: ${evento.descripcion} (${evento.calleId})`);
+        }
+      }
+    }
+  }
 
   // -----------------------------------------------------------
   // Step 3: Write TURNO#N with completo = false.
@@ -183,14 +180,21 @@ export async function ejecutarTurno(
   const decisiones = new Map<string, string>();
 
   const consultarMotor = async (sobreviviente: Sobreviviente): Promise<void> => {
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const respuesta = await Promise.race([
         config.motor.pedirPaso({
           sobrevivienteId: sobreviviente.id,
           nodoActual: sobreviviente.nodo,
           turno,
+        }, controller.signal),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => {
+            controller.abort();
+            reject(new Error("timeout"));
+          }, PASO_TIMEOUT_MS);
         }),
-        sleep(PASO_TIMEOUT_MS),
       ]);
 
       // Validate: must be the same node or a neighbor via a non-blocked street.
@@ -212,10 +216,12 @@ export async function ejecutarTurno(
       // Timeout or network error → stay put.
       decisiones.set(sobreviviente.id, sobreviviente.nodo);
       respuestasFallidas++;
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
     }
   };
 
-  await porLotes(activos, MAX_CONCURRENCIA, consultarMotor);
+  await Promise.all(activos.map(consultarMotor));
 
   // -----------------------------------------------------------
   // Step 6: Move survivors, resolve bites, check arrivals, write completo = true.
@@ -244,7 +250,7 @@ export async function ejecutarTurno(
   // Check shelter arrivals (after bites — a bitten survivor at a refuge is mordido).
   resolverLlegadas(config.sobrevivientes, config.nodosRefugio);
 
-  await config.persistencia.completarTurno(turno, decisiones);
+  await config.persistencia.completarTurno(turno, decisiones, config.sobrevivientes);
 
   // -----------------------------------------------------------
   // Wait until the tick window is full.
@@ -269,6 +275,8 @@ export async function ejecutarTurno(
 // -------------------------------------------------------------------------
 
 export interface ConfigRonda extends ConfigTurno {
+  /** Defaults to true for existing local callers; official scenarios run all 150 turns. */
+  detenerSinActivos?: boolean;
   /** Total number of turns to run (e.g. 150 for a 5-minute round at 2 s/turn). */
   totalTurnos: number;
   /** Optional callback invoked after each turn completes (for logging / metrics). */
@@ -292,7 +300,7 @@ export async function correrRonda(config: ConfigRonda): Promise<ResultadoTurno[]
     config.onTurno?.(resultado);
 
     // Stop early when no one is still moving.
-    if (resultado.enRuta === 0) break;
+    if (resultado.enRuta === 0 && config.detenerSinActivos !== false) break;
   }
 
   return resultados;
