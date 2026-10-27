@@ -11,7 +11,8 @@
     "dev:back": "npm run dev -w backend",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "build": "npm run build -w backend && npm run build -w frontend"
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "build:simulador": "esbuild tools/simulador/lambda.ts --bundle --platform=node --target=node24 --format=cjs --outfile=tools/simulador/dist/lambda.js --external:@aws-sdk/*"
   },
   "allowScripts": {
     "esbuild@0.28.2": true

@@ -14,8 +14,6 @@
  *
  * Zombie placement: seeded random positions on non-refuge, non-barrio-start nodes.
  */
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { crearAleatorio } from "./preparar";
 import { generarPartidaId } from "../../backend/src/db/keys";
 import { crearGrafo, GrafoSchema, type Nodo } from "@abcstack/shared";
@@ -29,16 +27,15 @@ import type { PersistenciaPartida } from "./persistencia";
 import type { Reloj } from "./reloj";
 import type { ConfigRonda, EventoRonda } from "./turno";
 import type { DatosSobreviviente } from "./metricas";
+// Static import so esbuild bundles the graph into the simulator Lambda (S6); no file read at runtime.
+import grafoManta from "@abcstack/shared/data/manta.json";
 
 // -------------------------------------------------------------------------
 // Graph loading (once per process)
 // -------------------------------------------------------------------------
 
-const RUTA_GRAFO = resolve(__dirname, "../../shared/data/manta.json");
-
 function cargarGrafo() {
-  const raw = JSON.parse(readFileSync(RUTA_GRAFO, "utf8"));
-  return GrafoSchema.parse(raw);
+  return GrafoSchema.parse(grafoManta);
 }
 
 // -------------------------------------------------------------------------
@@ -46,10 +43,10 @@ function cargarGrafo() {
 // -------------------------------------------------------------------------
 
 let ultimaIdentidadMs = 0;
-function nuevaIdentidad(ronda: 1 | 2 | 3): string {
+function nuevaIdentidad(ronda: 1 | 2 | 3, modo: "evaluacion" | "demo" = "evaluacion"): string {
   // Retain the canonical epoch-ms format while avoiding same-process collisions.
   ultimaIdentidadMs = Math.max(Date.now(), ultimaIdentidadMs + 1);
-  return generarPartidaId("evaluacion", ronda).replace(/\d+$/, String(ultimaIdentidadMs));
+  return generarPartidaId(modo, ronda).replace(/\d+$/, String(ultimaIdentidadMs));
 }
 
 // -------------------------------------------------------------------------
@@ -134,6 +131,8 @@ interface OpcionesEscenario {
   motor?: ClienteMotor;
   persistencia?: PersistenciaPartida;
   reloj?: Reloj;
+  /** Scheduled demo rounds (S6) are tagged "demo"; everything else stays "evaluacion". */
+  modo?: "evaluacion" | "demo";
 }
 
 // 150 turns × 2 s = 5 minutes (official round duration)
@@ -173,7 +172,7 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
     motor,
     persistencia,
     reloj,
-    partidaId: nuevaIdentidad(1),
+    partidaId: nuevaIdentidad(1, opts.modo),
     ronda: 1,
     nodosRefugio,
     aleatorio: rnd,
@@ -238,7 +237,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     motor,
     persistencia,
     reloj,
-    partidaId: nuevaIdentidad(2),
+    partidaId: nuevaIdentidad(2, opts.modo),
     ronda: 2,
     nodosRefugio,
     aleatorio: rnd,
@@ -309,7 +308,7 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     motor,
     persistencia,
     reloj,
-    partidaId: nuevaIdentidad(3),
+    partidaId: nuevaIdentidad(3, opts.modo),
     ronda: 3,
     nodosRefugio,
     aleatorio: rnd,

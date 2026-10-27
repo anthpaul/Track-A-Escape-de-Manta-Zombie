@@ -29,6 +29,35 @@ respeta calles bloqueadas y zombies visibles, pero no sustituye al A* real ni
 sirve para evaluar su supervivencia o rendimiento. La latencia local se muestra
 como **no medida**, no como cero milisegundos.
 
+### S6: rondas demo en AWS (Lambda + Scheduler)
+
+`lambda.ts` juega una ronda completa por invocación y escribe cada turno en DynamoDB
+con el mismo candado y cerco que `--modo=http`. `infra/simulador.tf` la invoca cada
+6 minutos con EventBridge Scheduler (ronda `demo_ronda`, R2 por defecto), así el
+mapa público nunca queda congelado. Si otra ronda tiene el candado, la demo sale sin
+escribir nada. Las partidas se marcan `demo-r<N>-<epoch>` y `modo: "demo"`.
+
+En modo demo el motor corre **en el mismo proceso** (`motor-en-proceso.ts`, la misma
+`calcularSiguienteNodo` que usa `/paso`), sin HTTP: llamar a `/paso` en cada ronda demo
+serían millones de pedidos diarios a API Gateway. Las rondas de evaluación siguen
+saliendo de `correr.ts --modo=http`, que sí mide el `/paso` real.
+
+Despliegue (lo corre Alex): `npm run build:simulador` y después `terraform plan` /
+`apply` como siempre. Probar una ronda a mano:
+
+```powershell
+aws lambda invoke --function-name "$(terraform -chdir=infra output -raw simulador_lambda_name)" --invocation-type Event out.json
+```
+
+**Antes de una ronda de evaluación**, apagar las demos (`demo_enabled = false` y
+`apply`, o `aws scheduler update-schedule ... --state DISABLED`) y esperar a que
+termine la demo en curso (hasta 5 minutos, o 30 s si se cortó): el CLI no expulsa
+partidas ajenas.
+
+Costo estimado con las demos encendidas todo el día: unos US$ 0,5 de Lambda
+(512 MB × ~305 s × 240 rondas) y unos US$ 0,5 de escrituras en DynamoDB, cerca de
+**US$ 1 por día**. Es una estimación: confirmar con Cost Explorer.
+
 ### Calentamiento antes de cada ronda
 
 En la R3 llegan unos 200 `POST /paso` en la misma ventana de 500 ms. Cada instancia

@@ -19,6 +19,8 @@ export class DynamoPersistencia implements PersistenciaPartida {
     if (!tableName || !partidaId) throw new Error("Table name and game ID are required");
   }
 
+  /** Demo rounds (S6) carry a "demo-" game id; the lock and metadata record that mode. */
+  private get modo(): "demo" | "evaluacion" { return this.partidaId.startsWith("demo-") ? "demo" : "evaluacion"; }
   private get segundos() { return Math.floor(this.ahora() / 1000); }
   private get ttl() { return this.segundos + 86_400; }
   private get cerco() {
@@ -34,7 +36,7 @@ export class DynamoPersistencia implements PersistenciaPartida {
     try {
       await this.client.send(new PutCommand({
         TableName: this.tableName,
-        Item: { ...KEYS.control(), partidaId: this.partidaId, modo: "evaluacion", turnoActual: 0,
+        Item: { ...KEYS.control(), partidaId: this.partidaId, modo: this.modo, turnoActual: 0,
           expiraEn: this.segundos + 30, ttl: this.ttl },
         ConditionExpression: "attribute_not_exists(PK) OR expiraEn < :ahora",
         ExpressionAttributeValues: { ":ahora": this.segundos },
@@ -46,7 +48,7 @@ export class DynamoPersistencia implements PersistenciaPartida {
     await this.client.send(new TransactWriteCommand({ TransactItems: [
       { ConditionCheck: this.cerco },
       { Put: { TableName: this.tableName, Item: { ...KEYS.metadata(this.partidaId), ttl: this.ttl,
-        data: { ronda: this.ronda, estado: "en_curso", turnoActual: 0, config: { semilla, modo: "evaluacion" } } },
+        data: { ronda: this.ronda, estado: "en_curso", turnoActual: 0, config: { semilla, modo: this.modo } } },
         ConditionExpression: "attribute_not_exists(PK)" } },
     ] }));
     return true;
