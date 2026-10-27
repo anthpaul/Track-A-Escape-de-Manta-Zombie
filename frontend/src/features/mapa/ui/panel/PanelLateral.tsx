@@ -26,11 +26,11 @@ const CLASE_LATENCIA: Record<NivelLatencia, string> = {
 // challenge cares about, always visible whatever the tab. Bottom sheet on phones.
 // Why the panel is not showing the live game: the operator must never mistake the simulation for it.
 const AVISO: Record<Exclude<Conexion, "en_vivo">, { texto: string; detalle: string; Icono: LucideIcon; clase: string }> = {
-  simulado: { texto: "SIMULADO", detalle: "Simulación local, sin API", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
-  conectando: { texto: "CONECTANDO · SIMULADO", detalle: "Esperando la primera respuesta de /api/estado", Icono: RefreshCw, clase: "bg-crimson-500 text-calabaza-900" },
-  reconectando: { texto: "RECONECTANDO", detalle: "La última consulta falló: se muestra el último turno real", Icono: RefreshCw, clase: "bg-otono-500 text-crimson-100" },
-  sin_partida: { texto: "SIN PARTIDA · SIMULADO", detalle: "La API responde, pero no hay ninguna ronda en curso", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
-  sin_conexion: { texto: "SIN CONEXIÓN · SIMULADO", detalle: "La API no responde o su respuesta no cumple el contrato", Icono: WifiOff, clase: "bg-sangre-700 text-crimson-100" },
+  simulado: { texto: "Simulación local", detalle: "Datos de prueba generados en este navegador, sin el servidor", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
+  conectando: { texto: "Conectando…", detalle: "Esperando el primer turno del servidor; mientras tanto, una simulación local", Icono: RefreshCw, clase: "bg-crimson-500 text-calabaza-900" },
+  reconectando: { texto: "Reconectando", detalle: "No llegó el último turno: se muestra el anterior real", Icono: RefreshCw, clase: "bg-otono-500 text-crimson-100" },
+  sin_partida: { texto: "Esperando la próxima ronda", detalle: "No hay una ronda en curso ahora: se muestra una simulación local", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
+  sin_conexion: { texto: "Sin conexión · simulación local", detalle: "El servidor no responde: se muestra una simulación local", Icono: WifiOff, clase: "bg-sangre-700 text-crimson-100" },
 };
 
 export default function PanelLateral({ titulo, resumen, generadoEn, conexion, children }: Props) {
@@ -45,23 +45,27 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
       <header className="space-y-2">
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="font-pixel text-xl uppercase text-calabaza-500">{titulo}</h2>
-          <span className="font-pixel text-xs text-crimson-800">
-            R{resumen.ronda} · T{resumen.turno}
+          <span className="text-xs font-semibold text-crimson-800">
+            Ronda {resumen.ronda} · Turno {resumen.turno}
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {/* Only real snapshots get "EN VIVO": simulated turns are always fresh, so their age proves nothing. */}
           {(conexion === "en_vivo" || conexion === "reconectando") && <IndicadorEnVivo generadoEn={generadoEn} />}
-          <span className="inline-flex items-center gap-1 text-calabaza-900">
+          <span className="inline-flex items-center gap-1 text-calabaza-900" title="Sobrevivientes que siguen con vida: en camino o ya a salvo">
             <HeartPulse className="size-3.5 text-crimson-700" aria-hidden />
-            {resumen.supervivenciaPct}%
+            {resumen.supervivenciaPct}% con vida
           </span>
-          <span className={cn("inline-flex items-center gap-1", CLASE_LATENCIA[resumen.latencia.nivel])}>
+          <span
+            className={cn("inline-flex items-center gap-1", CLASE_LATENCIA[resumen.latencia.nivel])}
+            // p95 in plain words: the time within which 95 % of the engine's answers arrive.
+            title="El 95 % de las respuestas del motor llega en este tiempo o menos. Se mide en las rondas de evaluación."
+          >
             <Activity className="size-3.5" aria-hidden />
-            p95 {resumen.p95ms === null ? "—" : `${Math.round(resumen.p95ms)} ms`}
+            Respuesta {resumen.p95ms === null ? "—" : `${Math.round(resumen.p95ms)} ms`}
           </span>
           {aviso && (
-            <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-pixel text-[9px]", aviso.clase)}>
+            <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold", aviso.clase)}>
               <aviso.Icono className="size-3" aria-hidden />
               {aviso.texto}
             </span>

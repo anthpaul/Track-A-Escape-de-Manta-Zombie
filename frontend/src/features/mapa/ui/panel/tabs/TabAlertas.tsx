@@ -21,7 +21,7 @@ export default function TabAlertas({ alertas, leidas, onUbicar, onMarcarLeida }:
         return (
           <li key={a.id} className={cn("rounded-lg border bg-crimson-100 p-3", nueva ? "border-crimson-600" : "border-crimson-300")}>
             <div className="flex items-center justify-between">
-              <span className="font-pixel text-[10px] text-crimson-800">T{a.turno}</span>
+              <span className="text-[11px] text-crimson-800">Turno {a.turno}</span>
               {nueva && <span className="font-pixel text-[10px] text-sangre-700">NUEVA</span>}
             </div>
             <p className="mt-1 font-semibold text-calabaza-900">{a.titulo}</p>

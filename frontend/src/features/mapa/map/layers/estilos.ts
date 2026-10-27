@@ -200,6 +200,6 @@ export const capaRefugioSeleccionado: LayerProps = {
 export const capaSeguidoEtiqueta: LayerProps = {
   id: "seguido-etiqueta",
   type: "symbol",
-  layout: { ...ETIQUETA_SELECCION, "text-field": ["get", "id"], "text-anchor": "bottom", "text-offset": [0, -1.4] },
+  layout: { ...ETIQUETA_SELECCION, "text-field": ["get", "nombre"], "text-anchor": "bottom", "text-offset": [0, -1.4] },
   paint: { "text-color": COLOR_SELECCION.sobreviviente, "text-halo-color": "#13030d", "text-halo-width": 2 },
 };

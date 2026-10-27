@@ -13,6 +13,7 @@ import { resumenPanel } from "@/features/mapa/domain/resumen";
 import { elegirSeguido } from "@/features/mapa/domain/seleccion";
 import type { Snapshot } from "@/features/mapa/domain/tipos";
 import { conteosCapas, conteosFiltro, filtrarSobrevivientes, resumenRefugios } from "@/features/mapa/domain/vistas";
+import LeyendaMapa from "@/features/mapa/ui/LeyendaMapa";
 import MedidorFps from "@/features/mapa/ui/MedidorFps";
 import PanelLateral from "@/features/mapa/ui/panel/PanelLateral";
 import RielIconos from "@/features/mapa/ui/panel/RielIconos";
@@ -136,6 +137,7 @@ export default function PantallaMapa() {
           onSeleccionarRefugio={(id) => enviarYAbrir({ tipo: "seleccionarRefugio", id })}
           onSeleccionarSobreviviente={(id) => enviarYAbrir({ tipo: "seleccionarSobreviviente", id })}
         />
+        <LeyendaMapa />
       </div>
 
       <RielIconos

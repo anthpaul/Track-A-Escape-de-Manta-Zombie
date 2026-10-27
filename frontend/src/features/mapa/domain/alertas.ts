@@ -1,5 +1,6 @@
 import { nodosBloqueadosPorHordas } from "./grafo";
-import type { Grafo, Nodo, Snapshot } from "./tipos";
+import { lugarDeNodo, nombreSobreviviente, refugioMasCercano } from "./lugares";
+import type { Grafo, Snapshot } from "./tipos";
 
 // Alerts are not part of GET /api/estado: they are derived in the front by comparing a turn with
 // the previous one. Ids are built from the event, so the same event never raises two alerts.
@@ -15,19 +16,6 @@ export type Alerta = {
   refugioId?: string;
   sobrevivienteId?: string;
 };
-
-function refugioMasCercano(grafo: Grafo, nodo: Nodo | undefined) {
-  if (!nodo) return undefined;
-  const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
-  let mejor: { id: string; nombre: string; d: number } | undefined;
-  for (const r of grafo.refugios) {
-    const n = nodos.get(r.nodo);
-    if (!n) continue;
-    const d = (n.lat - nodo.lat) ** 2 + (n.lng - nodo.lng) ** 2;
-    if (!mejor || d < mejor.d) mejor = { id: r.id, nombre: r.nombre, d };
-  }
-  return mejor;
-}
 
 export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Snapshot): Alerta[] {
   if (!previo) return [];
@@ -60,7 +48,7 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
       turno,
       tipo: "calle_bloqueada",
       titulo: calle?.tipo === "puente" ? "Puente colapsado" : "Calle bloqueada",
-      descripcion: `${id} ya no se puede cruzar${cerca ? ` (zona de ${cerca.nombre})` : ""}. Las rutas se recalculan.`,
+      descripcion: `${calle?.tipo === "puente" ? "El puente" : "La calle"} ya no se puede cruzar${calle ? ` ${lugarDeNodo(grafo, calle.desde)}` : ""}. Las rutas se recalculan.`,
       refugioId: cerca?.id,
     });
   }
@@ -87,8 +75,11 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
       id: `${turno}:mordido:${primero.id}`,
       turno,
       tipo: "mordido",
-      titulo: nuevos.length === 1 ? `${primero.id} mordido` : `${nuevos.length} sobrevivientes mordidos`,
-      descripcion: nuevos.length === 1 ? `Nodo ${primero.nodo}.` : `Entre ellos ${primero.id} en el nodo ${primero.nodo}.`,
+      titulo: nuevos.length === 1 ? `${nombreSobreviviente(primero.id)} mordido` : `${nuevos.length} sobrevivientes mordidos`,
+      descripcion:
+        nuevos.length === 1
+          ? `Fue alcanzado ${lugarDeNodo(grafo, primero.nodo)}.`
+          : `Entre ellos, ${nombreSobreviviente(primero.id)}, ${lugarDeNodo(grafo, primero.nodo)}.`,
       sobrevivienteId: primero.id,
     });
   }

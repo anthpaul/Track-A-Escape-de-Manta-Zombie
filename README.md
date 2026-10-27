@@ -28,7 +28,7 @@ Un simulador mueve zombies por un grafo real de Manta en turnos de 2 segundos y,
 
 ## Cómo se usa el mapa
 
-Abrí el mapa en vivo: no hace falta iniciar sesión ni configurar nada. Cada 2 segundos llega un turno nuevo.
+Abrí el mapa en vivo: no hace falta iniciar sesión ni configurar nada. Cada 2 segundos llega un turno nuevo. La leyenda, abajo a la derecha del mapa, explica cada ícono y color, y el botón **Ayuda** del menú resume qué se está viendo y qué se puede hacer.
 
 | En el mapa | Significado |
 |---|---|
@@ -40,14 +40,14 @@ Abrí el mapa en vivo: no hace falta iniciar sesión ni configurar nada. Cada 2 
 | Calle roja | Calle bloqueada o puente colapsado |
 | Naranja, rosa y celeste | Avenida, calle y puente |
 
-El panel lateral tiene cuatro pestañas:
+El menú lateral (barra inferior en el celular) abre cuatro secciones, con íconos en los mismos colores del mapa:
 
 - **Refugios:** a salvo en cada refugio y capacidad libre.
-- **Sobrevivientes:** búsqueda y filtros por estado; al elegir uno, el mapa lo sigue y dibuja su ruta.
+- **Personas:** búsqueda por número o refugio y filtros por estado; al elegir un sobreviviente, el mapa lo sigue y dibuja su ruta.
 - **Capas:** prende o apaga cada capa del mapa.
 - **Alertas:** hordas nuevas, calles bloqueadas, refugios llenos y mordidas, con un aviso flotante.
 
-Arriba del panel, siempre visibles: ronda y turno, **EN VIVO** con la edad real del último turno, porcentaje de supervivencia y **p95 de `/paso`** con el color del tramo de puntaje (150, 300 y 500 ms). Si no hay partida o la API no responde, el mapa sigue con una simulación local y lo dice: **SIN PARTIDA** o **SIN CONEXIÓN**. Si un turno no llega, se mantiene el último turno real unos segundos y se muestra **RECONECTANDO**. En el celular el panel se abre desde la barra inferior.
+Arriba del panel, siempre visibles: ronda y turno, **EN VIVO** con la edad real del último turno (solo con datos reales), porcentaje de sobrevivientes con vida y **tiempo de respuesta del motor** (p95 de `/paso`, con el color del tramo de puntaje: 150, 300 y 500 ms). Los sobrevivientes se nombran por número ("Sobreviviente 5") y su ubicación por barrio o refugio cercano, nunca por códigos internos. Si no hay partida o la API no responde, el mapa sigue con una simulación local y lo dice: **Esperando la próxima ronda** o **Sin conexión**. Si un turno no llega, se mantiene el último turno real unos segundos y se muestra **Reconectando**. El botón **Ocultar** esconde el panel y deja el mapa completo. En el celular el panel se abre desde la barra inferior.
 
 ## Arquitectura
 
