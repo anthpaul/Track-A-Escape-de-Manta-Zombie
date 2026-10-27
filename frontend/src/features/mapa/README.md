@@ -26,8 +26,8 @@ mapa/
 │   ├── geojson/          Conversores puros dominio → GeoJSON, con tests
 │   └── layers/           Capas, estilos de MapLibre y registro de íconos
 ├── data/                 Fuentes de datos
-│   ├── real/             Grafo real de Manta (shared/data/manta.json, T0.3)
-│   └── mock/             Simulación de prueba sobre el grafo real (se reemplaza por /api/estado en N4)
+│   ├── real/             Grafo real de Manta (T0.3) y polling de GET /api/estado cada 2 s (N4), validado con Zod
+│   └── mock/             Simulación en el navegador: se usa mientras no hay partida o la API no responde (marca SIMULADO)
 └── ui/                   Componentes de presentación (sin lógica de negocio)
     ├── MedidorFps.tsx    Overlay de depuración (?debug)
     └── panel/            Riel interactivo: RielIconos, PanelLateral, ToastAlerta, IndicadorEnVivo y tabs/ (Refugios, Sobrevivientes, Capas, Alertas)
@@ -42,3 +42,12 @@ mapa/
 | Toda decisión de fuente de datos (mock o API real) está en `PantallaMapa.tsx` | Pasar de mock a `/api/estado` (N4) cambia un solo archivo |
 | Los colores del tema van por tokens (`bg-card`, `text-primary`); los de significado (capas y leyenda), en `simbologia/colores.ts` | Ver la regla de oro de UI en `AGENTS.md` §6 |
 | Tests junto al archivo que prueban (`x.ts` + `x.test.ts`) | Se encuentran solos; `npm test -w frontend` los corre todos |
+
+## Datos en vivo (N4)
+
+| Variable | Valor | Efecto |
+|---|---|---|
+| `NEXT_PUBLIC_USE_MOCKS` | `false` | Pide `GET <API_URL>/estado` cada 2 s. Sin la variable, solo simulación local |
+| `NEXT_PUBLIC_API_URL` | `/api` en producción · `http://localhost:3001/api` con `npm run dev -w backend` | Base de la API |
+
+Si `/estado` responde `{ ok: false }` (no hay partida) o falla, el mapa sigue con la simulación y el panel muestra **SIMULADO**. Si una consulta falla después de recibir datos reales, se conserva el último snapshot y el indicador "EN VIVO" muestra su edad.
