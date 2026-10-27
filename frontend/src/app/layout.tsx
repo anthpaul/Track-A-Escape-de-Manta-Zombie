@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Silkscreen, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -22,6 +22,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Escape de Manta Zombie",
   description: "Motor de rutas en tiempo real para escapar de los zombies de Manta.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover", // lets env(safe-area-inset-*) work on phones with a notch or home indicator
+  themeColor: "#13030d",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -110,7 +110,7 @@ export default function PantallaMapa() {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-background">
-      <div className="absolute inset-x-0 bottom-16 top-0 md:bottom-0">
+      <div className="absolute inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] top-0 max-md:landscape:bottom-0 md:bottom-0">
         <MapaVivo
           grafo={grafo}
           snapshot={snapshot}
@@ -119,12 +119,19 @@ export default function PantallaMapa() {
           anilloSobrevivienteId={seleccionado?.id ?? seguidoId}
           refugioId={panel.refugioId}
           ruta={ruta}
+          panelAbierto={abierto}
           onSeleccionarRefugio={(id) => enviarYAbrir({ tipo: "seleccionarRefugio", id })}
           onSeleccionarSobreviviente={(id) => enviarYAbrir({ tipo: "seleccionarSobreviviente", id })}
         />
       </div>
 
-      <RielIconos tab={panel.tab} abierto={abierto} noLeidas={noLeidas} onElegir={elegirTab} />
+      <RielIconos
+        tab={panel.tab}
+        abierto={abierto}
+        noLeidas={noLeidas}
+        onElegir={elegirTab}
+        onAlternarPanel={() => setAbierto((a) => !a)}
+      />
 
       {abierto && (
         <PanelLateral titulo={TITULOS[panel.tab]} resumen={resumen} generadoEn={snapshot.generadoEn} esPrueba={esPrueba}>

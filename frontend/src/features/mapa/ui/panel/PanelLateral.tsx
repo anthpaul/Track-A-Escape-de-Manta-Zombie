@@ -26,8 +26,10 @@ const CLASE_LATENCIA: Record<NivelLatencia, string> = {
 export default function PanelLateral({ titulo, resumen, generadoEn, esPrueba, children }: Props) {
   return (
     <section
+      id="panel-mapa"
       aria-label={titulo}
-      className="absolute inset-x-0 bottom-16 z-20 flex max-h-[50dvh] flex-col gap-3.5 rounded-t-2xl border-t border-crimson-300 bg-crimson-200/95 p-5 backdrop-blur md:inset-y-0 md:bottom-auto md:left-16 md:right-auto md:max-h-none md:w-[300px] md:rounded-none md:border-r md:border-t-0"
+      // Sizes mirror map/padding.ts (DISENO).
+      className="absolute inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex max-h-[50dvh] flex-col gap-3.5 rounded-t-2xl border-t border-crimson-300 bg-crimson-200/95 p-5 backdrop-blur max-md:landscape:inset-y-0 max-md:landscape:bottom-0 max-md:landscape:left-14 max-md:landscape:right-auto max-md:landscape:max-h-none max-md:landscape:w-72 max-md:landscape:gap-2.5 max-md:landscape:rounded-none max-md:landscape:border-r max-md:landscape:border-t-0 max-md:landscape:p-3 md:inset-y-0 md:bottom-0 md:left-16 md:right-auto md:max-h-none md:w-[300px] md:rounded-none md:border-r md:border-t-0 xl:w-[340px]"
     >
       <header className="space-y-2">
         <div className="flex items-baseline justify-between gap-2">
