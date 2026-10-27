@@ -237,7 +237,7 @@ responde, pero `/api/estado`, `/api/paso` y `/api/sobrevivientes/:id/ruta` dan 4
 
 | Fase 1 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| | ✅ K1 · ✅ K2 · ✅ K3 · ✅ K6 · ✅ K5 · ⬜ K4 | ✅ S1 · ✅ S2 · ✅ S3 · ⬜ S4 (falta R1 contra AWS) · ✅ S5 · ⬜ S6 (falta `apply`) | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ✅ N4 · ✅ N6 · ⬜ N5 |
+| | ✅ K1 · ✅ K2 · ✅ K3 · ✅ K6 · ✅ K5 · ⬜ K4 | ✅ S1 · ✅ S2 · ✅ S3 · ⬜ S4 (falta R1 contra AWS) · ✅ S5 · ⬜ S6 (falta `apply`) | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ✅ N4 · ✅ N6 · ✅ N5 |
 
 | Entrega | Estado |
 |---|---|
