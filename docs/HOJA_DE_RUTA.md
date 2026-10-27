@@ -68,8 +68,22 @@ monorepo pasa; el typecheck global sigue fallando por problemas preexistentes
 (backend sin tsconfig y tipos/dependencias del frontend), reproducidos contra la
 versión base. La revisión independiente no encontró regresiones y comparó 20
 casos de los contratos anteriores. **La aprobación del PR por los tres sigue
-pendiente:** T0.2 no se marca completada en la sección 6. No se implementó K1/A*,
+pendiente:** T0.2 no se marca completada en la sección 6. En T0.2 no se implementó K1/A*,
 T0.6, persistencia ni integración del frontend.
+
+**T0.6 — implementación local verificada (Kevin):** interfaz `FuenteMundo` en
+`backend/src/motor/fuente-mundo.ts` y adaptador de solo lectura `DynamoFuente` en
+`backend/src/db/dynamo-fuente.ts`, reutilizando `KEYS`. Devuelve el peligro
+inmutable de la partida y el turno real; lee el turno exacto o el último existente
+menor o igual, sin inventar ronda ni devolver un mundo vacío ante fallos. La caché
+separa `(partidaId, turno)`, comparte lecturas simultáneas, respeta TTL y no guarda
+un respaldo anterior bajo el número solicitado. Uso y límites en `backend/README.md`.
+`npm test -w backend` pasa 39 pruebas y `npm run typecheck -w backend` pasa en modo
+strict. La suite del monorepo pasa; el typecheck global conserva 23 diagnósticos
+preexistentes del frontend, reproducidos en la versión base. La verificación
+independiente de concurrencia no encontró regresiones. No se probó contra AWS ni
+se conectó a `/paso`; A*, resolución de partida activa y candado siguen en sus
+tareas posteriores. La revisión y aprobación del PR siguen pendientes.
 
 ---
 
