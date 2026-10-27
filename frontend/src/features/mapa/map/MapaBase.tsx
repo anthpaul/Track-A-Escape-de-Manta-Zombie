@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Map, { type MapLayerMouseEvent } from "react-map-gl/maplibre";
+import type { Map as MapaMaplibre } from "maplibre-gl";
 import { getVersion, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } from "@/features/mapa/map/config";
@@ -23,6 +24,22 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
   const [falloEstilo, setFalloEstilo] = useState(false);
   const [sobreEntidad, setSobreEntidad] = useState(false);
 
+  // Recolor only the CARTO base layers with the night palette; our GeoJSON layers keep their own colors.
+  // Runs on every styledata (not only on "load", which waits for every tile and shows the original CARTO
+  // colors first, and misses later style reloads). It only sets properties that drifted, so once they
+  // match it changes nothing and cannot loop.
+  const recolorear = (mapa: MapaMaplibre) => {
+    // The style's layers exist once its JSON is parsed; isStyleLoaded() would wait for every tile too.
+    if (!mapa.getLayer("background")) return;
+    for (const capa of mapa.getStyle().layers) {
+      const fuente = "source" in capa && typeof capa.source === "string" ? mapa.getSource(capa.source) : undefined;
+      if (fuente?.type === "geojson") continue;
+      for (const [propiedad, valor] of pinturaTematica(capa)) {
+        if (mapa.getPaintProperty(capa.id, propiedad) !== valor) mapa.setPaintProperty(capa.id, propiedad, valor);
+      }
+    }
+  };
+
   const alHacerClick = (e: MapLayerMouseEvent) => {
     const entidades = (e.features ?? []).map((f) => ({ capa: f.layer.id, propiedades: f.properties ?? {} }));
     if (entidades.length > 0 && onClickEntidad) onClickEntidad(entidades);
@@ -42,16 +59,11 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
         onError={(e) => {
           if (!e.target.isStyleLoaded()) setFalloEstilo(true);
         }}
-        onStyleData={() => setFalloEstilo(false)}
-        // Recolor only the CARTO base layers with palette 2; our GeoJSON layers keep their own colors.
-        onLoad={(e) => {
-          const mapa = e.target;
-          for (const capa of mapa.getStyle().layers) {
-            const fuente = "source" in capa && typeof capa.source === "string" ? mapa.getSource(capa.source) : undefined;
-            if (fuente?.type === "geojson") continue;
-            for (const [propiedad, valor] of pinturaTematica(capa)) mapa.setPaintProperty(capa.id, propiedad, valor);
-          }
+        onStyleData={(e) => {
+          setFalloEstilo(false);
+          recolorear(e.target);
         }}
+        onLoad={(e) => recolorear(e.target)}
         interactiveLayerIds={capasInteractivas}
         onClick={alHacerClick}
         onMouseEnter={() => setSobreEntidad(true)}

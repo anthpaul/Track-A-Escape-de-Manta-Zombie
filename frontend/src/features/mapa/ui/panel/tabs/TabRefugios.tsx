@@ -58,7 +58,13 @@ export default function TabRefugios(p: Props) {
             </div>
             <p className="mt-1.5 text-xs text-crimson-800">
               {r.ocupacion} / {r.capacidad} ·{" "}
-              {r.accesosBloqueados > 0 ? `${r.accesosBloqueados} calles de acceso bloqueadas` : "acceso libre"}
+              {r.sinAcceso ? (
+                <span className="font-semibold text-sangre-700">sin acceso: el camino está bloqueado</span>
+              ) : r.accesosBloqueados > 0 ? (
+                `${r.accesosBloqueados} calles de acceso bloqueadas`
+              ) : (
+                "acceso libre"
+              )}
             </p>
             {elegido && (
               <div className="mt-3 grid grid-cols-2 gap-2">

@@ -1,3 +1,4 @@
+import { refugiosSinAcceso } from "./grafo";
 import type { CapaClave, FiltroSobreviviente } from "./panel";
 import type { EstadoSobreviviente, Grafo, Snapshot, Sobreviviente } from "./tipos";
 
@@ -39,10 +40,13 @@ export type RefugioVista = {
   lleno: boolean;
   enCamino: number;
   accesosBloqueados: number;
+  // Nobody can reach it this turn (horde on the way in, or blocked streets): see refugiosSinAcceso.
+  sinAcceso: boolean;
 };
 
 export function resumenRefugios(grafo: Grafo, snapshot: Snapshot) {
   const bloqueadas = new Set(snapshot.aristasBloqueadas);
+  const cortados = refugiosSinAcceso(grafo, snapshot);
   const refugios: RefugioVista[] = grafo.refugios.map((r) => {
     const o = snapshot.refugios.find((x) => x.id === r.id);
     const ocupacion = o?.ocupacion ?? 0;
@@ -56,6 +60,7 @@ export function resumenRefugios(grafo: Grafo, snapshot: Snapshot) {
       lleno: ocupacion >= capacidad,
       enCamino: snapshot.sobrevivientes.filter((s) => s.estado === "en_ruta" && s.refugio === r.id).length,
       accesosBloqueados: grafo.calles.filter((c) => bloqueadas.has(c.id) && (c.desde === r.nodo || c.hasta === r.nodo)).length,
+      sinAcceso: cortados.has(r.id),
     };
   });
   return {
