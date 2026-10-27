@@ -79,3 +79,32 @@ test("a survivor who is not on the road has no route", async () => {
   const salvado = { ...snap, sobrevivientes: [{ id: "S-0001", nodo: grafoMini.refugios[0].nodo, estado: "a_salvo" as const }] };
   assert.deepEqual(rutaHaciaRefugio(grafoMini, salvado, "S-0001"), []);
 });
+
+test("on-road survivors carry their destination shelter and remaining streets", async () => {
+  const { rutaHaciaRefugio } = await import("./simulacion");
+  const snap = avanzarTurno(grafoMini, crearSimulacion(grafoMini, config, AHORA), AHORA);
+  const refugios = new Map(grafoMini.refugios.map((r) => [r.nodo, r.id]));
+  const conDestino = snap.sobrevivientes.filter((x) => x.estado === "en_ruta" && x.callesRestantes !== undefined);
+  assert.ok(conDestino.length > 0, "no on-road survivor carries a destination");
+  for (const s of conDestino) {
+    const ruta = rutaHaciaRefugio(grafoMini, snap, s.id);
+    assert.equal(s.callesRestantes, ruta.length - 1, s.id);
+    assert.equal(s.refugio, refugios.get(ruta.at(-1)!), s.id);
+  }
+});
+
+test("on the real graph survivors start in the four neighborhoods and only walk streets", async () => {
+  const { grafoManta } = await import("../real/grafo-manta");
+  const conBarrio = new Set(grafoManta.nodos.filter((n) => n.barrio).map((n) => n.id));
+  const adyacencia = vecinos(grafoManta);
+  let snap = crearSimulacion(grafoManta, { ...config, caminantes: 12, corredores: 4, hordas: 2 }, AHORA);
+  assert.ok(snap.sobrevivientes.every((s) => conBarrio.has(s.nodo)));
+  for (let i = 0; i < 10; i++) {
+    const siguiente = avanzarTurno(grafoManta, snap, AHORA);
+    for (const s of siguiente.sobrevivientes) {
+      const antes = snap.sobrevivientes.find((x) => x.id === s.id)!;
+      assert.ok(antes.nodo === s.nodo || adyacencia.get(antes.nodo)?.includes(s.nodo), `${s.id} jumped`);
+    }
+    snap = siguiente;
+  }
+});
