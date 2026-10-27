@@ -52,18 +52,21 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {/* Only real snapshots get "EN VIVO": simulated turns are always fresh, so their age proves nothing. */}
           {(conexion === "en_vivo" || conexion === "reconectando") && <IndicadorEnVivo generadoEn={generadoEn} />}
-          <span className="inline-flex items-center gap-1 text-calabaza-900" title="Sobrevivientes que siguen con vida: en camino o ya a salvo">
+          <span className="inline-flex items-center gap-1 text-calabaza-900" title="Porcentaje de sobrevivientes que no fueron mordidos: los que siguen en camino más los que ya llegaron a un refugio">
             <HeartPulse className="size-3.5 text-crimson-700" aria-hidden />
-            {resumen.supervivenciaPct}% con vida
+            {resumen.supervivenciaPct}% sigue con vida
           </span>
-          <span
-            className={cn("inline-flex items-center gap-1", CLASE_LATENCIA[resumen.latencia.nivel])}
-            // p95 in plain words: the time within which 95 % of the engine's answers arrive.
-            title="El 95 % de las respuestas del motor llega en este tiempo o menos. Se mide en las rondas de evaluación."
-          >
-            <Activity className="size-3.5" aria-hidden />
-            Respuesta {resumen.p95ms === null ? "—" : `${Math.round(resumen.p95ms)} ms`}
-          </span>
+          {/* Demo rounds call the engine in-process, so there is no response time to show: hide it instead of "—". */}
+          {resumen.p95ms !== null && (
+            <span
+              className={cn("inline-flex items-center gap-1", CLASE_LATENCIA[resumen.latencia.nivel])}
+              // p95 in plain words: the time within which 95 % of the engine's answers arrive.
+              title="El 95 % de las respuestas del motor llega en este tiempo o menos. Se mide en las rondas de evaluación."
+            >
+              <Activity className="size-3.5" aria-hidden />
+              Respuesta {Math.round(resumen.p95ms)} ms
+            </span>
+          )}
           {aviso && (
             <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold", aviso.clase)}>
               <aviso.Icono className="size-3" aria-hidden />
