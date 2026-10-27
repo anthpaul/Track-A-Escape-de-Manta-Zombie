@@ -1,9 +1,11 @@
+import type { CircleLayerSpecification } from "maplibre-gl";
 import type { LayerProps } from "react-map-gl/maplibre";
 import {
   COLOR_CALLE,
   COLOR_FLECHA,
   COLOR_REFUGIO,
   COLOR_RUTA,
+  COLOR_SELECCION,
   COLOR_SOBREVIVIENTE,
   COLOR_ZONA_HORDA,
 } from "@/features/mapa/simbologia/colores";
@@ -40,8 +42,8 @@ export const capaRefugiosBase: LayerProps = {
   type: "circle",
   paint: {
     "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 7, 16, 13],
-    "circle-color": COLOR_REFUGIO,
-    "circle-stroke-color": "#0a0a0a",
+    "circle-color": COLOR_REFUGIO.relleno,
+    "circle-stroke-color": COLOR_REFUGIO.borde,
     "circle-stroke-width": 2,
   },
 };
@@ -78,26 +80,35 @@ export const capaZonasHorda: LayerProps = {
   type: "circle",
   paint: {
     "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 10, 14, 26, 16, 70],
-    "circle-color": COLOR_ZONA_HORDA,
-    "circle-opacity": ["match", ["get", "origen"], "horda", 0.35, 0.18],
-    "circle-stroke-color": COLOR_ZONA_HORDA,
-    "circle-stroke-width": 1,
-    "circle-stroke-opacity": 0.5,
+    "circle-color": COLOR_ZONA_HORDA.relleno,
+    "circle-opacity": ["match", ["get", "origen"], "horda", 0.4, 0.25],
+    "circle-stroke-color": COLOR_ZONA_HORDA.borde,
+    "circle-stroke-width": 1.5,
+    "circle-stroke-opacity": 0.8,
   },
 };
 
+// Survivors on the road and bitten ones are separate layers so each can be switched off (Capas tab).
 // Survivors already in a shelter are counted in the panel, not drawn.
+const pinturaPersona = (color: string): CircleLayerSpecification["paint"] => ({
+  "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 3, 16, 7],
+  "circle-color": color,
+  "circle-stroke-color": "#13030d",
+  "circle-stroke-width": 1,
+});
+
 export const capaSobrevivientes: LayerProps = {
   id: "sobrevivientes",
   type: "circle",
-  filter: ["!=", ["get", "estado"], "a_salvo"],
-  paint: {
-    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 2.5, 16, 6],
-    "circle-color": ["match", ["get", "estado"], "mordido", COLOR_SOBREVIVIENTE.mordido, COLOR_SOBREVIVIENTE.en_ruta],
-    "circle-opacity": ["match", ["get", "estado"], "mordido", 0.45, 0.95],
-    "circle-stroke-color": "#0a0a0a",
-    "circle-stroke-width": 0.5,
-  },
+  filter: ["==", ["get", "estado"], "en_ruta"],
+  paint: pinturaPersona(COLOR_SOBREVIVIENTE.en_ruta),
+};
+
+export const capaMordidos: LayerProps = {
+  id: "mordidos",
+  type: "circle",
+  filter: ["==", ["get", "estado"], "mordido"],
+  paint: pinturaPersona(COLOR_SOBREVIVIENTE.mordido),
 };
 
 export const capaZombies: LayerProps = {
@@ -136,19 +147,12 @@ export const capaFlechasPuntas: LayerProps = {
   },
 };
 
-// Planned route of the followed survivor: soft glow under a solid line.
-export const capaRutaHalo: LayerProps = {
-  id: "ruta-halo",
-  type: "line",
-  layout: { "line-cap": "round", "line-join": "round" },
-  paint: { "line-color": COLOR_RUTA, "line-width": 12, "line-opacity": 0.2 },
-};
-
+// Planned route of the followed survivor: dashed tide-blue line (dasharray is in line widths: 10px / 6px at 4px).
 export const capaRuta: LayerProps = {
   id: "ruta",
   type: "line",
-  layout: { "line-cap": "round", "line-join": "round" },
-  paint: { "line-color": COLOR_RUTA, "line-width": 4 },
+  layout: { "line-cap": "butt", "line-join": "round" },
+  paint: { "line-color": COLOR_RUTA, "line-width": 4, "line-dasharray": [2.5, 1.5] },
 };
 
 export const capaSeguido: LayerProps = {
@@ -157,7 +161,7 @@ export const capaSeguido: LayerProps = {
   paint: {
     "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 7, 16, 12],
     "circle-color": "rgba(0,0,0,0)",
-    "circle-stroke-color": COLOR_RUTA,
+    "circle-stroke-color": COLOR_SELECCION.sobreviviente,
     "circle-stroke-width": 3,
   },
 };

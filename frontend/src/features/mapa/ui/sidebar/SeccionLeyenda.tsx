@@ -70,7 +70,7 @@ export default function SeccionLeyenda() {
                 </li>
               );
             })}
-            <li className="flex items-center gap-2"><Punto color={COLOR_ZONA_HORDA} opacidad={0.45} />Zona bloqueada por horda</li>
+            <li className="flex items-center gap-2"><Punto color={COLOR_ZONA_HORDA.relleno} opacidad={0.6} />Zona bloqueada por horda</li>
             <li className="flex items-center gap-2"><Punto color={COLOR_SOBREVIVIENTE.en_ruta} />Sobreviviente</li>
             <li className="flex items-center gap-2"><Punto color={COLOR_SOBREVIVIENTE.mordido} opacidad={0.5} />Mordido</li>
             <li className="flex items-center gap-2">

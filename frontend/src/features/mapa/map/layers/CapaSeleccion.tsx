@@ -5,7 +5,7 @@ import type { FeatureCollection, Point } from "geojson";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { flechasAGeoJSON, rutaAGeoJSON } from "@/features/mapa/map/geojson/rutas";
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
-import { capaFlechasLineas, capaFlechasPuntas, capaRuta, capaRutaHalo, capaSeguido } from "@/features/mapa/map/layers/estilos";
+import { capaFlechasLineas, capaFlechasPuntas, capaRuta, capaSeguido } from "@/features/mapa/map/layers/estilos";
 
 type Props = { grafo: Grafo; snapshot: Snapshot; seguidoId: string | null; ruta: string[] };
 
@@ -31,7 +31,6 @@ export default function CapaSeleccion({ grafo, snapshot, seguidoId, ruta }: Prop
         <Layer {...capaFlechasPuntas} />
       </Source>
       <Source id="ruta" type="geojson" data={lineaRuta}>
-        <Layer {...capaRutaHalo} />
         <Layer {...capaRuta} />
       </Source>
       <Source id="seguido" type="geojson" data={seguido}>

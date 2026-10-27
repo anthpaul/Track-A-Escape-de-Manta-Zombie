@@ -5,6 +5,7 @@ import Map, { type MapLayerMouseEvent } from "react-map-gl/maplibre";
 import { getVersion, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } from "@/features/mapa/map/config";
+import { pinturaTematica } from "@/features/mapa/map/tema-mapa";
 
 // The worker is copied to public/ by scripts/copy-maplibre-worker.mjs; the version query busts stale caches.
 setWorkerUrl(`/maplibre-gl-worker.js?v=${getVersion()}`);
@@ -42,6 +43,15 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
           if (!e.target.isStyleLoaded()) setFalloEstilo(true);
         }}
         onStyleData={() => setFalloEstilo(false)}
+        // Recolor only the CARTO base layers with palette 2; our GeoJSON layers keep their own colors.
+        onLoad={(e) => {
+          const mapa = e.target;
+          for (const capa of mapa.getStyle().layers) {
+            const fuente = "source" in capa && typeof capa.source === "string" ? mapa.getSource(capa.source) : undefined;
+            if (fuente?.type === "geojson") continue;
+            for (const [propiedad, valor] of pinturaTematica(capa)) mapa.setPaintProperty(capa.id, propiedad, valor);
+          }
+        }}
         interactiveLayerIds={capasInteractivas}
         onClick={alHacerClick}
         onMouseEnter={() => setSobreEntidad(true)}

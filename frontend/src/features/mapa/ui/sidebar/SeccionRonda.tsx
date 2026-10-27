@@ -51,7 +51,7 @@ export default function SeccionRonda({ resumen }: { resumen: ResumenPanel }) {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-3 gap-1.5">
           <Dato Icono={Footprints} etiqueta="En ruta" valor={resumen.enRuta} color={COLOR_SOBREVIVIENTE.en_ruta} />
-          <Dato Icono={ShieldCheck} etiqueta="A salvo" valor={resumen.aSalvo} color={COLOR_REFUGIO} />
+          <Dato Icono={ShieldCheck} etiqueta="A salvo" valor={resumen.aSalvo} color={COLOR_REFUGIO.relleno} />
           <Dato Icono={HeartCrack} etiqueta="Mordidos" valor={resumen.mordidos} color={COLOR_SOBREVIVIENTE.mordido} />
         </div>
         <dl className="space-y-1">

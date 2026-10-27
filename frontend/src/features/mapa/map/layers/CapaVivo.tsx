@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import { sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
-import { capaSobrevivientes, capaZombies, capaZonasHorda } from "@/features/mapa/map/layers/estilos";
+import { capaMordidos, capaSobrevivientes, capaZombies, capaZonasHorda } from "@/features/mapa/map/layers/estilos";
 
 type Props = { grafo: Grafo; snapshot: Snapshot };
 
@@ -25,6 +25,7 @@ export default function CapaVivo({ grafo, snapshot }: Props) {
       </Source>
       <Source id="sobrevivientes" type="geojson" data={sobrevivientes}>
         <Layer {...capaSobrevivientes} />
+        <Layer {...capaMordidos} />
       </Source>
       <Source id="zombies" type="geojson" data={zombies}>
         <Layer {...capaZombies} />

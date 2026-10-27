@@ -11,6 +11,12 @@ test("a badge wraps the Lucide svg in a 64x64 svg with a colored disc", () => {
   assert.match(svg, /<g transform="translate\(16 16\)"><svg width="32" height="32"><path d="M1 1"\/><\/svg><\/g>/);
 });
 
+test("a square badge draws a rounded rect with its own border color", () => {
+  const svg = decodificar(svgIconoMapa("<svg/>", "#bae8f4", "cuadrado", "#0f4c5c"));
+  assert.match(svg, /<rect[^>]*fill="#bae8f4"[^>]*stroke="#0f4c5c"/);
+  assert.doesNotMatch(svg, /<circle/);
+});
+
 test("an icon without background has no disc", () => {
   assert.doesNotMatch(decodificar(svgIconoMapa("<svg/>", null)), /<circle/);
 });

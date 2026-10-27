@@ -31,7 +31,7 @@ export default function SeccionRefugios({ refugios }: { refugios: RefugioPanel[]
                   className="h-full rounded-full"
                   style={{
                     width: `${Math.min(100, (r.ocupacion / Math.max(1, r.capacidad)) * 100)}%`,
-                    backgroundColor: r.lleno ? "#f87171" : COLOR_REFUGIO,
+                    backgroundColor: r.lleno ? "#f87171" : COLOR_REFUGIO.relleno,
                   }}
                 />
               </div>
