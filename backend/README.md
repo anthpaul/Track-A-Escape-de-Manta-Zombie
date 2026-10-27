@@ -25,6 +25,18 @@ El motor depende de `FuenteMundo`, no del SDK de DynamoDB. La implementación
 `DynamoFuente` queda en `src/db/`; la interfaz y los errores de dominio están en
 `src/motor/fuente-mundo.ts`. No implementa A*, `/paso`, el candado ni el simulador.
 
+## `GET /api/sobrevivientes/:id/ruta` — K6
+
+`src/routes/sobrevivientes.ts` responde la ruta planificada completa de un
+sobreviviente sobre el último turno completo, el mismo que muestra `/estado`.
+`src/motor/ruta.ts` recorre `buscarRuta` paso a paso sobre ese mundo congelado,
+sin modificar el A* de `/paso`: el primer paso coincide con lo que respondería
+`/paso` y su latencia no cambia. Respuestas: `200` con `ruta` (en ruta), `ruta: []`
+y `estado` (a salvo o mordido), `motivo: "sin_ruta"` si no hay refugio alcanzable;
+`400` con un id fuera del formato `S-0000`; `404` si el sobreviviente no está en la
+partida activa o no hay partida. En el grafo real de Manta, la ruta desde cualquiera
+de los 284 nodos llega a un refugio, con un peor caso local de unos 100 ms.
+
 ## Contrato que consume el motor
 
 ```ts
