@@ -5,12 +5,14 @@ import { Layer, Source } from "react-map-gl/maplibre";
 import { sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
 import { capaMordidos, capaSobrevivientes, capaZombies, capaZonasHorda } from "@/features/mapa/map/layers/estilos";
+import { conFiltro, conVisibilidad, filtroZombies, type CapasVisibles } from "./visibilidad";
 
-type Props = { grafo: Grafo; snapshot: Snapshot };
+type Props = { grafo: Grafo; snapshot: Snapshot; capas: CapasVisibles };
 
 // Live layers. Each snapshot only swaps the GeoJSON data of three sources (one setData each),
-// never one React component per entity, so 200 survivors stay smooth.
-export default function CapaVivo({ grafo, snapshot }: Props) {
+// never one React component per entity, so 200 survivors stay smooth. Switched-off layers are
+// hidden by visibility or filter, without rebuilding any source.
+export default function CapaVivo({ grafo, snapshot, capas }: Props) {
   const zonas = useMemo(() => zonasHordaAGeoJSON(grafo, snapshot.zombies), [grafo, snapshot.zombies]);
   const sobrevivientes = useMemo(
     () => sobrevivientesAGeoJSON(grafo, snapshot.sobrevivientes),
@@ -21,14 +23,14 @@ export default function CapaVivo({ grafo, snapshot }: Props) {
   return (
     <>
       <Source id="zonas-horda" type="geojson" data={zonas}>
-        <Layer {...capaZonasHorda} />
+        <Layer {...conVisibilidad(capaZonasHorda, capas.horda)} />
       </Source>
       <Source id="sobrevivientes" type="geojson" data={sobrevivientes}>
-        <Layer {...capaSobrevivientes} />
-        <Layer {...capaMordidos} />
+        <Layer {...conVisibilidad(capaSobrevivientes, capas.sobreviviente)} />
+        <Layer {...conVisibilidad(capaMordidos, capas.mordido)} />
       </Source>
       <Source id="zombies" type="geojson" data={zombies}>
-        <Layer {...capaZombies} />
+        <Layer {...conFiltro(capaZombies, filtroZombies(capas))} />
       </Source>
     </>
   );

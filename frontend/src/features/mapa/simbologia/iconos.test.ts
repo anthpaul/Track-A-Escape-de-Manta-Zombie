@@ -22,7 +22,7 @@ test("an icon without background has no disc", () => {
 });
 
 test("every map image referenced by the layers is defined", () => {
-  for (const nombre of ["zombie-caminante", "zombie-corredor", "zombie-horda", "refugio", "flecha"]) {
+  for (const nombre of ["zombie-caminante", "zombie-corredor", "zombie-horda", "refugio", "flecha", "anillo-refugio"]) {
     assert.ok(ICONOS_MAPA[nombre], `missing map icon ${nombre}`);
   }
 });

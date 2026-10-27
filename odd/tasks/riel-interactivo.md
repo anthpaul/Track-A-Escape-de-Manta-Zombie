@@ -20,9 +20,10 @@ Rama: `feat/riel-interactivo` · Entrega: un PR con commits por unidad · Tests:
 | T1 | S6, S7 | inline | hecho (49 tests) | d6266ab |
 | T2 | S1, S5 | inline | hecho (54 tests) | 9ed8347 |
 | T3 | S2, S3, S5 | inline | hecho (76 tests) | a95730d |
-| T4 | S1–S4 | inline | pendiente | |
+| T4 | S1–S4 | inline | hecho (76 tests, build ok) | pendiente de commit |
 
 ## Log
 
 - **L1** (2026-10-26, pedido del usuario): "Mi propuesta — Implementar el Riel interactivo con su look exacto (paleta 2, fuente pixel, 4 tabs, toast, brújula, bottom sheet en celular), pero dentro de nuestra arquitectura y sin perder ningún DEBE: Mantener la ruta siempre visible, las calles bloqueadas, los íconos por tipo, el indicador EN VIVO, y el p95 y la supervivencia (en el encabezado del panel). Alertas calculadas en el front, capas con `visibility` de MapLibre, estado con `useReducer`. Y aprovechar para pasar al grafo real de Alex. ¿Avanzo con esa versión adaptada? sigue para poder continuar con el proceso y seguir con los parametros del hackathon"
 - **L2** Ruta de implementación: inline, sin writers (una sola unidad de comportamiento encadenada; ningún disparador de delegación).
+- **L3** Verificación de T4: typecheck, 76 tests (incluida la guarda de arquitectura) y build en verde; clases nuevas confirmadas en el CSS generado. Pendiente: verificación visual en el navegador (escritorio y móvil) por el usuario.

@@ -11,7 +11,10 @@ mapa/
 │   ├── tipos.ts          Grafo y snapshot de /api/estado (copia temporal de shared/ hasta T0.2)
 │   ├── grafo.ts          Vecinos y nodos bloqueados por hordas
 │   ├── seleccion.ts      A qué sobreviviente se sigue
-│   └── resumen.ts        Cifras del panel y nivel de latencia (tramos oficiales)
+│   ├── resumen.ts        Ronda, turno, supervivencia y nivel de latencia (tramos oficiales)
+│   ├── panel.ts          Estado del panel (tabs, selección, filtros, capas, toast) como reducer puro
+│   ├── alertas.ts        Alertas derivadas comparando un turno con el anterior
+│   └── vistas.ts         Búsqueda, conteos de chips y capas, resumen de refugios
 ├── simbologia/           Colores con significado e íconos Lucide, compartidos por el mapa y la leyenda
 │   ├── colores.ts
 │   └── iconos.ts
@@ -19,13 +22,16 @@ mapa/
 │   ├── MapaBase.tsx      Mapa base, worker, errores de estilo, clics
 │   ├── MapaVivo.tsx      Compone las capas (un solo chunk para el orden de capas)
 │   ├── config.ts         Centro, límites y estilo de Manta
+│   ├── tema-mapa.ts      Recolorea el mapa base de CARTO con la paleta 2
+│   ├── Brujula.tsx       Vuelve el mapa al norte
 │   ├── geojson/          Conversores puros dominio → GeoJSON, con tests
 │   └── layers/           Capas, estilos de MapLibre y registro de íconos
 ├── data/                 Fuentes de datos
-│   └── mock/             Grafo y simulación de prueba (se reemplazan por manta.json y /api/estado)
+│   ├── real/             Grafo real de Manta (shared/data/manta.json, T0.3)
+│   └── mock/             Simulación de prueba sobre el grafo real (se reemplaza por /api/estado en N4)
 └── ui/                   Componentes de presentación (sin lógica de negocio)
     ├── MedidorFps.tsx    Overlay de depuración (?debug)
-    └── sidebar/          Barra lateral: Sidebar + secciones Ronda, Sobreviviente, Refugios y Leyenda
+    └── panel/            Riel interactivo: RielIconos, PanelLateral, ToastAlerta, IndicadorEnVivo y tabs/ (Refugios, Sobrevivientes, Capas, Alertas)
 ```
 
 ## Reglas

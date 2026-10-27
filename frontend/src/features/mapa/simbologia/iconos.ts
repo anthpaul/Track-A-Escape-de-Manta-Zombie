@@ -1,5 +1,5 @@
-import { Biohazard, Navigation2, ShieldCheck, Skull, Zap, type LucideIcon } from "lucide-react";
-import { COLOR_FLECHA, COLOR_REFUGIO, COLOR_ZOMBIE } from "./colores";
+import { Biohazard, Navigation2, ShieldCheck, Skull, Square, Zap, type LucideIcon } from "lucide-react";
+import { COLOR_FLECHA, COLOR_REFUGIO, COLOR_SELECCION, COLOR_ZOMBIE } from "./colores";
 
 // Every icon in the app is a Lucide icon. The map uses the same components, serialized to SVG
 // and registered as MapLibre images (map/layers/RegistroIconos.tsx), so legend and map always match.
@@ -25,6 +25,8 @@ export const ICONOS_MAPA: Record<string, IconoMapa> = {
   refugio: { Icono: ICONO_REFUGIO.Icono, fondo: ICONO_REFUGIO.color, trazo: ICONO_REFUGIO.borde, forma: "cuadrado", borde: ICONO_REFUGIO.borde },
   // Arrow head for next-step arrows: points north, rotated by the layer.
   flecha: { Icono: Navigation2, fondo: null, trazo: COLOR_FLECHA, relleno: COLOR_FLECHA },
+  // Ring around the selected shelter.
+  "anillo-refugio": { Icono: Square, fondo: null, trazo: COLOR_SELECCION.refugio },
 };
 
 export const LADO_ICONO = 64; // px, registered at pixelRatio 2

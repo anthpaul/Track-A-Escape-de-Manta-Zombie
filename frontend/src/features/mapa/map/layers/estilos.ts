@@ -165,3 +165,34 @@ export const capaSeguido: LayerProps = {
     "circle-stroke-width": 3,
   },
 };
+
+// Selection overlay: shelter = square accent ring with its name below; survivor = tide ring with its id above.
+const ETIQUETA_SELECCION = {
+  "text-font": FUENTE_ETIQUETAS,
+  "text-size": 12,
+  "text-allow-overlap": true,
+  "text-ignore-placement": true,
+} as const;
+
+export const capaRefugioSeleccionado: LayerProps = {
+  id: "refugio-seleccionado",
+  type: "symbol",
+  layout: {
+    "icon-image": "anillo-refugio",
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.9, 16, 1.4],
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
+    ...ETIQUETA_SELECCION,
+    "text-field": ["get", "nombre"],
+    "text-anchor": "top",
+    "text-offset": [0, 1.8],
+  },
+  paint: { "text-color": COLOR_SELECCION.refugio, "text-halo-color": "#13030d", "text-halo-width": 2 },
+};
+
+export const capaSeguidoEtiqueta: LayerProps = {
+  id: "seguido-etiqueta",
+  type: "symbol",
+  layout: { ...ETIQUETA_SELECCION, "text-field": ["get", "id"], "text-anchor": "bottom", "text-offset": [0, -1.4] },
+  paint: { "text-color": COLOR_SELECCION.sobreviviente, "text-halo-color": "#13030d", "text-halo-width": 2 },
+};
