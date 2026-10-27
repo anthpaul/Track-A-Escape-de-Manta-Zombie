@@ -31,13 +31,13 @@ Motor de rutas en tiempo real sobre AWS. Cada 2 segundos los zombies se mueven p
 
 ![Arquitectura](docs/arquitectura.png)
 
-<!-- TODO (Alex): exportar docs/arquitectura.png desde docs/arquitectura.drawio y explicarlo en 3-5 líneas. -->
+CloudFront sirve el frontend desde S3 privado mediante OAC y envía `/api/*`, sin caché, a API Gateway y la Lambda del API.
+El estado compartido vive en DynamoDB; el mapa consulta `/api/estado` cada 2 segundos y recibe el último turno completo.
+EventBridge Scheduler inicia las rondas demo en la Lambda del simulador, que calcula movimientos en proceso y publica los turnos.
+La evaluación HTTP se ejecuta desde el CLI: publica el mundo y consulta `/api/paso` con API key; la demo no mide esa latencia.
+El diagrama representa el código del repositorio, no una inspección de la cuenta AWS.
 
-```text
-Navegador ──▶ CloudFront ──┬─▶ S3 (mapa estático, privado vía OAC)
-                           └─▶ /api/* ─▶ API Gateway HTTP API ─▶ Lambda (Node 24, arm64, Hono) ─▶ DynamoDB
-Simulador ──▶ escribe el turno en DynamoDB ──▶ POST /api/paso por cada sobreviviente
-```
+[Fuente editable en diagrams.net](docs/arquitectura.drawio) · [Flujos y archivos de referencia](docs/arquitectura.md).
 
 | Pieza | Servicio |
 |---|---|
@@ -45,6 +45,7 @@ Simulador ──▶ escribe el turno en DynamoDB ──▶ POST /api/paso por ca
 | API | API Gateway HTTP API (throttling 300 rps / 600 burst) |
 | Cómputo | Lambda `nodejs24.x` arm64, 1024 MB |
 | Estado del mundo | DynamoDB on-demand, single-table |
+| Demo automática | Lambda del simulador + EventBridge Scheduler |
 | Monitoreo | CloudWatch |
 | Infraestructura como código | Terraform (`infra/`) |
 
@@ -164,7 +165,11 @@ AWS Budget con alerta desde el primer día (alertas por SNS al 50 %, 80 % y 100 
 
 ![AWS Budget](docs/budget.png)
 
-Costo mensual estimado y gasto real del evento: `docs/costos.md`.
+[Costos y fórmulas](docs/costos.md): escenario de referencia de **USD 63.69 por
+30 días** de demo continua y uso ligero del mapa, antes de créditos y franquicias
+gratuitas. Incluye supuestos no medidos y tarifas de referencia pendientes de
+confirmación regional; no es una factura ni un máximo. El gasto real del evento
+queda pendiente de evidencia de facturación.
 
 ## Limitaciones
 
