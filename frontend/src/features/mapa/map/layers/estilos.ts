@@ -16,24 +16,14 @@ import {
 // Glyphs available on the CARTO Dark Matter font server.
 const FUENTE_ETIQUETAS = ["Montserrat SemiBold", "Open Sans Bold", "Noto Sans Regular"];
 
+// Only blocked streets are drawn over the base map: the clean map of the reference design, while the
+// collapsed bridge (R2) and the two blocked streets (R3) stay visible, as the challenge requires.
 export const capaCalles: LayerProps = {
   id: "calles",
   type: "line",
+  filter: ["==", ["get", "bloqueada"], true],
   layout: { "line-cap": "round", "line-join": "round" },
-  paint: {
-    "line-color": [
-      "case",
-      ["get", "bloqueada"],
-      COLOR_CALLE.bloqueada,
-      ["match", ["get", "tipo"],
-        "avenida", COLOR_CALLE.avenida,
-        "puente", COLOR_CALLE.puente,
-        "callejon", COLOR_CALLE.callejon,
-        COLOR_CALLE.calle],
-    ],
-    "line-width": ["match", ["get", "tipo"], "avenida", 5, "puente", 5, "callejon", 2, 3],
-    "line-opacity": 0.9,
-  },
+  paint: { "line-color": COLOR_CALLE.bloqueada, "line-width": 6, "line-opacity": 0.95 },
 };
 
 // Plain disc under the shelter icon: shelters stay visible even if the Lucide image fails to register.

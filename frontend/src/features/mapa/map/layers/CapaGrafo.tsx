@@ -9,8 +9,8 @@ import { conVisibilidad } from "./visibilidad";
 
 type Props = { grafo: Grafo; aristasBloqueadas?: ReadonlySet<string>; refugiosVisibles?: boolean };
 
-// Static graph layers: streets (colored by type, red when blocked) and shelters.
-// Streets always stay visible: blocked streets are a requirement of the live map.
+// Static graph layers: blocked streets (the rest of the network is already on the base map) and shelters.
+// Blocked streets cannot be switched off: they are a requirement of the live map.
 export default function CapaGrafo({ grafo, aristasBloqueadas, refugiosVisibles = true }: Props) {
   const calles = useMemo(() => callesAGeoJSON(grafo, aristasBloqueadas), [grafo, aristasBloqueadas]);
   const refugios = useMemo(() => refugiosAGeoJSON(grafo), [grafo]);
