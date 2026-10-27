@@ -117,11 +117,36 @@ npm run typecheck
 
 ### Simulador
 
-<!-- TODO (Alex): cómo correr las rondas R1, R2 y R3 contra AWS y qué métricas imprime (supervivencia, eficiencia, p95, errores). -->
+Desde la raíz, ejecutar una ronda local reproducible (150 turnos de 2 segundos):
+
+```powershell
+node --import tsx tools/simulador/correr.ts --ronda=1 --semilla=42
+```
+
+Cambiar `--ronda` a `2` o `3` para los escenarios de 80 y 200 sobrevivientes.
+El modo local usa un motor falso: no demuestra la supervivencia ni la latencia
+del backend real. Para HTTP, publicación en DynamoDB, variables requeridas y
+precauciones del candado, consultar [la guía del simulador](tools/simulador/README.md).
+La ejecución contra AWS requiere autorización del equipo y el Scheduler de demo
+deshabilitado. No se despliegan recursos ni se reemplazan partidas activas.
+
+Pruebas del simulador (no incluidas en los workspaces de `npm test`):
+
+```powershell
+node --import tsx --test tools/simulador/*.test.ts
+node node_modules/typescript/bin/tsc -p tools/simulador/tsconfig.json
+```
 
 ### Cómo se mide la latencia
 
-<!-- TODO (Alex): dónde se mide (simulador y CloudWatch), cómo se calcula el p95 y resultados de nuestra prueba de fuego. -->
+En modo HTTP, el simulador registra una duración por pedido a `/paso`, incluyendo
+la lectura y validación del cuerpo, errores y timeouts. Informa p50/p95/p99 por
+rango más cercano, cantidad de llamadas y porcentaje de errores. Los pedidos
+superiores a 500 ms se abortan y el sobreviviente se queda quieto. En modo local,
+la latencia HTTP figura como no medida. También informa vivos, rescatados,
+mordidos y turnos reales de llegada frente al mínimo en el mapa sin peligros.
+Los resultados reales de AWS y su contraste con CloudWatch siguen pendientes;
+no se sustituyen por resultados del motor falso.
 
 ## Resultados de nuestra prueba de fuego
 

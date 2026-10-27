@@ -1,5 +1,26 @@
 # Fuente del mundo — T0.6
 
+## `/paso`: verificación del handler de producción
+
+`src/routes/paso.ts` exporta `crearRutaPaso` para inyectar la fuente, el resolver
+de partida y la clave en pruebas sin llamadas a AWS. La instancia desplegada y
+los tests usan el mismo handler; `paso.test-factory.ts` es solo un adaptador.
+
+- Autenticación: compara resúmenes SHA-256 de longitud fija con `timingSafeEqual`,
+  incluyendo todos los bytes de la clave; una clave configurada vacía rechaza todo.
+- Éxito: devuelve exactamente `{ siguienteNodo }` y `Cache-Control: no-store`.
+- Respaldo: captura errores del resolver, la fuente o el motor y limita la espera
+  asíncrona a 300 ms. Sin un snapshot conocido, devuelve el nodo actual; no inventa
+  un mundo vacío. Si conoce el peligro y el nodo actual es inseguro, busca un vecino
+  transitable seguro próximo a un refugio; si no existe, permanece quieto.
+- Antes de responder, valida el formato y el movimiento con
+  `contextoGrafo.indexado.esMovimientoValido` y los bloqueos del snapshot leído.
+
+Las pruebas usan el grafo real empaquetado, no suponen los IDs de refugios ni
+las conexiones del fixture pequeño. No prueban despliegue ni latencia en AWS.
+La fecha límite asíncrona no interrumpe trabajo JavaScript síncrono; el tiempo
+real de cómputo y la latencia de red deben medirse con las rondas desplegadas.
+
 El motor depende de `FuenteMundo`, no del SDK de DynamoDB. La implementación
 `DynamoFuente` queda en `src/db/`; la interfaz y los errores de dominio están en
 `src/motor/fuente-mundo.ts`. No implementa A*, `/paso`, el candado ni el simulador.

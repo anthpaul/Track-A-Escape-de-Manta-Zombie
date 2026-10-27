@@ -175,6 +175,17 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 
 Marcar ✅ en el PR que cierra la tarea.
 
+**S4 — implementación local (Alex, 27 de octubre):** escenarios R1/R2/R3 con
+semilla, eventos, métricas y CLI documentados en `tools/simulador/README.md`.
+El modo HTTP publica el mundo en DynamoDB antes de consultar `/paso` y verifica
+la propiedad del candado. Se preservaron y completaron los borradores existentes.
+Las pruebas locales del simulador pasan; la aceptación sigue pendiente hasta
+correr R1 contra AWS con autorización explícita e imprimir sus métricas.
+Por eso S4 conserva su casilla pendiente; esto no completa S6 ni prueba deploy.
+La verificación independiente y sus resultados se registran en
+`odd/tasks/s4-rondas.md`. El typecheck del backend conserva 13 diagnósticos
+reproducidos en la versión base, sin cambios en esos archivos.
+
 | Fase 0 | Kevin | Alex | Anthony |
 |---|---|---|---|
 | ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ✅ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
