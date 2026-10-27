@@ -1,20 +1,21 @@
 /**
- * A* router — K1 implementation (AGENTS.md §4.4, HOJA_DE_RUTA §4.1 item 3).
+ * A* router — K1 + K2 implementation (AGENTS.md §4.4, HOJA_DE_RUTA §4.1 items 3–4).
  *
  * Finds the next node a survivor should move to in order to reach the nearest
  * reachable shelter with minimum turns, breaking ties by travel time.
  *
- * Danger awareness (this file, K1):
- *   - Blocked edges (city events)
- *   - Horde-blocked nodes (node + all static neighbors)
+ * Danger awareness (full K1+K2 scope):
+ *   - Blocked edges (city events)                       K1
+ *   - Horde-blocked nodes (node + all static neighbors) K1 via peligros.ts
+ *   - Any node with a visible zombie                    K2 via peligros.ts
+ *   - Walker-adjacent nodes (high-cost penalty)         K2 via peligros.ts
+ *   - Cross-traffic edges (cruce de frente)             K2 via peligros.ts
  *
- * NOT handled here (K2, next task):
- *   - Cost penalty for walker-adjacent nodes
- *   - Forbidden cross-traffic edges (cruce de frente)
+ * NOT handled here (future tasks):
  *   - Runner prediction (Pro, K5)
  *
  * Cost model (adjustment A3 — PLAN_IMPLEMENTACION §6):
- *   edge cost = 1 + ε × (distancia_m / velocidad_m_s)
+ *   edge cost = 1 + ε × (distancia_m / velocidad_m_s) + danger_penalty
  *
  * The leading "1" makes the search minimize TURNS (hops), not travel time.
  * The ε term is a tiebreaker: among equally-fast routes in turns, prefer the
@@ -29,6 +30,11 @@ import type { Grafo, Refugio } from "@abcstack/shared";
 import { VELOCIDADES_M_S, type GrafoIndexado } from "@abcstack/shared";
 import { MinHeap } from "./min-heap";
 import type { MundoTurno } from "./fuente-mundo";
+import { calcularPeligros, costoPeligroArista, type Peligros } from "./peligros";
+
+// Re-export so callers only need to import from astar.ts
+export type { Peligros };
+export { calcularPeligros };
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -145,22 +151,27 @@ interface NodoAstar {
  *
  * Returns the NEXT NODE to move to (one step), not the full path.
  * Returns the current node if no move is valid (safe fallback).
+ *
+ * Accepts an optional pre-computed `Peligros` object. When omitted,
+ * danger sets are computed from `mundo` internally. Pass a pre-computed
+ * value when calling buscarRuta for multiple survivors in the same turn
+ * to avoid redundant work.
  */
 export function buscarRuta(
   nodoActual: string,
   contexto: ContextoGrafo,
   mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,
+  peligrosPrecomputados?: Peligros,
 ): ResultadoBusqueda {
   const { indexado } = contexto;
 
-  // Pre-compute danger sets for this turn (K1 scope: horde-blocked nodes).
-  const bloqueadosPorHordas = indexado.nodosBloqueadosPorHordas(mundo.zombies);
+  // K2: use pre-computed danger sets or compute them now.
+  const peligros = peligrosPrecomputados ?? calcularPeligros(mundo, indexado);
   const aristasBloqueadas = new Set(mundo.aristasBloqueadas);
 
-  // Shelters reachable in principle (node exists and is not blocked by a horde).
-  // A horde on a shelter node is an edge case — we still try the other shelters.
+  // Shelters reachable in principle (node not prohibited by any danger rule).
   const refugiosDisponibles = contexto.refugios.filter(
-    (r) => !bloqueadosPorHordas.has(r.nodo),
+    (r) => !peligros.nodosProhibidos.has(r.nodo),
   );
 
   // Already at a shelter?
@@ -177,15 +188,11 @@ export function buscarRuta(
   // State: (nodo, refugioDestino). We run a single open set across all
   // targets and stop as soon as any shelter is popped.
   const INFINITY = Infinity;
-  // best g-cost seen for (nodoId, refugioId)
   const gCost = new Map<string, number>();
   const stateKey = (nodo: string, refugio: string) => `${nodo}|${refugio}`;
 
   const heap = new MinHeap<NodoAstar>();
 
-  // Seed the heap: one entry per reachable shelter from the current node.
-  // The "first step" from the start node is the start node itself — it gets
-  // overwritten on the first expansion.
   for (const refugio of refugiosDisponibles) {
     const h = heuristica(nodoActual, contexto, [refugio]);
     const key = stateKey(nodoActual, refugio.id);
@@ -193,7 +200,7 @@ export function buscarRuta(
     heap.push(0 + h, {
       id: nodoActual,
       g: 0,
-      primerPaso: nodoActual, // placeholder; replaced on first real move
+      primerPaso: nodoActual,
       refugioDestino: refugio.id,
     });
   }
@@ -209,9 +216,8 @@ export function buscarRuta(
     // Goal check: reached the target shelter.
     const refugioMeta = contexto.refugios.find((r) => r.id === current.refugioDestino);
     if (refugioMeta && current.id === refugioMeta.nodo) {
-      // The first step is the node we should move to this turn.
       const siguienteNodo = current.primerPaso === nodoActual
-        ? current.id   // only if we're already there (zero-step, caught above)
+        ? current.id
         : current.primerPaso;
       return {
         tipo: "movimiento",
@@ -223,17 +229,19 @@ export function buscarRuta(
 
     // Expand neighbors.
     for (const vecino of indexado.vecinos(current.id)) {
-      // Skip nodes blocked by hordes.
-      if (bloqueadosPorHordas.has(vecino)) continue;
-
-      // Skip edges that are blocked by city events.
+      // Skip edges blocked by city events first (edge doesn't exist).
       if (!indexado.esMovimientoValido(current.id, vecino, aristasBloqueadas)) continue;
 
       const calle = indexado.calleEntre(current.id, vecino);
-      if (!calle) continue; // defensive; esMovimientoValido already ensures this
+      if (!calle) continue;
+
+      // K2: apply danger cost. Infinity = forbidden, positive = penalty.
+      const edgeKey = `${current.id}|${vecino}`;
+      const peligroCosto = costoPeligroArista(peligros, vecino, edgeKey);
+      if (peligroCosto === Infinity) continue;
 
       const velocidad = VELOCIDADES_M_S[calle.tipo];
-      const edgeCost = 1 + EPSILON * (calle.distancia_m / velocidad);
+      const edgeCost = 1 + EPSILON * (calle.distancia_m / velocidad) + peligroCosto;
       const tentativeG = current.g + edgeCost;
 
       const vecinoKey = stateKey(vecino, current.refugioDestino);
@@ -241,8 +249,6 @@ export function buscarRuta(
 
       gCost.set(vecinoKey, tentativeG);
 
-      // Track the first step: if we are expanding directly from the origin,
-      // the first step IS the neighbor we are moving to.
       const primerPaso = current.id === nodoActual ? vecino : current.primerPaso;
 
       const h = heuristica(vecino, contexto, [
