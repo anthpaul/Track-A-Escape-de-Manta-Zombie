@@ -29,3 +29,13 @@ output "table_name" {
 output "lambda_name" {
   value = aws_lambda_function.api.function_name
 }
+
+output "simulador_lambda_name" {
+  description = "Invoke a demo round by hand: aws lambda invoke --function-name <this> --invocation-type Event out.json"
+  value       = aws_lambda_function.simulador.function_name
+}
+
+output "demo_schedule_name" {
+  description = "Disable before evaluating: aws scheduler update-schedule --name <this> ... --state DISABLED (or demo_enabled = false)."
+  value       = aws_scheduler_schedule.demo.name
+}

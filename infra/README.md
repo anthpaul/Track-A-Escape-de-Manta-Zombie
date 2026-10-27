@@ -13,6 +13,7 @@ Región `us-east-2` (la de la cuenta del equipo; `us-east-1` solo si la organiza
 | `apigateway.tf` | HTTP API con ruta `$default` → Lambda, throttling 300 rps / burst 600 |
 | `s3.tf` | Bucket privado del sitio (solo CloudFront lee, vía OAC) |
 | `cloudfront.tf` | Un dominio: `/` → S3, `/api/*` → API sin cache |
+| `simulador.tf` | Lambda del simulador (512 MB, 15 min) con permisos mínimos de escritura en la tabla + EventBridge Scheduler que arranca una ronda demo cada 6 minutos (S6). Ver `tools/simulador/README.md` |
 
 Valkey (`elasticache.tf`) no existe: `enable_valkey` está apagado y no crea nada (ver `AGENTS.md` §1).
 
@@ -57,7 +58,7 @@ Ver el comando completo en `INFRA.md` §3 (el build necesita `NEXT_PUBLIC_USE_MO
 ## 4. Cambios en el backend
 
 ```bash
-npm run build -w backend
+npm run build -w backend && npm run build:simulador
 cd infra && terraform plan -out=tfplan && terraform apply tfplan
 ```
 

@@ -6,7 +6,7 @@ Un dominio de CloudFront sirve el sitio estático (mapa en vivo) y la API, una L
 
 1. Login en la cuenta del equipo: `aws sts get-caller-identity` debe mostrar tu usuario IAM.
 2. Bootstrap del bucket del state, una sola vez por cuenta (`infra/README.md` §1).
-3. Desde la raíz: `npm ci`, `npm run build -w backend`.
+3. Desde la raíz: `npm ci`, `npm run build -w backend`, `npm run build:simulador`.
 4. En `infra/`: copiar `backend.hcl.example` a `backend.hcl` con el bucket real, exportar `TF_VAR_api_key`, `terraform init -backend-config=backend.hcl`, `terraform plan -out=tfplan`, leer el plan, `terraform apply tfplan`.
 5. Verificar: `curl "$(terraform output -raw site_url)/api/health"` → `{"ok":true,...}`.
 
@@ -58,7 +58,7 @@ Un dominio de CloudFront sirve el sitio estático (mapa en vivo) y la API, una L
 ### Primer deploy
 
 ```bash
-npm ci && npm run build -w backend
+npm ci && npm run build -w backend && npm run build:simulador
 cd infra
 terraform init -backend-config=backend.hcl   # nunca -reconfigure ni -migrate-state
 terraform plan -out=tfplan     # primera vez: todo "to add", nada "to destroy"
@@ -69,7 +69,7 @@ terraform output
 ### Cada cambio de backend
 
 ```bash
-npm run build -w backend
+npm run build -w backend && npm run build:simulador
 cd infra && terraform plan -out=tfplan
 # esperado: "0 to add, 1 to change, 0 to destroy" (solo source_code_hash de la Lambda)
 terraform apply tfplan
