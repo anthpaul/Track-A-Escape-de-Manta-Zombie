@@ -15,6 +15,12 @@ import type { ResultadoTurno } from "./turno";
 // Percentile helper
 // -------------------------------------------------------------------------
 
+/** Live p95 of the round's /paso latencies so far (unsorted), or null before any call. */
+export function p95DeLatencias(latencias: readonly number[]): number | null {
+  if (latencias.length === 0) return null;
+  return percentil([...latencias].sort((a, b) => a - b), 95);
+}
+
 /** Return the p-th percentile (0–100) of a sorted array of numbers. */
 export function percentil(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;

@@ -9,6 +9,8 @@ export interface ClienteEscritura { send(command: Escritura): Promise<unknown> }
 /** Owns only this game's new records; every turn write is fenced by the active lease. */
 export class DynamoPersistencia implements PersistenciaPartida {
   private readonly memoria = crearPersistenciaMemoria();
+  /** Set by the HTTP runner: each completed turn then publishes the round's /paso p95 so far. */
+  medirP95?: () => number | null;
   constructor(
     private readonly client: ClienteEscritura,
     private readonly tableName: string,
@@ -73,13 +75,14 @@ export class DynamoPersistencia implements PersistenciaPartida {
     if (!parcial) throw new Error("Cannot complete an unpublished turn");
     const sobrevivientes = (finales ?? parcial.sobrevivientes).map(s => ({ ...s,
       ...(decisiones.has(s.id) ? { siguienteNodo: decisiones.get(s.id)! } : {}) }));
+    const p95 = this.medirP95 ? { expresion: ", #data.p95ms = :p95", valores: { ":p95": this.medirP95() } } : { expresion: "", valores: {} };
     await this.client.send(new TransactWriteCommand({ TransactItems: [
       { ConditionCheck: this.cerco },
       { Update: { TableName: this.tableName, Key: KEYS.turno(this.partidaId, turno),
-        UpdateExpression: "SET #data.sobrevivientes = :survivors, #data.completo = :true",
+        UpdateExpression: `SET #data.sobrevivientes = :survivors, #data.completo = :true${p95.expresion}`,
         ConditionExpression: "attribute_exists(PK) AND #data.completo = :false",
         ExpressionAttributeNames: { "#data": "data" },
-        ExpressionAttributeValues: { ":survivors": sobrevivientes, ":true": true, ":false": false } } },
+        ExpressionAttributeValues: { ":survivors": sobrevivientes, ":true": true, ":false": false, ...p95.valores } } },
       { Update: { TableName: this.tableName, Key: KEYS.metadata(this.partidaId),
         UpdateExpression: "SET #data.turnoActual = :turno",
         ExpressionAttributeNames: { "#data": "data" }, ExpressionAttributeValues: { ":turno": turno } } },

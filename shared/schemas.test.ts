@@ -124,3 +124,10 @@ test("validates complete/incomplete turns, rounds and blocked street IDs", () =>
     { completo: "true" }, { aristasBloqueadas: ["5"] },
   ]) assert.equal(EstadoTurnoSchema.safeParse({ ...turn, ...patch }).success, false);
 });
+
+test("a turn may carry the round's /paso p95 so far, optional and never negative", () => {
+  assert.deepEqual(EstadoTurnoSchema.parse({ ...turn, p95ms: 87.5 }), { ...turn, p95ms: 87.5 });
+  assert.equal(EstadoTurnoSchema.safeParse({ ...turn, p95ms: null }).success, true, "no latency measured yet");
+  assert.equal("p95ms" in EstadoTurnoSchema.parse(turn), false, "turns written before stay valid");
+  assert.equal(EstadoTurnoSchema.safeParse({ ...turn, p95ms: -1 }).success, false);
+});

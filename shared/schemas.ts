@@ -112,6 +112,9 @@ export const EstadoTurnoSchema = z.object({
   zombies: z.array(ZombieVisibleSchema),
   aristasBloqueadas: z.array(CalleIdSchema),
   sobrevivientes: z.array(SobrevivienteSchema),
+  // p95 of every POST /paso latency of the round so far, written by the HTTP simulator when it
+  // completes the turn; absent or null when nothing measured /paso (in-process demo rounds).
+  p95ms: z.number().nonnegative().nullable().optional(),
 });
 
 export type PasoInput = z.infer<typeof PasoInputSchema>;

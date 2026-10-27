@@ -29,6 +29,13 @@ respeta calles bloqueadas y zombies visibles, pero no sustituye al A* real ni
 sirve para evaluar su supervivencia o rendimiento. La latencia local se muestra
 como **no medida**, no como cero milisegundos.
 
+### p95 en vivo
+
+En `--modo=http`, cada turno completo guarda en `TURNO#N` el p95 de todas las
+latencias de `/paso` de la ronda hasta ese turno (`p95ms`), y `/estado` lo publica
+en `metricas.p95ms` para el panel del mapa. Las rondas demo en proceso no miden
+`/paso`: ahí queda `null` y el panel muestra "—".
+
 ### S6: rondas demo en AWS (Lambda + Scheduler)
 
 `lambda.ts` juega una ronda completa por invocación y escribe cada turno en DynamoDB
