@@ -7,9 +7,32 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-silkscreen), monospace;
+  --font-pixel: var(--font-silkscreen), monospace;
+  /* Palette 2 with project-specific names so Tailwind's own orange/teal scales stay intact. */
+  --color-crimson-100: #13030d;
+  --color-crimson-200: #27061a;
+  --color-crimson-300: #3a0927;
+  --color-crimson-400: #4e0c35;
+  --color-crimson-500: #5f0f40;
+  --color-crimson-600: #a61a70;
+  --color-crimson-700: #df319c;
+  --color-crimson-800: #ea75bd;
+  --color-crimson-900: #f4bade;
+  --color-sangre-500: #9a031e;
+  --color-sangre-600: #e0052d;
+  --color-sangre-700: #fb3055;
+  --color-sangre-900: #febac6;
+  --color-calabaza-500: #fb8b24;
+  --color-calabaza-800: #fdd1a7;
+  --color-calabaza-900: #fee8d3;
+  --color-otono-500: #e36414;
+  --color-marea-500: #0f4c5c;
+  --color-marea-700: #2fbadd;
+  --color-marea-800: #74d1e8;
+  --color-marea-900: #bae8f4;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -83,38 +106,41 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Halloween theme, palette 2 (dark): crimson surfaces, pumpkin accent, tide blue for survivors.
+   Map layer colors are NOT theme tokens: they carry meaning and live in features/mapa/simbologia.
+   Every text pair is ≥ 5:1. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #13030d; /* crimson-100 */
+  --foreground: #fee8d3; /* calabaza-900 */
+  --card: #27061a; /* crimson-200 */
+  --card-foreground: #fee8d3;
+  --popover: #27061a;
+  --popover-foreground: #fee8d3;
+  --primary: #fb8b24; /* calabaza-500 */
+  --primary-foreground: #13030d;
+  --secondary: #3a0927; /* crimson-300 */
+  --secondary-foreground: #fee8d3;
+  --muted: #3a0927;
+  --muted-foreground: #ea75bd; /* crimson-800 */
+  --accent: #5f0f40; /* crimson-500 */
+  --accent-foreground: #fee8d3;
+  --destructive: #fb3055; /* sangre-700 */
+  --border: #3a0927;
+  --input: #4e0c35;
+  --ring: #fb8b24;
+  --chart-1: #fb8b24;
+  --chart-2: #2fbadd;
+  --chart-3: #df319c;
+  --chart-4: #e36414;
+  --chart-5: #74d1e8;
+  --sidebar: #13030d;
+  --sidebar-foreground: #fee8d3;
+  --sidebar-primary: #fb8b24;
+  --sidebar-primary-foreground: #13030d;
+  --sidebar-accent: #5f0f40;
+  --sidebar-accent-foreground: #fee8d3;
+  --sidebar-border: #3a0927;
+  --sidebar-ring: #fb8b24;
 }
 
 @layer base {

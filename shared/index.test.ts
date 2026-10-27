@@ -20,3 +20,10 @@ test("rejects negative or fractional turns", () => {
   assert.equal(PasoInputSchema.safeParse({ sobrevivienteId: "S-0089", nodoActual: "N-0117", turno: -1 }).success, false);
   assert.equal(PasoInputSchema.safeParse({ sobrevivienteId: "S-0089", nodoActual: "N-0117", turno: 1.5 }).success, false);
 });
+
+test("preserves /paso unknown-field stripping and accepts turn zero", () => {
+  assert.deepEqual(PasoInputSchema.parse({
+    sobrevivienteId: "S-0089", nodoActual: "N-0117", turno: 0, partidaId: "ignored",
+  }), { sobrevivienteId: "S-0089", nodoActual: "N-0117", turno: 0 });
+  assert.deepEqual(PasoOutputSchema.parse({ siguienteNodo: "N-0118", ruta: [] }), { siguienteNodo: "N-0118" });
+});

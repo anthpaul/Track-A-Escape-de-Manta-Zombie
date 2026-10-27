@@ -1,0 +1,22 @@
+{
+  "target_nodes": 300,
+  "node_tolerance": 30,
+  "max_snap_m": 300,
+  "barrio_radius_m": 600,
+  "radii_m": [0, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 600, 700],
+  "barrios": [
+    {"id": "tarqui", "osm_node": 10213104581},
+    {"id": "los_esteros", "osm_node": 10213104582},
+    {"id": "barbasquillo", "osm_node": 12066773600},
+    {"id": "jocay", "osm_node": 13111139050}
+  ],
+  "refugios": [
+    {"id": "R-01", "nombre": "Universidad ULEAM", "osm_way": 851414676, "capacidad": 200},
+    {"id": "R-02", "nombre": "Faro de Manta", "lat": -0.9301625, "lng": -80.721953125, "capacidad": 200,
+     "source": "User-selected short Plus Code 379H+W6R, Manta; full code 66FX379H+W6R"},
+    {"id": "R-03", "nombre": "Faro de Jaramijó", "lat": -0.928775, "lng": -80.65666666666667, "capacidad": 200,
+     "source": "https://www.inocar.mil.ec/boletin/ALN/2014/ALN_042014.pdf, page 9: 00°55’43.59”S, 080°39’24.00”W"},
+    {"id": "R-04", "nombre": "Aeropuerto Eloy Alfaro", "osm_way": 219062422, "capacidad": 200}
+  ],
+  "capacity_note": "Alex approved provisional 200 per refuge; no Pro occupancy enforcement. Refuges are fictional game destinations, not certified emergency shelters."
+}

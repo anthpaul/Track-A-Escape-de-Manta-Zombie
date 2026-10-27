@@ -57,6 +57,34 @@ type PasoOutput = { siguienteNodo: string }
 
 Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`): `vecinos(nodo)`, `calleEntre(a, b)`, `esMovimientoValido(desde, hasta, aristasBloqueadas)` y `nodosBloqueadosPorHordas(zombies)` (nodo + vecinos).
 
+**Aceptación del grafo en T0.2/T0.3:** aplicar `docs/CONTRATO_GRAFO.md`, sección «Aplicación en las tareas existentes». T0.2 incluye fixtures con geometrías válidas y pruebas de extremos exactos; al integrar el fixture común, se adapta el mock del frontend. T0.3 normaliza los extremos y comprueba el puente real de R2 después de simplificar. Q4 sigue pendiente: no se fijan capacidades finales ni se activa el límite Pro. Son precisiones de las tareas actuales, no nuevas fases ni cambios del cronograma.
+
+**T0.2 — implementación local verificada (Kevin):** schemas y tipos derivados en
+`shared/schemas.ts`, funciones indexadas en `shared/grafo.ts` y fixture de 12 nodos,
+15 calles, un puente y dos refugios. Uso documentado en `shared/README.md`.
+`npm test -w shared` pasa 18 pruebas y `npm run typecheck -w shared` pasa en modo
+strict; el schema también acepta el grafo real sin modificarlo. La suite del
+monorepo pasa; el typecheck global sigue fallando por problemas preexistentes
+(backend sin tsconfig y tipos/dependencias del frontend), reproducidos contra la
+versión base. La revisión independiente no encontró regresiones y comparó 20
+casos de los contratos anteriores. **La aprobación del PR por los tres sigue
+pendiente:** T0.2 no se marca completada en la sección 6. En T0.2 no se implementó K1/A*,
+T0.6, persistencia ni integración del frontend.
+
+**T0.6 — implementación local verificada (Kevin):** interfaz `FuenteMundo` en
+`backend/src/motor/fuente-mundo.ts` y adaptador de solo lectura `DynamoFuente` en
+`backend/src/db/dynamo-fuente.ts`, reutilizando `KEYS`. Devuelve el peligro
+inmutable de la partida y el turno real; lee el turno exacto o el último existente
+menor o igual, sin inventar ronda ni devolver un mundo vacío ante fallos. La caché
+separa `(partidaId, turno)`, comparte lecturas simultáneas, respeta TTL y no guarda
+un respaldo anterior bajo el número solicitado. Uso y límites en `backend/README.md`.
+`npm test -w backend` pasa 39 pruebas y `npm run typecheck -w backend` pasa en modo
+strict. La suite del monorepo pasa; el typecheck global conserva 23 diagnósticos
+preexistentes del frontend, reproducidos en la versión base. La verificación
+independiente de concurrencia no encontró regresiones. No se probó contra AWS ni
+se conectó a `/paso`; A*, resolución de partida activa y candado siguen en sus
+tareas posteriores. La revisión y aprobación del PR siguen pendientes.
+
 ---
 
 ## 3. Cronograma con puntos de control
@@ -108,6 +136,8 @@ Cada paso indica rama, qué hacer, prompt de `docs/PLAN_IMPLEMENTACION.md` a usa
 | 8 | `feat/s6-simulador-lambda` | Simulador empaquetado como Lambda (ronda completa por invocación) + EventBridge Scheduler para demo, en Terraform con rol de mínimo privilegio | 7 | `aws lambda invoke` corre una ronda; la URL pública nunca muestra un mapa congelado |
 | 9 | `docs/arquitectura-costos` | `docs/arquitectura.drawio` + `.png`, `docs/costos.md` con cálculo visible y gasto real | 8 | Sin `TODO (Alex)` en el README ni en `docs/costos.md` |
 
+**T0.3 verificada (26 de octubre):** C/D generaron 284 nodos, 384 calles y los cuatro refugios aprobados por Alex con capacidad provisional de 200. E comprobó geometrías originales, distancias, conectividad, desvío del puente, regeneración idéntica e inspección visual. Resultado y limitaciones en `shared/data/README.md`; datos en `manta.json` y trazabilidad en `manta.provenance.json`. No prueba integración con el motor ni despliegue. Los tipos de T0.2 siguen siendo responsabilidad de Kevin.
+
 ### 4.3 Anthony — mapa en vivo y coordinación (`frontend/`)
 
 | # | Rama | Qué hacer | Prompt | Listo cuando |
@@ -147,11 +177,11 @@ Marcar ✅ en el PR que cierra la tarea.
 
 | Fase 0 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ⬜ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
+| ✅ T0.5 Budget · ✅ T0.7 repo | ⬜ T0.2 · ⬜ T0.6 | ✅ T0.3 · ⬜ T0.4 | ⬜ T0.1 |
 
 | Fase 1 | Kevin | Alex | Anthony |
 |---|---|---|---|
-| | ⬜ K1 · ⬜ K2 · ⬜ K3 · ⬜ K6 · ⬜ K4 | ⬜ S1 · ⬜ S2 · ⬜ S3 · ⬜ S4 · ⬜ S5 · ⬜ S6 | ⬜ N0 · ⬜ N1 · ⬜ N2 · ⬜ N3 · ⬜ N4 · ⬜ N6 · ⬜ N5 |
+| | ⬜ K1 · ⬜ K2 · ⬜ K3 · ⬜ K6 · ⬜ K4 | ⬜ S1 · ⬜ S2 · ⬜ S3 · ⬜ S4 · ⬜ S5 · ⬜ S6 | ✅ N0 · ✅ N1 · ✅ N2 · ✅ N3 · ⬜ N4 · ✅ N6 · ⬜ N5 |
 
 | Entrega | Estado |
 |---|---|

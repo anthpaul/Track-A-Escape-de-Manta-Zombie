@@ -11,6 +11,7 @@ export interface ClienteLecturaDynamo {
 }
 
 interface OpcionesDynamoFuente {
+  /** Epoch milliseconds; injectable to test expiration without sleeping. */
   ahora?: () => number;
   maxTurnosEnCache?: number;
 }
@@ -23,6 +24,7 @@ const ItemTurnoSchema = z.object({
     && /^\d{6}$/.test(key.slice(KEYS.prefixes.turnos.length))),
   ttl: z.number().int().nonnegative(),
   data: EstadoTurnoSchema.pick({ zombies: true, aristasBloqueadas: true, completo: true }).extend({
+    // Optional duplicated identity must agree with the authoritative keys, when present.
     partidaId: z.string().min(1).optional(),
     turno: NumeroTurnoSchema.optional(),
   }),
@@ -97,6 +99,7 @@ export class DynamoFuente implements FuenteMundo {
       zombies: Object.freeze(item.data.zombies.map((zombie) => Object.freeze(zombie))),
       aristasBloqueadas: Object.freeze(item.data.aristasBloqueadas),
     });
+    // Cache under the real turn, never alias an older fallback as the requested N.
     this.cache.set(cacheKey(partidaId, actualTurn), { mundo, ttl: item.ttl });
     if (this.cache.size > this.maxTurnosEnCache) this.cache.delete(this.cache.keys().next().value!);
     return mundo;

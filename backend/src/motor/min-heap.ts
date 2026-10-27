@@ -3,6 +3,9 @@
  *
  * TypeScript has no built-in PriorityQueue. This keeps the Lambda bundle
  * small (no third-party dep) and the implementation reviewable.
+ *
+ * The heap stores entries of shape { priority: number; value: T }.
+ * Ties in priority are broken by insertion order (stable within the same turn).
  */
 
 export interface EntradaHeap<T> {

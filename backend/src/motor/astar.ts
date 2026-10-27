@@ -1,11 +1,24 @@
 /**
  * A* router — K1 + K2 implementation (AGENTS.md §4.4, HOJA_DE_RUTA §4.1 items 3–4).
  *
- * Cost model (adjustment A3):
+ * Finds the next node a survivor should move to in order to reach the nearest
+ * reachable shelter with minimum turns, breaking ties by travel time.
+ *
+ * Danger awareness (full K1+K2 scope):
+ *   - Blocked edges (city events)                       K1
+ *   - Horde-blocked nodes (node + all static neighbors) K1 via peligros.ts
+ *   - Any node with a visible zombie                    K2 via peligros.ts
+ *   - Walker-adjacent nodes (high-cost penalty)         K2 via peligros.ts
+ *   - Cross-traffic edges (cruce de frente)             K2 via peligros.ts
+ *
+ * NOT handled here (future tasks):
+ *   - Runner prediction (Pro, K5)
+ *
+ * Cost model (adjustment A3 — PLAN_IMPLEMENTACION §6):
  *   edge cost = 1 + ε × (distancia_m / velocidad_m_s) + danger_penalty
  *
- * The "1" minimizes TURNS (hops). ε is a tiebreaker for travel time.
- * ε = 0.0001, max ε×time ≈ 0.2 << 1 turn ✓
+ * The leading "1" makes the search minimize TURNS (hops), not travel time.
+ * ε = 0.0001; max ε×time ≈ 0.2 << 1 turn — safe tiebreaker.
  */
 
 import type { Grafo, Refugio } from "@abcstack/shared";
@@ -18,6 +31,7 @@ import { calcularPeligros, costoPeligroArista, type Peligros } from "./peligros"
 export type { Peligros };
 export { calcularPeligros };
 
+/** Tiebreaker weight for travel time inside the edge cost formula. */
 const EPSILON = 0.0001;
 
 export type ResultadoBusqueda =
@@ -26,10 +40,13 @@ export type ResultadoBusqueda =
   | { tipo: "sin_ruta"; nodo: string };
 
 // ---------------------------------------------------------------------------
-// Haversine distance helper
+// Haversine distance helper (admissible heuristic input)
 // ---------------------------------------------------------------------------
 
-function distanciaHaversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+function distanciaHaversine(
+  lat1: number, lng1: number,
+  lat2: number, lng2: number,
+): number {
   const R = 6_371_000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
@@ -46,11 +63,15 @@ function distanciaHaversine(lat1: number, lng1: number, lat2: number, lng2: numb
 // ---------------------------------------------------------------------------
 
 export interface ContextoGrafo {
+  /** Indexed graph for neighbor/edge lookups. */
   indexado: GrafoIndexado;
+  /** Node coordinates for the heuristic. */
   coordenadas: ReadonlyMap<string, { lat: number; lng: number }>;
+  /** All four shelters with their node IDs. */
   refugios: readonly Readonly<Refugio>[];
 }
 
+/** Build a routing context from the static graph. Freeze and cache the result. */
 export function crearContextoGrafo(grafo: Grafo, indexado: GrafoIndexado): ContextoGrafo {
   const coordenadas = new Map(grafo.nodos.map((n) => [n.id, { lat: n.lat, lng: n.lng }]));
   return Object.freeze({
@@ -64,6 +85,10 @@ export function crearContextoGrafo(grafo: Grafo, indexado: GrafoIndexado): Conte
 // Admissible heuristic
 // ---------------------------------------------------------------------------
 
+/**
+ * Lower-bound cost (in turns) from `nodo` to the nearest shelter.
+ * Uses straight-line distance / max possible speed — never overestimates.
+ */
 function heuristica(
   nodoId: string,
   contexto: ContextoGrafo,
@@ -90,14 +115,23 @@ function heuristica(
 
 interface NodoAstar {
   id: string;
+  /** g = cost from start to this node. */
   g: number;
+  /** First step taken from the origin (to reconstruct the next move). */
   primerPaso: string;
+  /** Which shelter we are heading towards. */
   refugioDestino: string;
 }
 
 /**
- * Run A* from `nodoActual` and return the next node to move to.
- * Accepts optional pre-computed peligros for shared use across survivors.
+ * Run A* from `nodoActual` towards every reachable shelter and return
+ * whichever route reaches a shelter with minimum cost.
+ *
+ * Returns the NEXT NODE to move to (one step), not the full path.
+ * Returns the current node if no move is valid (safe fallback).
+ *
+ * Accepts optional pre-computed peligros for shared use across survivors
+ * in the same turn (avoids redundant computation).
  */
 export function buscarRuta(
   nodoActual: string,
@@ -131,26 +165,32 @@ export function buscarRuta(
   for (const refugio of refugiosDisponibles) {
     const h = heuristica(nodoActual, contexto, [refugio]);
     gCost.set(stateKey(nodoActual, refugio.id), 0);
-    heap.push(h, { id: nodoActual, g: 0, primerPaso: nodoActual, refugioDestino: refugio.id });
+    heap.push(0 + h, { id: nodoActual, g: 0, primerPaso: nodoActual, refugioDestino: refugio.id });
   }
 
   while (!heap.isEmpty()) {
     const { value: current } = heap.pop()!;
     const key = stateKey(current.id, current.refugioDestino);
+
+    // Skip stale entries (lazy deletion).
     if (current.g > (gCost.get(key) ?? INFINITY)) continue;
 
+    // Goal check: reached the target shelter.
     const refugioMeta = contexto.refugios.find((r) => r.id === current.refugioDestino);
     if (refugioMeta && current.id === refugioMeta.nodo) {
       const siguienteNodo = current.primerPaso === nodoActual ? current.id : current.primerPaso;
       return { tipo: "movimiento", siguienteNodo, refugio: current.refugioDestino, costoTotal: current.g };
     }
 
+    // Expand neighbors.
     for (const vecino of indexado.vecinos(current.id)) {
+      // Skip edges blocked by city events first (edge doesn't exist).
       if (!indexado.esMovimientoValido(current.id, vecino, aristasBloqueadas)) continue;
 
       const calle = indexado.calleEntre(current.id, vecino);
       if (!calle) continue;
 
+      // K2: apply danger cost. Infinity = forbidden, positive = penalty.
       const edgeKey = `${current.id}|${vecino}`;
       const peligroCosto = costoPeligroArista(peligros, vecino, edgeKey);
       if (peligroCosto === Infinity) continue;

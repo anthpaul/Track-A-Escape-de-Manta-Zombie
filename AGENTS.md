@@ -160,7 +160,7 @@ Monorepo con npm workspaces (`shared`, `backend`, `frontend`): Next.js con expor
 ```
 ├── shared/       data/manta.json (grafo estático) · grafo.ts (A*, vecinos) · reglas.ts (zombies, mordidas) · schemas.ts · errors.ts
 ├── backend/src/  handler.ts · app.ts · dev.ts · routes/paso.ts · routes/estado.ts · motor/ (costos de peligro, refugios) · db/
-├── frontend/src/ app/ (/, /mapa) · features/mapa/ (MapLibre, fuentes y capas GeoJSON, polling) · lib/
+├── frontend/src/ app/ (/, /mapa) · features/mapa/ (domain/ · map/ · data/ · ui/, ver su README) · components/ui/ · lib/
 ├── tools/        osm/ (extracción del grafo) · simulador/ (rondas, métricas)
 ├── infra/        *.tf
 ├── docs/         arquitectura.png + .drawio · costos.md · budget.png
@@ -186,6 +186,8 @@ type Refugio = { id: string; nodo: string; nombre: string; capacidad: number }  
 
 Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · callejon 1.0`. Tiempo de una calle = `distancia_m / velocidad`.
 
+**Acuerdo de exportación del grafo (Alex, 26 de octubre):** ver `docs/CONTRATO_GRAFO.md`. Para el juego se usan calles bidireccionales y una sola conexión por pareja de nodos (la más corta si hay paralelas), conservando geometrías reales. Los refugios elegidos son ULEAM, Faro de Manta (`379H+W6R`), Faro de Jaramijó y aeropuerto Eloy Alfaro, con capacidad **provisional de 200 cada uno**, sin activar el límite Pro ni dar Q4 por respondida. La selección de corredores, la verificación E del grafo estático y las limitaciones geográficas se documentan en `shared/data/README.md`. La integración con el motor y el simulador sigue pendiente.
+
 **Por qué no está en DynamoDB:** no cambia durante la partida. Leerlo en cada `/paso` sumaría latencia sin aportar nada. Cargarlo en memoria de la Lambda **no** es la trampa del jurado: la trampa es guardar en memoria el estado **que cambia** (zombies, sobrevivientes).
 
 ### 4.2 Estado del mundo (DynamoDB, tabla `spookython_mundo`)
@@ -193,7 +195,8 @@ Velocidad por tipo (m/s, ajustable): `avenida 1.6 · calle 1.4 · puente 1.2 · 
 | Ítem | PK | SK | `data` | Lo escribe |
 |---|---|---|---|---|
 | Partida | `PARTIDA#<id>` | `METADATA` | ronda, estado, turnoActual, config | Simulador |
-| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombiesVisibles `[{id,tipo,nodo}]`, aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]`, completo | Simulador |
+| Turno | `PARTIDA#<id>` | `TURNO#<n 6 dígitos>` | zombies `[{id,tipo,nodo}]` (solo visibles; los dormidos nunca se escriben), aristasBloqueadas `[id]`, sobrevivientes `[{id,nodo,estado,siguienteNodo}]`, completo | Simulador |
+| Partida activa (candado) | `CONTROL` | `PARTIDA_ACTIVA` | partidaId, modo (`evaluacion` \| `demo`), turnoActual, expiraEn (epoch s) | Simulador |
 | Ocupación de refugio (Pro) | `PARTIDA#<id>` | `REFUGIO#<id>` | asignados (contador atómico), capacidad | Motor |
 
 Todos los ítems llevan `ttl` (epoch) para que DynamoDB los borre solos al día siguiente.
@@ -231,7 +234,37 @@ Nunca `Scan`.
 
 Costo base de una calle: `1 turno + ε × tiempo(distancia_m, tipo)` (si Q2 confirma "una arista por turno"). **No** usar solo `distancia_m / velocidad`: la eficiencia se puntúa en turnos, y optimizar en tiempo elige rutas con más saltos. Objetivo: el refugio que minimiza el costo total, con penalización si está lleno (Pro).
 
-### 4.5 Estados del sobreviviente
+### 4.5 Partida activa y semántica del turno (contrato motor ↔ simulador)
+
+> **A cerrar entre Kevin y Alex antes de K3 y S1.** Es la propuesta por defecto; si cambia, se edita acá en el mismo PR.
+
+**Identidad de partida.** `POST /paso` no trae `partidaId` (el contrato oficial no se puede cambiar). Por eso **hay una sola partida activa a la vez**, registrada en el ítem candado `CONTROL / PARTIDA_ACTIVA`:
+
+- `partidaId`: `<modo>-<ronda>-<epoch ms>` (por ejemplo `evaluacion-r3-1793030400000`), lo genera el simulador al arrancar.
+- El motor resuelve la partida leyendo ese ítem y después lee `PARTIDA#<partidaId> / TURNO#<N>`. **Ojo con la caché:** los números de turno se repiten entre partidas (cada una arranca en 1), así que la caché de turnos se indexa por `(partidaId, N)`, nunca solo por `N`. El candado se cachea como máximo 1 s; si el pedido trae un `turno` menor o igual al último visto para esa partida, se vuelve a leer el candado (puede haber empezado una partida nueva).
+- `/estado` y `GET /api/sobrevivientes/:id/ruta` usan la misma partida activa.
+
+**Exclusión (una sola ronda a la vez, también entre demo y evaluación).**
+
+1. Al arrancar, el simulador toma el candado con `PutItem` condicional: `attribute_not_exists(PK) OR expiraEn < :ahora`. Si falla, otra ronda está corriendo y **sale sin hacer nada** (así se comportan las rondas de demo del Scheduler).
+2. En cada turno renueva el candado (`UpdateItem` con condición `partidaId = :mia`, `expiraEn = ahora + 30 s`). Si la condición falla, **perdió el candado y termina en ese turno**.
+3. Al terminar, lo borra con condición `partidaId = :mia`.
+4. **Ronda de evaluación:** se deshabilita el Scheduler y se invoca con `forzar: true`, que toma el candado con `PutItem` sin condición. La ronda de demo que estaba corriendo falla su próxima renovación y se detiene en ese mismo turno (máximo 2 s). El `expiraEn` evita un candado huérfano si una Lambda muere.
+
+**Semántica del turno N.**
+
+| Paso | Quién | Qué pasa |
+|---|---|---|
+| 1 | Simulador | Mueve los zombies del turno N y aplica los eventos de ciudad del turno N |
+| 2 | Simulador | Escribe `TURNO#N` con `completo: false`: zombies **ya movidos**, `aristasBloqueadas` vigentes y sobrevivientes en su posición **antes** de moverse; renueva el candado con `turnoActual = N` |
+| 3 | Simulador → motor | `POST /paso` con `turno: N` y `nodoActual` = posición del paso 2 |
+| 4 | Motor | Lee `TURNO#N` (aunque esté incompleto: solo necesita zombies y bloqueos). Si `turno` no coincide con un turno existente, usa el último existente menor o igual, nunca un mundo vacío |
+| 5 | Simulador | Valida cada respuesta con `esMovimientoValido`, aplica los movimientos, resuelve mordidas (nodo y cruce) y llegadas, y hace **un** `UpdateItem` de `TURNO#N` con `siguienteNodo` y `completo: true` |
+| 6 | `/estado` | Muestra el último `TURNO` con `completo: true` |
+
+Un turno dura 2 s de reloj y **los turnos nunca se superponen**: el simulador corta cada `POST /paso` a los 500 ms (una respuesta tardía o inválida cuenta como "quedarse quieto"), así que los pasos 1–5 siempre entran en el turno. El turno N+1 arranca recién después del `UpdateItem` del paso 5 de N; si sobra tiempo, el simulador espera hasta completar los 2 s.
+
+### 4.6 Estados del sobreviviente
 
 ```text
 en_ruta → a_salvo (llegó a un refugio)
@@ -255,6 +288,9 @@ GET  /api/estado                   público (solo lectura, sin secretos)
   200   { "turno": 142, "ronda": 2, "zombies": [{ "id", "tipo", "nodo" }], "aristasBloqueadas": ["C-0042"],
           "sobrevivientes": [{ "id", "nodo", "estado", "siguienteNodo" }], "refugios": [{ "id", "ocupacion", "capacidad" }],
           "metricas": { "vivos", "aSalvo", "mordidos", "p95ms" }, "generadoEn": "<ISO 8601>" }
+  Opcionales por sobreviviente: "refugio" (destino o null) y "callesRestantes". Los calcula el simulador en el
+  paso 5 del turno con la misma función de shared/ que usa /paso (200 rutas sobre ~300 nodos tardan milisegundos);
+  el mapa los usa para buscar por destino, "n calles" y "EN CAMINO (n)" sin pedir 200 rutas
   Cache-Control: no-store (cambia cada 2 s)
   Sin rutas: el snapshot queda chico. generadoEn alimenta el indicador "EN VIVO" (edad real del snapshot)
 
@@ -281,6 +317,7 @@ GET  /api/health                   público → { ok: true, service }
 - **Rendimiento de `/paso`:** nada de `await` innecesarios, una sola lectura a DynamoDB por turno y por instancia, A* con cola de prioridad (binary heap) y vecinos precalculados en un `Map` al cargar el grafo.
 - Bundle de la Lambda chico (sin dependencias pesadas) para que el arranque en frío quede lejos de 500 ms. Memoria de la Lambda: **1024 MB** (más CPU = A* más rápido y arranque más corto).
 - Las reglas del juego en `shared/`, con tests: movimiento de cada tipo de zombie, mordida por nodo, mordida por cruce, horda que bloquea vecinos, dormido que despierta a 2 nodos o menos.
+- **Regla de oro de UI:** nada de emojis en ningún lado (código, UI, íconos del mapa). Todos los íconos son de **Lucide** (`lucide-react`); los del mapa se generan desde los mismos componentes Lucide (`capas/RegistroIconos.tsx`). Antes de crear un componente visual, reutilizar los de `frontend/src/components/ui/` (`Card`, `Button`, `Dialog`, `Select`…). Tipografía: **Silkscreen** (pixel) para títulos, IDs, botones y etiquetas cortas (`font-pixel` / `font-heading`) y **Space Grotesk** para el texto (`font-sans`); tema oscuro en todo el sitio. **Colores de la interfaz:** siempre por tokens del tema (`bg-background`, `bg-card`, `text-primary`, `text-muted-foreground`…) o por la **paleta 2** definida en `globals.css` con nombres propios que no pisan las escalas de Tailwind: `crimson-*` (superficies), `calabaza-*` (acento naranja), `marea-*` (azul de sobrevivientes y rutas), `sangre-*` (peligro) y `otono-500`. Nada de colores sueltos. Los colores de las **capas del mapa** tienen significado y viven en `features/mapa/simbologia/colores.ts`; el mapa base de CARTO se recolorea con `map/tema-mapa.ts`.
 - Front: TanStack Query con `refetchInterval: 2000` para `/estado`. MapLibre solo en client components (`"use client"` + `dynamic(..., { ssr: false })`, porque usa `window` y WebGL). Reglas del mapa en §2.
 
 ## 7. Flujo de trabajo con Git
