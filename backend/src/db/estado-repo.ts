@@ -51,6 +51,7 @@ const ItemTurnoEstadoSchema = EstadoTurnoSchema.pick({
   aristasBloqueadas: true,
   sobrevivientes: true,
   completo: true,
+  p95ms: true,
 });
 
 // ---------------------------------------------------------------------------
@@ -67,7 +68,7 @@ export interface RespuestaEstado {
     vivos: number;
     aSalvo: number;
     mordidos: number;
-    /** Placeholder — real p95 is calculated by the simulator and stored separately. */
+    /** p95 of the round's POST /paso latencies so far, from the turn; null when nothing measured /paso. */
     p95ms: number | null;
   };
   generadoEn: string;  // ISO 8601
@@ -167,7 +168,7 @@ export class EstadoRepo {
         vivos,
         aSalvo,
         mordidos,
-        p95ms: null,  // filled in by the simulator; /estado just relays it
+        p95ms: turnoCompleto.p95ms ?? null,  // stored by the HTTP simulator; /estado just relays it
       },
       generadoEn: new Date(this.ahora()).toISOString(),
     };

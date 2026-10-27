@@ -21,7 +21,7 @@ import { correrRonda } from "./turno";
 import { crearEscenarioR1, crearEscenarioR2, crearEscenarioR3 } from "./escenarios";
 import { MotorHttp } from "./motor-http";
 import { crearPersistenciaMemoria } from "./persistencia";
-import { calcularMetricas, imprimirMetricas } from "./metricas";
+import { calcularMetricas, imprimirMetricas, p95DeLatencias } from "./metricas";
 import type { ResultadoTurno } from "./turno";
 import { DynamoPersistencia } from "./dynamo-persistencia";
 
@@ -106,6 +106,9 @@ export async function main() {
     const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region, credentials: fromIni({ profile }), maxAttempts: 1 }));
     destruirCliente = () => client.destroy();
     dynamo = new DynamoPersistencia(client, table, config.partidaId, ronda);
+    // Publishes the live /paso p95 the map panel shows (AGENTS.md §5 metricas.p95ms).
+    const latencias = motorHttp!.latencias;
+    dynamo.medirP95 = () => p95DeLatencias(latencias);
     if (!await dynamo.iniciar(semilla)) {
       console.log("Round not started: another game owns the active-game lock.");
       client.destroy();

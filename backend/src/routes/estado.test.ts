@@ -117,6 +117,15 @@ test("returns the last complete turn when a game is active", async () => {
   assert.ok((body.generadoEn as string).includes("T"), "generadoEn must be ISO 8601");
 });
 
+test("metricas.p95ms relays the p95 the simulator stored in the turn, and is null when absent", async () => {
+  const conP95 = { ...itemTurno, data: { ...turnoCompletoDato, p95ms: 96.2 } };
+  const res = await crearAppTest({ control: candadoValido, turnos: [conP95] }).request("/api/estado");
+  assert.equal(((await res.json()) as { metricas: { p95ms: number | null } }).metricas.p95ms, 96.2);
+
+  const sinP95 = await crearAppTest({ control: candadoValido, turnos: [itemTurno] }).request("/api/estado");
+  assert.equal(((await sinP95.json()) as { metricas: { p95ms: number | null } }).metricas.p95ms, null);
+});
+
 test("metricas counts vivos / a_salvo / mordidos correctly", async () => {
   const testApp = crearAppTest({
     control: candadoValido,

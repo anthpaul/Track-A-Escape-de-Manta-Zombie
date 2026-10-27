@@ -37,3 +37,26 @@ test("an occupied round is not preempted and a failed fence prevents local compl
   await assert.rejects(store.guardarTurnoIncompleto({ turno: 1, zombies: [], sobrevivientes: [], aristasBloqueadas: [] }));
   assert.equal(await store.leerTurno(1), undefined);
 });
+
+test("with a latency meter, each completed turn publishes the round's /paso p95 so far", async () => {
+  const commands: Array<PutCommand | TransactWriteCommand | DeleteCommand> = [];
+  const store = new DynamoPersistencia({ async send(command) { commands.push(command); return {}; } }, "test", "evaluacion-r1-123", 1, () => 1_000_000);
+  store.medirP95 = () => 123.4;
+  await store.iniciar(1);
+  await store.guardarTurnoIncompleto({ turno: 1, zombies: [], aristasBloqueadas: [], sobrevivientes: [] });
+  await store.completarTurno(1, new Map());
+  const update = (commands.at(-1) as TransactWriteCommand).input.TransactItems?.[1]?.Update;
+  assert.match(update!.UpdateExpression!, /#data\.p95ms = :p95/);
+  assert.equal(update!.ExpressionAttributeValues?.[":p95"], 123.4);
+});
+
+test("without a meter (in-process demo rounds) no p95 is published", async () => {
+  const commands: Array<PutCommand | TransactWriteCommand | DeleteCommand> = [];
+  const store = new DynamoPersistencia({ async send(command) { commands.push(command); return {}; } }, "test", "demo-r1-123", 1, () => 1_000_000);
+  await store.iniciar(1);
+  await store.guardarTurnoIncompleto({ turno: 1, zombies: [], aristasBloqueadas: [], sobrevivientes: [] });
+  await store.completarTurno(1, new Map());
+  const update = (commands.at(-1) as TransactWriteCommand).input.TransactItems?.[1]?.Update;
+  assert.doesNotMatch(update!.UpdateExpression!, /p95/);
+  assert.equal(":p95" in (update!.ExpressionAttributeValues ?? {}), false);
+});
