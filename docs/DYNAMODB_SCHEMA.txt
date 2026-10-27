@@ -1,0 +1,323 @@
+============================================================
+  DYNAMODB SCHEMA — Escape de Manta Zombie (SpookyThon 2026)
+============================================================
+
+TABLA: spookython_mundo
+BILLING: PAY_PER_REQUEST  (on-demand, no hay que provisionar capacidad)
+TTL:     habilitado sobre el atributo "ttl" (DynamoDB borra los ítems solos)
+REGIÓN:  us-east-2
+ÍNDICE:  GSI1 con GSI1PK (S) + GSI1SK (S) — disponible para futuros patrones de acceso
+
+CLAVES PRIMARIAS (los únicos atributos que DynamoDB obliga a declarar):
+  PK  →  String  →  hash key
+  SK  →  String  →  range key
+
+Una sola tabla, cuatro tipos de ítem.
+Cada ítem se diferencia por el valor que tiene en PK y SK.
+
+------------------------------------------------------------
+ÍTEM 1: TURNO  (el más importante, uno por turno de juego)
+------------------------------------------------------------
+
+PK  →  "PARTIDA#<partidaId>"
+         Ejemplo: "PARTIDA#evaluacion-r3-1793030400000"
+SK  →  "TURNO#000142"
+         IMPORTANTE: siempre 6 dígitos con ceros a la izquierda.
+         Si no, "TURNO#20" quedaría ANTES que "TURNO#9" al ordenar
+         como texto, y el Query devolvería el turno equivocado.
+
+Campos del ítem:
+
+  zombies            →  List (lista de objetos)
+                         Cada objeto: { id: "Z-0001", tipo: "caminante", nodo: "N-0117" }
+                         QUÉ VA: solo los zombies VISIBLES en ese turno.
+                         Los zombies dormidos NO aparecen hasta despertar.
+                         El motor no hace trampa con información que el juego
+                         no le debería dar.
+
+  aristasBloqueadas  →  List (lista de strings)
+                         Ejemplo: ["C-0042", "C-0099"]
+                         QUÉ VA: IDs de calles que colapsaron o se bloquearon
+                         por eventos de ciudad. El motor las excluye del A*
+                         y el mapa las pinta en rojo.
+
+  sobrevivientes     →  List (lista de objetos)
+                         Cada objeto: { id: "S-0089", nodo: "N-0117",
+                                        estado: "en_ruta", siguienteNodo: "N-0118" }
+                         QUÉ VA: posición actual de cada sobreviviente.
+                         IMPORTANTE: "siguienteNodo" llega vacío cuando el simulador
+                         escribe la fase 1 del turno (todavía no llamó a /paso).
+                         El simulador lo rellena después en la fase 2.
+
+  completo           →  Boolean
+                         QUÉ VA: false cuando el simulador acaba de mover los zombies
+                         pero aún no procesó las respuestas de /paso.
+                         true cuando el turno está cerrado: zombies movidos, /paso
+                         respondido, mordidas resueltas, siguienteNodo de cada
+                         sobreviviente ya cargado.
+                         POR QUÉ: /estado solo muestra el último turno con
+                         completo=true, así el mapa nunca ve un snapshot a medias.
+
+  generadoEn         →  String (ISO 8601)
+                         Ejemplo: "2026-10-28T03:42:00.000Z"
+                         QUÉ VA: timestamp del momento en que el simulador
+                         cerró el turno (fase 2). El frontend lo usa para
+                         calcular hace cuántos segundos llegó el último dato
+                         y mostrar el indicador "● EN VIVO" o "desconectado".
+
+  ttl                →  Number (epoch en segundos)
+                         QUÉ VA: Math.floor(Date.now() / 1000) + 86400
+                         (ahora + 24 horas). DynamoDB borra el ítem
+                         automáticamente después de que expira.
+                         POR QUÉ: los datos de una ronda no sirven para nada
+                         al día siguiente; el TTL evita que la tabla crezca
+                         indefinidamente sin pagar por cleanup manual.
+
+Cómo lo escribe el simulador (DOS FASES):
+  Fase 1:  PutItem con completo=false, zombies movidos, sobrevivientes en
+           posición anterior, siguienteNodo vacío.
+           → El motor YA puede leer este turno para calcular /paso.
+  Fase 2:  UpdateItem con completo=true y los siguienteNodo de cada
+           sobreviviente. UN SOLO UpdateItem para todo el turno.
+           → El mapa empieza a mostrar este turno.
+
+Quién lo lee:
+  - El motor (GetItem por PK+SK exacto) para calcular /paso
+  - GET /api/estado (Query para traer el último con completo=true)
+
+------------------------------------------------------------
+ÍTEM 2: METADATA  (uno por partida, describe la ronda)
+------------------------------------------------------------
+
+PK  →  "PARTIDA#<partidaId>"
+         Mismo PK que los turnos de esa partida.
+SK  →  "METADATA"
+
+Campos del ítem:
+
+  ronda              →  Number
+                         QUÉ VA: 1, 2 o 3.
+                         R1 = 20 sobrevivientes solo caminantes.
+                         R2 = 80, corredores + hordas, un puente colapsa.
+                         R3 = 200, todos los tipos, dos calles bloqueadas en vivo.
+
+  estado             →  String
+                         QUÉ VA: "corriendo" | "finalizada" | "cancelada"
+                         El simulador lo actualiza al terminar la ronda.
+
+  modo               →  String
+                         QUÉ VA: "evaluacion" | "demo"
+                         "evaluacion": ronda oficial de la prueba de fuego.
+                         "demo": ronda periódica del EventBridge Scheduler
+                         para que la URL pública no muestre un mapa congelado.
+
+  semilla            →  String
+                         QUÉ VA: la semilla del generador aleatorio.
+                         POR QUÉ: para poder reproducir exactamente la misma
+                         ronda si hay que revisar un resultado. El jurado pide
+                         reproducibilidad.
+
+  turnoActual        →  Number
+                         QUÉ VA: número del último turno que el simulador
+                         escribió. Se actualiza en cada turno.
+
+  config             →  Map (objeto)
+                         QUÉ VA: { sobrevivientes: 200, ronda: "R3" }
+                         Parámetros de configuración de la ronda.
+
+  iniciadoEn         →  String (ISO 8601)
+                         QUÉ VA: timestamp de cuándo arrancó la ronda.
+
+  ttl                →  Number (epoch en segundos)
+                         Mismo cálculo que en TURNO.
+
+Quién lo escribe: solo el simulador al arrancar (PutItem) y al terminar (UpdateItem).
+Quién lo lee: /estado para enriquecer la respuesta con el número de ronda.
+
+------------------------------------------------------------
+ÍTEM 3: CANDADO  (uno solo en toda la tabla, singleton)
+------------------------------------------------------------
+
+PK  →  "CONTROL"
+SK  →  "PARTIDA_ACTIVA"
+
+QUÉ ES: un mutex distribuido. Como POST /paso no recibe partidaId
+(el contrato oficial es fijo), el motor necesita saber qué partida
+está activa para leer el TURNO correcto. Este ítem lo registra.
+
+Campos del ítem:
+
+  partidaId          →  String
+                         QUÉ VA: el ID de la partida que tiene el candado ahora.
+                         Ejemplo: "evaluacion-r3-1793030400000"
+
+  modo               →  String
+                         QUÉ VA: "evaluacion" | "demo"
+                         Para que el motor sepa en qué contexto opera.
+
+  turnoActual        →  Number
+                         QUÉ VA: el número de turno más reciente de esta partida.
+                         El motor lo usa para saber si hay un turno nuevo que leer.
+
+  expiraEn           →  Number (epoch en segundos)
+                         QUÉ VA: ahora + 30 segundos. El simulador lo renueva
+                         en cada turno.
+                         POR QUÉ: si la Lambda del simulador muere a mitad de
+                         una ronda, el candado no queda bloqueado para siempre.
+                         Cuando expiraEn < ahora, otro simulador puede tomarlo.
+                         Así EventBridge puede arrancar una ronda demo nueva
+                         sin intervención manual.
+
+  ttl                →  Number (epoch en segundos)
+                         Mismo cálculo que en TURNO.
+
+Cómo funciona el candado:
+  TOMAR:    PutItem condicional → attribute_not_exists(PK) OR expiraEn < :ahora
+            Si falla: ya hay una ronda corriendo, salir sin hacer nada.
+  RENOVAR:  UpdateItem condicional → partidaId = :mia, expiraEn = ahora + 30s
+            Si falla: otra partida tomó el candado, terminar en ese turno.
+  LIBERAR:  DeleteItem condicional → partidaId = :mia
+
+Quién lo escribe: solo el simulador.
+Quién lo lee: el motor al inicio de cada /paso (con caché de 1 s máximo).
+
+------------------------------------------------------------
+ÍTEM 4: REFUGIO  (uno por refugio, solo nivel Pro)
+------------------------------------------------------------
+
+PK  →  "PARTIDA#<partidaId>"
+SK  →  "REFUGIO#R-01"
+         Un ítem por cada uno de los 4 refugios:
+         REFUGIO#R-01, REFUGIO#R-02, REFUGIO#R-03, REFUGIO#R-04
+
+QUÉ ES: contador atómico de sobrevivientes asignados a cada refugio.
+Solo se activa en nivel Pro (capacidad de refugios).
+
+Campos del ítem:
+
+  asignados          →  Number
+                         QUÉ VA: cuántos sobrevivientes ya tienen este
+                         refugio como destino. Arranca en 0.
+                         CÓMO SE ESCRIBE: siempre con UpdateItem + ADD asignados 1
+                         (operación atómica de DynamoDB). Nunca leer-modificar-escribir
+                         porque con 200 sobrevivientes habría condiciones de carrera.
+
+  capacidad          →  Number
+                         QUÉ VA: 200 (provisional; Q4 de la organización pendiente).
+                         La condición del UpdateItem es: asignados < capacidad.
+                         Si falla, el refugio está lleno y el motor elige el siguiente.
+
+  ttl                →  Number (epoch en segundos)
+                         Mismo cálculo que en TURNO.
+
+Quién lo escribe: solo el motor, cuando confirma destino de un sobreviviente.
+Quién lo lee: el motor con Query (PK=PARTIDA#<id>, SK begins_with "REFUGIO#").
+
+------------------------------------------------------------
+  RESUMEN VISUAL DE LA TABLA
+------------------------------------------------------------
+
+PK                                       SK                  Tipo
+─────────────────────────────────────── ─────────────────── ──────────────
+PARTIDA#evaluacion-r3-1793030400000     METADATA            Metadatos
+PARTIDA#evaluacion-r3-1793030400000     TURNO#000001        Turno 1
+PARTIDA#evaluacion-r3-1793030400000     TURNO#000002        Turno 2
+PARTIDA#evaluacion-r3-1793030400000     TURNO#000142        Turno 142
+PARTIDA#evaluacion-r3-1793030400000     REFUGIO#R-01        Refugio (Pro)
+PARTIDA#evaluacion-r3-1793030400000     REFUGIO#R-02        Refugio (Pro)
+PARTIDA#evaluacion-r3-1793030400000     REFUGIO#R-03        Refugio (Pro)
+PARTIDA#evaluacion-r3-1793030400000     REFUGIO#R-04        Refugio (Pro)
+CONTROL                                 PARTIDA_ACTIVA      Candado
+
+------------------------------------------------------------
+  PATRONES DE ACCESO Y SUS OPERACIONES
+------------------------------------------------------------
+
+¿Qué partida está activa?
+  → GetItem   PK="CONTROL"           SK="PARTIDA_ACTIVA"
+
+¿Cuál es el estado del turno N?
+  → GetItem   PK="PARTIDA#<id>"      SK="TURNO#<N padStart 6>"
+
+¿Cuál es el último turno completo? (para /estado)
+  → Query     PK="PARTIDA#<id>",     SK begins_with "TURNO#"
+              ScanIndexForward=false, Limit=10, filtrar por completo=true
+
+¿Metadatos de la partida?
+  → GetItem   PK="PARTIDA#<id>"      SK="METADATA"
+
+¿Cuántos sobrevivientes tiene cada refugio? (Pro)
+  → Query     PK="PARTIDA#<id>",     SK begins_with "REFUGIO#"
+
+Asignar un sobreviviente a un refugio (Pro, atómico)
+  → UpdateItem ADD asignados 1
+              condición: asignados < capacidad
+
+NUNCA Scan. Sin Scan no hay costos inesperados ni throttling.
+
+------------------------------------------------------------
+  QUÉ NO VA EN DYNAMODB
+------------------------------------------------------------
+
+manta.json (el grafo de Manta)
+  No cambia durante la partida. Va empaquetado en la Lambda
+  y en el frontend. Leerlo de Dynamo en cada /paso sumaría
+  ~5 ms de latencia por nada.
+
+Ruta completa de cada sobreviviente
+  No se guarda entre turnos. Se calcula a demanda en
+  GET /api/sobrevivientes/:id/ruta usando la misma función
+  de shared/ que usa /paso. Guardarla serían 200 escrituras
+  por turno en el camino crítico de la latencia.
+
+Zombies dormidos
+  Por contrato son invisibles. El motor no puede saber
+  dónde están: no están en ningún campo de TURNO.
+
+------------------------------------------------------------
+  CONSTANTES DE CÓDIGO  (van en backend/src/db/keys.ts)
+------------------------------------------------------------
+
+export const KEYS = {
+  turno: (partidaId: string, n: number) => ({
+    PK: `PARTIDA#${partidaId}`,
+    SK: `TURNO#${String(n).padStart(6, "0")}`,
+  }),
+  metadata: (partidaId: string) => ({
+    PK: `PARTIDA#${partidaId}`,
+    SK: "METADATA",
+  }),
+  control: () => ({
+    PK: "CONTROL",
+    SK: "PARTIDA_ACTIVA",
+  }),
+  refugio: (partidaId: string, refugioId: string) => ({
+    PK: `PARTIDA#${partidaId}`,
+    SK: `REFUGIO#${refugioId}`,
+  }),
+} as const;
+
+// TTL helper (siempre el mismo cálculo)
+export const ttlManana = () => Math.floor(Date.now() / 1000) + 86400;
+
+// Generar un ID de partida
+export const generarPartidaId = (modo: "evaluacion" | "demo", ronda: 1 | 2 | 3) =>
+  `${modo}-r${ronda}-${Date.now()}`;
+
+============================================================
+  ESTADO DE LA INFRA
+============================================================
+
+La tabla YA ESTÁ definida en infra/dynamodb.tf con:
+  - nombre:  var.table_name  →  default = "spookython_mundo"
+  - PK (S) + SK (S) + GSI1 con GSI1PK/GSI1SK
+  - billing_mode PAY_PER_REQUEST
+  - point_in_time_recovery habilitado
+  - TTL habilitado sobre atributo "ttl"
+
+La Lambda YA tiene permisos en infra/iam.tf:
+  GetItem, PutItem, UpdateItem, DeleteItem, Query, ConditionCheckItem, BatchGetItem
+  sobre la tabla y sus índices. Sin Scan (a propósito).
+
+NO hay que crear ni cambiar nada en infra/ para la base de datos.
+Lo que falta es el código en backend/src/db/ que use estos patrones.
