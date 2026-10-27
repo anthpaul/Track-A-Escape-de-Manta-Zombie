@@ -355,3 +355,37 @@ test("leerUltimoTurnoCompleto returns the completed turn snapshot", async () => 
   assert.equal(completo.turno, 1);
   assert.ok(Array.isArray(completo.sobrevivientes));
 });
+
+// ---------------------------------------------------------------------------
+// Published siguienteNodo: the next planned step, not the step just taken
+// ---------------------------------------------------------------------------
+
+test("with a planner, a completed turn publishes each survivor's next step from its new position", async () => {
+  const config = configBase();
+  // The fake motor moves S-0001 from N-0001 to N-0002; from there the next step is N-0003.
+  config.planificarSiguiente = (s) => (s.nodo === "N-0002" ? "N-0003" : s.nodo);
+  await ejecutarTurno(config, 1);
+  const publicado = (await config.persistencia.leerUltimoTurnoCompleto())!.sobrevivientes[0]!;
+  assert.equal(publicado.nodo, "N-0002", "the move itself is unchanged");
+  assert.equal(publicado.siguienteNodo, "N-0003");
+});
+
+test("without a planner the published step stays the one just taken (HTTP rounds unchanged)", async () => {
+  const config = configBase();
+  await ejecutarTurno(config, 1);
+  const publicado = (await config.persistencia.leerUltimoTurnoCompleto())!.sobrevivientes[0]!;
+  assert.equal(publicado.nodo, "N-0002");
+  assert.equal(publicado.siguienteNodo, "N-0002");
+});
+
+test("bitten and safe survivors are never planned", async () => {
+  const config = configBase();
+  config.sobrevivientes.push({ id: "S-0002", nodo: "N-0005", estado: "mordido" }, { id: "S-0003", nodo: "N-0004", estado: "a_salvo" });
+  const planificados: string[] = [];
+  config.planificarSiguiente = (s) => {
+    planificados.push(s.id);
+    return s.nodo;
+  };
+  await ejecutarTurno(config, 1);
+  assert.deepEqual(planificados, ["S-0001"]);
+});
