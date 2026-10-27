@@ -40,6 +40,15 @@ export type Sobreviviente = {
 export type OcupacionRefugio = { id: string; ocupacion: number; capacidad: number };
 export type Metricas = { vivos: number; aSalvo: number; mordidos: number; p95ms: number | null };
 
+// Where the snapshot on screen comes from. Every state but en_vivo and reconectando shows the simulation.
+export type Conexion =
+  | "simulado" // local build without the API (NEXT_PUBLIC_USE_MOCKS unset)
+  | "conectando" // waiting for the first answer of GET /api/estado
+  | "en_vivo"
+  | "reconectando" // last poll failed: the last real world stays a few turns
+  | "sin_partida" // the API answers but no game is running
+  | "sin_conexion"; // the API fails or breaks the contract
+
 export type Snapshot = {
   turno: number;
   ronda: 1 | 2 | 3;

@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
+import type { Conexion, Grafo, Snapshot } from "@/features/mapa/domain/tipos";
 import { leerEstado } from "@/features/mapa/data/real/estado-api";
+import { resolverConexion, type UltimoReal } from "@/features/mapa/data/real/conexion";
 
 const TURNO_MS = 2000;
 
@@ -12,10 +13,8 @@ const TURNO_MS = 2000;
 export const USAR_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
-export type Conexion = "conectando" | "en_vivo" | "sin_partida" | "sin_conexion";
-
-// Polls GET /api/estado once per turn. On a failed poll the last good snapshot is kept, so its
-// age in the "EN VIVO" indicator shows the delay instead of the map silently freezing.
+// Polls GET /api/estado once per turn. The decision of what to show lives in resolverConexion (pure,
+// tested); this hook only feeds it the latest poll and remembers the last real world.
 export function useEstadoEnVivo(grafo: Grafo, activo: boolean): { snapshot: Snapshot | null; conexion: Conexion } {
   const consulta = useQuery({
     queryKey: ["estado", API_URL],
@@ -30,10 +29,17 @@ export function useEstadoEnVivo(grafo: Grafo, activo: boolean): { snapshot: Snap
     retry: false,
   });
 
-  return useMemo(() => {
-    if (consulta.data === undefined) return { snapshot: null, conexion: consulta.isError ? "sin_conexion" : "conectando" };
-    const resultado = leerEstado(consulta.data, grafo);
-    if (resultado.tipo === "partida") return { snapshot: resultado.snapshot, conexion: consulta.isError ? "sin_conexion" : "en_vivo" };
-    return { snapshot: null, conexion: resultado.tipo === "sinPartida" ? "sin_partida" : "sin_conexion" };
-  }, [consulta.data, consulta.isError, grafo]);
+  // Memoized on the response so the same answer keeps the same snapshot object.
+  const leido = useMemo(() => (consulta.data === undefined ? null : leerEstado(consulta.data, grafo)), [consulta.data, grafo]);
+  const ultimoFallo = consulta.errorUpdatedAt > consulta.dataUpdatedAt;
+  const resultado = ultimoFallo ? "error" : (leido ?? "pendiente");
+  const ahora = Math.max(consulta.dataUpdatedAt, consulta.errorUpdatedAt);
+
+  // Updating state during render (guarded) is React's pattern for values derived from a previous render.
+  const [ultimoReal, setUltimoReal] = useState<UltimoReal | null>(null);
+  const salida = resolverConexion({ resultado, ultimoReal, ahora });
+  if (salida.ultimoReal !== ultimoReal) setUltimoReal(salida.ultimoReal);
+
+  if (!activo) return { snapshot: null, conexion: "simulado" };
+  return { snapshot: salida.snapshot, conexion: salida.conexion };
 }

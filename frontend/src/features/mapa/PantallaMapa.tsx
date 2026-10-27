@@ -55,9 +55,14 @@ export default function PantallaMapa() {
   const previo = useRef<Snapshot | null>(null);
   // Turns restart in every round, so alert ids carry the round number: an alert from a new round
   // must never look already read just because an earlier round had the same event.
+  // Switching between the live game and the simulation also starts clean: comparing a real turn
+  // with a simulated one would invent hordes and bites that never happened.
   const numeroRonda = useRef(0);
+  const previoEsPrueba = useRef(esPrueba);
   useEffect(() => {
-    const nuevaRonda = previo.current !== null && snapshot.turno < previo.current.turno;
+    const cambioFuente = previoEsPrueba.current !== esPrueba;
+    previoEsPrueba.current = esPrueba;
+    const nuevaRonda = previo.current !== null && (cambioFuente || snapshot.turno < previo.current.turno);
     if (nuevaRonda) numeroRonda.current += 1;
     const nuevas = (nuevaRonda ? [] : derivarAlertas(grafo, previo.current, snapshot)).map((a) => ({
       ...a,
@@ -68,7 +73,7 @@ export default function PantallaMapa() {
     if (nuevas.length === 0) return;
     setAlertas((actuales) => [...nuevas, ...actuales].slice(0, MAX_ALERTAS));
     dispatch({ tipo: "nuevaAlerta", id: nuevas[0].id });
-  }, [grafo, snapshot]);
+  }, [grafo, snapshot, esPrueba]);
 
   const resumen = useMemo(() => resumenPanel(grafo, snapshot), [grafo, snapshot]);
   const refugios = useMemo(() => resumenRefugios(grafo, snapshot), [grafo, snapshot]);
@@ -138,7 +143,7 @@ export default function PantallaMapa() {
       />
 
       {abierto && (
-        <PanelLateral titulo={TITULOS[panel.tab]} resumen={resumen} generadoEn={snapshot.generadoEn} esPrueba={esPrueba}>
+        <PanelLateral titulo={TITULOS[panel.tab]} resumen={resumen} generadoEn={snapshot.generadoEn} conexion={vivo.conexion}>
           {panel.tab === "ref" && (
             <TabRefugios
               aSalvo={refugios.aSalvo}
