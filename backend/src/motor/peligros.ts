@@ -8,7 +8,7 @@
  *   Node with visible zombie                    → Prohibited   (K2 ✓)
  *   Horde: its node AND all static neighbours   → Prohibited   (K1 ✓)
  *   Blocked edge (city event)                   → Non-existent (K1 ✓)
- *   Nodes a RUNNER can reach next turn          → Very high    (Pro K5 — not yet)
+ *   Nodes a RUNNER can reach next turn          → Very high    (Pro K5 ✓)
  *   Neighbours of a WALKER                      → High penalty (K2 ✓)
  *   Edge a zombie can cross in opposite dir.    → Prohibited   (K2 ✓)
  *   Near possible SLEEPER locations             → No cost      (K2 ✓)
@@ -42,10 +42,13 @@ import type { MundoTurno } from "./fuente-mundo";
 export const WALKER_ADJACENT_PENALTY = 0.5;
 
 /**
- * Placeholder for runner-reachable nodes (Pro K5 — prediction).
- * NOT applied by calcularPeligros until K5 is implemented.
+ * Added for every node a runner can reach next turn (Pro K5 — prediction).
+ * A runner moves up to 2 unblocked streets per turn (shared/reglas.ts moverZombie),
+ * so it can end on any node within 2 streets. Higher than the walker penalty but
+ * still < 1 turn: it detours around runners without ever refusing a shelter.
+ * Additive across runners.
  */
-export const RUNNER_PREDICTION_PENALTY = 0.9; // Pro K5 — not yet active
+export const RUNNER_PREDICTION_PENALTY = 0.9;
 
 // ---------------------------------------------------------------------------
 // Output type
@@ -123,6 +126,13 @@ export function calcularPeligros(
       }
     }
 
+    // Runner prediction (§4.4 row 4, Pro K5): nodes it can reach next turn.
+    if (zombie.tipo === "corredor") {
+      for (const nodo of alcanceCorredor(zombie.nodo, indexado, mundo.aristasBloqueadas)) {
+        costosExtraRaw.set(nodo, (costosExtraRaw.get(nodo) ?? 0) + RUNNER_PREDICTION_PENALTY);
+      }
+    }
+
     // Cross-traffic rule (§4.4 row 6): walkers and runners can cross edges.
     // Forbidden survivor direction: vecino → zombie.nodo.
     if (zombie.tipo === "caminante" || zombie.tipo === "corredor") {
@@ -133,6 +143,32 @@ export function calcularPeligros(
   }
 
   return { nodosProhibidos, costosExtra: costosExtraRaw, aristasCrucePeligroso };
+}
+
+/**
+ * Nodes within 2 unblocked streets of a runner, excluding its own node
+ * (already prohibited). Same movement limits as shared/reglas.ts moverZombie.
+ */
+function alcanceCorredor(
+  origen: string,
+  indexado: GrafoIndexado,
+  aristasBloqueadas: MundoTurno["aristasBloqueadas"],
+): Set<string> {
+  const alcanzados = new Set<string>();
+  let frontera = [origen];
+  for (let paso = 0; paso < 2; paso++) {
+    const siguiente: string[] = [];
+    for (const nodo of frontera) {
+      for (const vecino of indexado.vecinos(nodo)) {
+        if (vecino === origen || alcanzados.has(vecino)) continue;
+        if (!indexado.esMovimientoValido(nodo, vecino, aristasBloqueadas)) continue;
+        alcanzados.add(vecino);
+        siguiente.push(vecino);
+      }
+    }
+    frontera = siguiente;
+  }
+  return alcanzados;
 }
 
 // ---------------------------------------------------------------------------
