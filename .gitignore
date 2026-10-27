@@ -35,3 +35,6 @@ Thumbs.db
 
 # backend bucket name holds the account id
 infra/backend.hcl
+
+# Local AI tooling (impeccable skill), not part of the product
+frontend/.claude/
