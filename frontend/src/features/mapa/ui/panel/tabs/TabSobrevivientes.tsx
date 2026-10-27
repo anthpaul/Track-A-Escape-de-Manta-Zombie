@@ -55,7 +55,7 @@ export default function TabSobrevivientes(p: Props) {
             aria-pressed={p.filtro === filtro}
             onClick={() => p.onFiltrar(filtro)}
             className={cn(
-              "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
+              "min-h-8 rounded-full border px-3 py-1 text-xs font-semibold md:min-h-0 md:py-0.5",
               p.filtro === filtro ? "border-calabaza-500 bg-calabaza-500 text-crimson-100" : "border-crimson-600 text-calabaza-900 hover:bg-crimson-300",
             )}
           >

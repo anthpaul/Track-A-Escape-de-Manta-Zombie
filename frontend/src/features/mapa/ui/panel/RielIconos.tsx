@@ -18,7 +18,8 @@ export default function RielIconos({ tab, abierto, noLeidas, onElegir }: Props) 
   return (
     <nav
       aria-label="Secciones del panel"
-      className="absolute inset-x-0 bottom-0 z-30 flex h-16 items-center justify-around border-t border-crimson-300 bg-crimson-100 md:inset-x-auto md:inset-y-0 md:left-0 md:h-auto md:w-16 md:flex-col md:justify-start md:gap-2 md:border-r md:border-t-0 md:py-3"
+      // Sizes mirror map/padding.ts (DISENO). Portrait phone: bottom bar above the iOS home indicator.
+      className="absolute inset-x-0 bottom-0 z-30 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-center justify-around border-t border-crimson-300 bg-crimson-100 pb-[env(safe-area-inset-bottom)] max-md:landscape:inset-x-auto max-md:landscape:inset-y-0 max-md:landscape:left-0 max-md:landscape:h-auto max-md:landscape:w-14 max-md:landscape:flex-col max-md:landscape:justify-center max-md:landscape:gap-1 max-md:landscape:border-r max-md:landscape:border-t-0 max-md:landscape:pb-0 max-md:landscape:pl-[env(safe-area-inset-left)] md:inset-x-auto md:inset-y-0 md:left-0 md:h-auto md:w-16 md:flex-col md:justify-start md:gap-2 md:border-r md:border-t-0 md:py-3 md:pb-3"
     >
       <span className="hidden font-pixel text-xl text-calabaza-500 [text-shadow:2px_2px_0_#9a031e] md:mb-2 md:block" aria-hidden>
         EM
@@ -33,7 +34,7 @@ export default function RielIconos({ tab, abierto, noLeidas, onElegir }: Props) 
             aria-label={nombre}
             aria-pressed={activo}
             className={cn(
-              "relative flex size-13 flex-col items-center justify-center gap-1 rounded-lg transition-colors",
+              "relative flex size-13 flex-col items-center justify-center gap-1 rounded-lg transition-colors max-md:landscape:size-11",
               activo ? "bg-crimson-500" : "hover:bg-crimson-300",
             )}
           >

@@ -5,6 +5,7 @@ import CapaGrafo from "@/features/mapa/map/layers/CapaGrafo";
 import CapaVivo from "@/features/mapa/map/layers/CapaVivo";
 import CapaSeleccion from "@/features/mapa/map/layers/CapaSeleccion";
 import RegistroIconos from "@/features/mapa/map/layers/RegistroIconos";
+import AjustePadding from "@/features/mapa/map/AjustePadding";
 import type { CapasVisibles } from "@/features/mapa/map/layers/visibilidad";
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
 
@@ -16,6 +17,7 @@ type Props = {
   anilloSobrevivienteId: string | null;
   refugioId: string | null;
   ruta: string[];
+  panelAbierto: boolean;
   onSeleccionarRefugio: (refugioId: string) => void;
   onSeleccionarSobreviviente: (sobrevivienteId: string) => void;
 };
@@ -49,6 +51,7 @@ export default function MapaVivo(props: Props) {
         flechasVisibles={capas.sobreviviente}
       />
       <CapaVivo grafo={grafo} snapshot={snapshot} capas={capas} />
+      <AjustePadding panelAbierto={props.panelAbierto} />
     </MapaBase>
   );
 }
