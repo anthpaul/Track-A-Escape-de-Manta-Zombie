@@ -15,7 +15,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { crearEscenarioR1, crearEscenarioR2, crearEscenarioR3 } from "./escenarios";
 import { DynamoPersistencia, type ClienteEscritura } from "./dynamo-persistencia";
-import { crearMotorEnProceso } from "./motor-en-proceso";
+import { crearMotorEnProceso, siguientePasoEnProceso } from "./motor-en-proceso";
 import { correrRonda, type ConfigRonda } from "./turno";
 import { relojReal, type Reloj } from "./reloj";
 
@@ -43,6 +43,9 @@ export function crearHandler(deps: { cliente: ClienteEscritura; tabla: string; r
     const motor = crearMotorEnProceso(() => vivo?.zombies ?? [], () => vivo?.aristasBloqueadas ?? []);
     const { config } = crear({ semilla, motor, reloj: deps.reloj ?? relojReal, modo: "demo" });
     vivo = config;
+    // Publish each survivor's next step so the map draws its arrow; free here because the motor runs in process.
+    config.planificarSiguiente = (s) =>
+      siguientePasoEnProceso({ sobrevivienteId: s.id, nodoActual: s.nodo, turno: 0 }, config.zombies, config.aristasBloqueadas);
 
     const persistencia = new DynamoPersistencia(deps.cliente, deps.tabla, config.partidaId, ronda);
     if (!(await persistencia.iniciar(semilla))) return { iniciada: false };

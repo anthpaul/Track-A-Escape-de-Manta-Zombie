@@ -78,6 +78,12 @@ export interface ConfigTurno {
   aleatorio: () => number;
   /** Scheduled city events — applied at their designated turn (Step 2). */
   eventos?: readonly EventoRonda[];
+  /**
+   * Next planned step of a survivor from its current node. When set (in-process demo rounds), the
+   * completed turn publishes it as siguienteNodo so the map can draw each survivor's arrow; without
+   * it (HTTP rounds, where planning would cost an extra /paso call) siguienteNodo is the step just taken.
+   */
+  planificarSiguiente?: (sobreviviente: Sobreviviente) => string;
 }
 
 /** Summary returned after each turn for metrics / logging. */
@@ -250,7 +256,19 @@ export async function ejecutarTurno(
   // Check shelter arrivals (after bites — a bitten survivor at a refuge is mordido).
   resolverLlegadas(config.sobrevivientes, config.nodosRefugio);
 
-  await config.persistencia.completarTurno(turno, decisiones, config.sobrevivientes);
+  // Only survivors still on the road get a next step; moves, bites and arrivals above are unchanged.
+  let publicadas = decisiones;
+  const planificar = config.planificarSiguiente;
+  if (planificar) {
+    publicadas = new Map(decisiones);
+    for (const sobreviviente of config.sobrevivientes) {
+      if (sobreviviente.estado !== "en_ruta") continue;
+      sobreviviente.siguienteNodo = planificar(sobreviviente);
+      publicadas.set(sobreviviente.id, sobreviviente.siguienteNodo);
+    }
+  }
+
+  await config.persistencia.completarTurno(turno, publicadas, config.sobrevivientes);
 
   // -----------------------------------------------------------
   // Wait until the tick window is full.

@@ -71,6 +71,23 @@ test("a scheduled demo plays a whole round on DynamoDB and releases the lock", a
   assert.ok(comandos.at(-1) instanceof DeleteCommand, "the lock is released at the end");
 });
 
+test("demo turns publish each survivor's next planned step, so the map can draw its arrow", async () => {
+  const { cliente, comandos } = clienteFalso();
+  await crearHandler({ cliente, tabla: "t", reloj: crearRelojFake() })({ ronda: 1, semilla: 3 });
+  type Publicado = { nodo: string; estado: string; siguienteNodo?: string };
+  const publicados = comandos
+    .filter((c): c is TransactWriteCommand => c instanceof TransactWriteCommand)
+    .flatMap((c) => c.input.TransactItems ?? [])
+    .filter((item) => item.Update?.UpdateExpression?.includes("#data.sobrevivientes"))
+    .flatMap((item) => item.Update!.ExpressionAttributeValues![":survivors"] as Publicado[])
+    .filter((s) => s.estado === "en_ruta");
+  assert.ok(publicados.length > 0);
+  assert.ok(publicados.some((s) => s.siguienteNodo !== s.nodo), "a moving survivor points somewhere else");
+  for (const s of publicados) {
+    assert.ok(grafo.esMovimientoValido(s.nodo, s.siguienteNodo!, []), `${s.nodo} → ${s.siguienteNodo} must be a street`);
+  }
+});
+
 test("when another round holds the lock, the demo exits without writing anything else", async () => {
   const { cliente, comandos } = clienteFalso({ candadoOcupado: true });
   const r = await crearHandler({ cliente, tabla: "t", reloj: crearRelojFake() })({});

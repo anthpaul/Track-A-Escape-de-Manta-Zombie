@@ -49,6 +49,11 @@ En modo demo el motor corre **en el mismo proceso** (`motor-en-proceso.ts`, la m
 serían millones de pedidos diarios a API Gateway. Las rondas de evaluación siguen
 saliendo de `correr.ts --modo=http`, que sí mide el `/paso` real.
 
+En las rondas demo, cada turno completo publica como `siguienteNodo` el **próximo**
+paso de cada sobreviviente desde su posición nueva (`planificarSiguiente`), así el
+mapa dibuja su flecha. En `--modo=http` sigue siendo el paso recién dado: planificar
+el próximo costaría una llamada extra a `/paso` por sobreviviente.
+
 Despliegue (lo corre Alex): `npm run build:simulador` y después `terraform plan` /
 `apply` como siempre. Probar una ronda a mano:
 
