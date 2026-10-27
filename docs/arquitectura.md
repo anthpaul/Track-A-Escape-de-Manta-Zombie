@@ -35,7 +35,7 @@ los conectores indican solicitudes o escrituras, no el sentido de las respuestas
 
 ## Valores del repositorio
 
-La demo usa por defecto R2 cada 6 minutos. La Lambda del simulador tiene
+La demo usa por defecto R2; el Scheduler intenta cada minuto y las rondas quedan casi seguidas. La Lambda del simulador tiene
 512 MB y timeout de 900 segundos; la Lambda API usa por defecto 1024 MB.
 Son valores declarados, no mediciones del despliegue. La programación puede
 tener intervalos sin una ronda en curso: no se garantiza movimiento continuo

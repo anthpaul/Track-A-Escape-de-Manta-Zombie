@@ -87,9 +87,9 @@ variable "demo_enabled" {
 }
 
 variable "demo_schedule" {
-  description = "How often a demo round starts. A round lasts 5 minutes; a busy lock makes the next start skip."
+  description = "How often the scheduler tries to start a demo round. A round lasts 5 minutes and a busy lock makes an attempt exit in under a second, so trying every minute keeps rounds back to back (about 30 s without a game between them, on average)."
   type        = string
-  default     = "rate(6 minutes)"
+  default     = "rate(1 minute)"
 }
 
 variable "demo_ronda" {

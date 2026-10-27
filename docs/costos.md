@@ -15,7 +15,7 @@ la configuración desplegada.
 | Entrada | Valor del escenario | Procedencia |
 |---|---|---|
 | Horizonte | 30 días, demo habilitada todo el día | Supuesto; no es la duración real del evento |
-| Demo | R2 cada 6 minutos | Valores por defecto de `infra/variables.tf` |
+| Demo | R2; el Scheduler intenta cada minuto y las rondas quedan casi seguidas (ciclo medio de 5,5 minutos) | Valores por defecto de `infra/variables.tf` |
 | Ronda | 300 segundos, 150 turnos de 2 segundos | Supuesto de ronda completa; puede terminar antes |
 | Lambda simulador | 512 MB = 0.5 GB, arm64 | `infra/simulador.tf` |
 | Lambda API | 1024 MB = 1 GB, arm64 | Valor por defecto de `infra/variables.tf` |
@@ -66,8 +66,10 @@ cotización regional completa.
 Separador decimal con punto en las fórmulas; 1 KiB = 1,024 bytes.
 
 ```text
-Rondas = 30 dias × 24 horas × 60 minutos / 6 = 7,200
-Turnos = 7,200 × 150 = 1,080,000
+Intentos del Scheduler = 30 dias × 24 horas × 60 minutos = 43,200
+Rondas = 43,200 minutos / 5.5 minutos por ciclo = 7,855
+Intentos con el candado ocupado = 43,200 - 7,855 = 35,345 (salen en menos de 1 s)
+Turnos = 7,855 × 150 = 1,178,250
 Polling = 100 horas-navegador × 3,600 / 2 = 180,000 solicitudes
 API = 180,000 + 10,000 rutas = 190,000 solicitudes
 CloudFront = 190,000 API + 20,000 estaticas = 210,000 solicitudes
@@ -85,11 +87,11 @@ WRU por turno = 2 escrituras de turno × 16 KiB × factor transaccional 2
              + 1 actualizacion de candado × 1 KiB × 2
              + 1 actualizacion de metadatos × 1 KiB × 2 = 68
 WRU por ronda = 150 × 68 + 4 de inicio/cierre = 10,204
-WRU mensuales = 7,200 × 10,204 = 73,468,800
+WRU mensuales = 7,855 × 10,204 + 35,345 Put condicionales fallidos = 80,187,765
 
-RRU transaccionales = 7,200 × (150 × 2 + 2 de inicio) = 2,174,400
+RRU transaccionales = 7,855 × (150 × 2 + 2 de inicio) = 2,372,210
 RRU API = 190,000 × (1 candado + 5 turnos × 16/4) = 3,990,000
-RRU totales = 6,164,400
+RRU totales = 6,362,210
 ```
 
 Inicio/cierre suma un Put de candado, un Put transaccional de metadatos y un
@@ -111,21 +113,21 @@ de redondear, no sumando filas ya redondeadas.
 
 | Componente | Fórmula en USD | Costo mensual |
 |---|---|---:|
-| Lambda simulador | `7,200 × 0.5 × 300 × 0.0000133334 + 7,200/1e6 × 0.20` | 14.4015 |
+| Lambda simulador | `7,855 × 0.5 × 300 × 0.0000133334 + 35,345 × 0.5 × 1 × 0.0000133334 + 43,200/1e6 × 0.20` | 15.9544 |
 | Lambda API | `190,000 × 1 × 0.1 × 0.0000133334 + 190,000/1e6 × 0.20` | 0.2913 |
 | API Gateway | `190,000/1e6 × 1.00` | 0.1900 |
-| DynamoDB escrituras | `73,468,800/1e6 × 0.625` | 45.9180 |
-| DynamoDB lecturas | `6,164,400/1e6 × 0.125` | 0.7706 |
+| DynamoDB escrituras | `80,187,765/1e6 × 0.625` | 50.1174 |
+| DynamoDB lecturas | `6,362,210/1e6 × 0.125` | 0.7953 |
 | DynamoDB almacenamiento | `2 × 0.25` | 0.5000 |
 | DynamoDB PITR | `2 × 0.20` | 0.4000 |
-| EventBridge Scheduler | `7,200/1e6 × 1.00` | 0.0072 |
+| EventBridge Scheduler | `43,200/1e6 × 1.00` | 0.0432 |
 | CloudFront | `10 × 0.085 + 210,000/10,000 × 0.01` | 1.0600 |
 | CloudFront Functions | `20,000/1e6 × 0.10` | 0.0020 |
 | S3 | `0.5 × 0.023 + 10,000/1,000 × 0.0004 + 1,000/1,000 × 0.005` | 0.0205 |
 | CloudWatch Logs | `0.25 × 0.50 + 0.1 × 0.03` | 0.1280 |
 | SNS | `100/1e6 × 0.50 + 100/100,000 × 2.00` | 0.0021 |
 | Budget de seguimiento | Sin acciones automáticas ni reportes de pago | 0.0000 |
-| **Total de referencia** | **Redondeado desde 63.6911466** | **63.69** |
+| **Total de referencia** | **Redondeado desde 69.5040656** | **69.50** |
 
 ### Sensibilidad
 
@@ -134,9 +136,9 @@ almacenamiento medio proporcionalmente:
 
 | Turno facturable | Almacenamiento medio | Total mensual bruto |
 |---|---:|---:|
-| 8 KiB | 1 GB | USD 41.40 |
-| 16 KiB | 2 GB | USD 63.69 |
-| 32 KiB | 4 GB | USD 108.27 |
+| 8 KiB | 1 GB | USD 45.25 |
+| 16 KiB | 2 GB | USD 69.50 |
+| 32 KiB | 4 GB | USD 118.01 |
 
 Son escenarios, no un intervalo estadístico ni un máximo. Más tráfico, tamaños,
 demoras o reintentos pueden superar esos valores. Rondas que terminan antes

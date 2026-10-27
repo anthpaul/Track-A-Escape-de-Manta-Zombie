@@ -13,7 +13,7 @@ Región `us-east-2` (la de la cuenta del equipo; `us-east-1` solo si la organiza
 | `apigateway.tf` | HTTP API con ruta `$default` → Lambda, throttling 300 rps / burst 600 |
 | `s3.tf` | Bucket privado del sitio (solo CloudFront lee, vía OAC) |
 | `cloudfront.tf` | Un dominio: `/` → S3, `/api/*` → API sin cache |
-| `simulador.tf` | Lambda del simulador (512 MB, 15 min) con permisos mínimos de escritura en la tabla + EventBridge Scheduler que arranca una ronda demo cada 6 minutos (S6). Ver `tools/simulador/README.md` |
+| `simulador.tf` | Lambda del simulador (512 MB, 15 min) con permisos mínimos de escritura en la tabla + EventBridge Scheduler que intenta arrancar una ronda demo cada minuto (S6). Ver `tools/simulador/README.md` |
 
 Valkey (`elasticache.tf`) no existe: `enable_valkey` está apagado y no crea nada (ver `AGENTS.md` §1).
 
