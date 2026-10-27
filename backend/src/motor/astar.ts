@@ -18,12 +18,7 @@
  *   edge cost = 1 + ε × (distancia_m / velocidad_m_s) + danger_penalty
  *
  * The leading "1" makes the search minimize TURNS (hops), not travel time.
- * The ε term is a tiebreaker: among equally-fast routes in turns, prefer the
- * one with less real travel time. ε must be small enough that it never
- * converts a 1-hop route into a costlier one than a 0-hop route.
- *   Max single-edge time contribution: longest street / slowest type
- *   Conservative upper bound: 2000 m / 1.0 m·s⁻¹ = 2000 s
- *   ε = 0.0001 → max ε×time = 0.2 << 1  ✓
+ * ε = 0.0001; max ε×time ≈ 0.2 << 1 turn — safe tiebreaker.
  */
 
 import type { Grafo, Refugio } from "@abcstack/shared";
@@ -36,16 +31,8 @@ import { calcularPeligros, costoPeligroArista, type Peligros } from "./peligros"
 export type { Peligros };
 export { calcularPeligros };
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
 /** Tiebreaker weight for travel time inside the edge cost formula. */
 const EPSILON = 0.0001;
-
-// ---------------------------------------------------------------------------
-// Public types
-// ---------------------------------------------------------------------------
 
 export type ResultadoBusqueda =
   | { tipo: "movimiento"; siguienteNodo: string; refugio: string; costoTotal: number }
@@ -56,12 +43,11 @@ export type ResultadoBusqueda =
 // Haversine distance helper (admissible heuristic input)
 // ---------------------------------------------------------------------------
 
-/** Returns the straight-line distance in metres between two lat/lng points. */
 function distanciaHaversine(
   lat1: number, lng1: number,
   lat2: number, lng2: number,
 ): number {
-  const R = 6_371_000; // Earth radius in metres
+  const R = 6_371_000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
@@ -73,7 +59,7 @@ function distanciaHaversine(
 }
 
 // ---------------------------------------------------------------------------
-// Index builder — called once per Lambda warm start, not per request
+// Routing context — built once per Lambda warm start
 // ---------------------------------------------------------------------------
 
 export interface ContextoGrafo {
@@ -101,8 +87,7 @@ export function crearContextoGrafo(grafo: Grafo, indexado: GrafoIndexado): Conte
 
 /**
  * Lower-bound cost (in turns) from `nodo` to the nearest shelter.
- * Uses straight-line distance / max possible speed, so it never overestimates.
- * Returns 0 when the node IS a shelter node (already there).
+ * Uses straight-line distance / max possible speed — never overestimates.
  */
 function heuristica(
   nodoId: string,
@@ -112,23 +97,16 @@ function heuristica(
   if (refugiosAlcanzables.length === 0) return 0;
   const coord = contexto.coordenadas.get(nodoId);
   if (!coord) return 0;
-
   const maxVelocidad = Math.max(...Object.values(VELOCIDADES_M_S));
-  let minTurnos = Infinity;
-
+  let minH = Infinity;
   for (const refugio of refugiosAlcanzables) {
+    if (nodoId === refugio.nodo) return 0;
     const destCoord = contexto.coordenadas.get(refugio.nodo);
     if (!destCoord) continue;
     const distancia = distanciaHaversine(coord.lat, coord.lng, destCoord.lat, destCoord.lng);
-    // Convert metres to turns: one turn = one edge traversal.
-    // Minimum edge time ≈ 1 turn, so floor at 0 when already on the shelter node.
-    const turnos = nodoId === refugio.nodo ? 0 : Math.max(0, distancia / maxVelocidad * EPSILON);
-    // The heuristic is the turn count (integer lower bound) + ε tie-break:
-    // a direct neighbour is 1 turn away at minimum.
-    const h = nodoId === refugio.nodo ? 0 : 1 * (distancia / maxVelocidad * EPSILON);
-    minTurnos = Math.min(minTurnos, h);
+    minH = Math.min(minH, distancia / maxVelocidad * EPSILON);
   }
-  return minTurnos === Infinity ? 0 : minTurnos;
+  return minH === Infinity ? 0 : minH;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,10 +130,8 @@ interface NodoAstar {
  * Returns the NEXT NODE to move to (one step), not the full path.
  * Returns the current node if no move is valid (safe fallback).
  *
- * Accepts an optional pre-computed `Peligros` object. When omitted,
- * danger sets are computed from `mundo` internally. Pass a pre-computed
- * value when calling buscarRuta for multiple survivors in the same turn
- * to avoid redundant work.
+ * Accepts optional pre-computed peligros for shared use across survivors
+ * in the same turn (avoids redundant computation).
  */
 export function buscarRuta(
   nodoActual: string,
@@ -164,12 +140,9 @@ export function buscarRuta(
   peligrosPrecomputados?: Peligros,
 ): ResultadoBusqueda {
   const { indexado } = contexto;
-
-  // K2: use pre-computed danger sets or compute them now.
   const peligros = peligrosPrecomputados ?? calcularPeligros(mundo, indexado);
   const aristasBloqueadas = new Set(mundo.aristasBloqueadas);
 
-  // Shelters reachable in principle (node not prohibited by any danger rule).
   const refugiosDisponibles = contexto.refugios.filter(
     (r) => !peligros.nodosProhibidos.has(r.nodo),
   );
@@ -184,47 +157,29 @@ export function buscarRuta(
     return { tipo: "sin_ruta", nodo: nodoActual };
   }
 
-  // A* with one simultaneous search toward all shelters.
-  // State: (nodo, refugioDestino). We run a single open set across all
-  // targets and stop as soon as any shelter is popped.
   const INFINITY = Infinity;
   const gCost = new Map<string, number>();
   const stateKey = (nodo: string, refugio: string) => `${nodo}|${refugio}`;
-
   const heap = new MinHeap<NodoAstar>();
 
   for (const refugio of refugiosDisponibles) {
     const h = heuristica(nodoActual, contexto, [refugio]);
-    const key = stateKey(nodoActual, refugio.id);
-    gCost.set(key, 0);
-    heap.push(0 + h, {
-      id: nodoActual,
-      g: 0,
-      primerPaso: nodoActual,
-      refugioDestino: refugio.id,
-    });
+    gCost.set(stateKey(nodoActual, refugio.id), 0);
+    heap.push(0 + h, { id: nodoActual, g: 0, primerPaso: nodoActual, refugioDestino: refugio.id });
   }
 
   while (!heap.isEmpty()) {
     const { value: current } = heap.pop()!;
     const key = stateKey(current.id, current.refugioDestino);
-    const bestG = gCost.get(key) ?? INFINITY;
 
     // Skip stale entries (lazy deletion).
-    if (current.g > bestG) continue;
+    if (current.g > (gCost.get(key) ?? INFINITY)) continue;
 
     // Goal check: reached the target shelter.
     const refugioMeta = contexto.refugios.find((r) => r.id === current.refugioDestino);
     if (refugioMeta && current.id === refugioMeta.nodo) {
-      const siguienteNodo = current.primerPaso === nodoActual
-        ? current.id
-        : current.primerPaso;
-      return {
-        tipo: "movimiento",
-        siguienteNodo,
-        refugio: current.refugioDestino,
-        costoTotal: current.g,
-      };
+      const siguienteNodo = current.primerPaso === nodoActual ? current.id : current.primerPaso;
+      return { tipo: "movimiento", siguienteNodo, refugio: current.refugioDestino, costoTotal: current.g };
     }
 
     // Expand neighbors.
@@ -248,21 +203,13 @@ export function buscarRuta(
       if (tentativeG >= (gCost.get(vecinoKey) ?? INFINITY)) continue;
 
       gCost.set(vecinoKey, tentativeG);
-
       const primerPaso = current.id === nodoActual ? vecino : current.primerPaso;
-
       const h = heuristica(vecino, contexto, [
         contexto.refugios.find((r) => r.id === current.refugioDestino)!,
       ]);
-      heap.push(tentativeG + h, {
-        id: vecino,
-        g: tentativeG,
-        primerPaso,
-        refugioDestino: current.refugioDestino,
-      });
+      heap.push(tentativeG + h, { id: vecino, g: tentativeG, primerPaso, refugioDestino: current.refugioDestino });
     }
   }
 
-  // No path found to any shelter — safe fallback: stay put.
   return { tipo: "sin_ruta", nodo: nodoActual };
 }
