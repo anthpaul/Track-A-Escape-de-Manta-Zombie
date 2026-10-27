@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { grafoManta } from "@/features/mapa/data/real/grafo-manta";
 import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
 import { USAR_MOCKS, useEstadoEnVivo } from "@/features/mapa/data/real/useEstadoEnVivo";
+import { useRutaEnVivo } from "@/features/mapa/data/real/useRutaEnVivo";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
 import { derivarAlertas, type Alerta } from "@/features/mapa/domain/alertas";
 import { estadoInicialPanel, reducirPanel, type Tab } from "@/features/mapa/domain/panel";
@@ -96,11 +97,14 @@ export default function PantallaMapa() {
     () => elegirSeguido(snapshot.sobrevivientes, panel.sobrevivienteId),
     [snapshot.sobrevivientes, panel.sobrevivienteId],
   );
-  // Mock of GET /api/sobrevivientes/:id/ruta (K6); N4 replaces it with the real endpoint.
-  const ruta = useMemo(
+  // Live game: the route comes from the engine (K6). Simulation, or while the first real route loads:
+  // a local shortest path, so a planned route is always visible (challenge requirement).
+  const rutaReal = useRutaEnVivo(!esPrueba && panel.mostrarRuta ? (seguidoId ?? null) : null, snapshot.turno);
+  const rutaLocal = useMemo(
     () => (panel.mostrarRuta && seguidoId ? rutaHaciaRefugio(grafo, snapshot, seguidoId) : []),
     [grafo, snapshot, seguidoId, panel.mostrarRuta],
   );
+  const ruta = rutaReal ?? rutaLocal;
 
   // Same Set instance while the blocked list is unchanged, so street GeoJSON is not rebuilt every turn.
   const clave = snapshot.aristasBloqueadas.join(",");
