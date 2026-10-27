@@ -7,7 +7,7 @@
  *   1. Node with visible zombie            → Prohibited
  *   2. Horde: node + all neighbours        → Prohibited  (shared/ + peligros.ts)
  *   3. Blocked edge (city event)           → Non-existent (K1, not re-tested here)
- *   4. Runner reachable next turn          → Very high    (Pro K5 — not active yet)
+ *   4. Runner reachable next turn          → Very high    (Pro K5)
  *   5. Neighbours of a walker              → High penalty
  *   6. Cross-traffic edge (cruce)          → Prohibited
  *   7. Near possible sleeper               → No cost
@@ -150,10 +150,15 @@ describe("§4.4 row 2: horde blocks its node and all static neighbours", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 4 — Runner reachable nodes (Pro K5 — not active yet)
+// §4.4 Row 4 — Runner reachable nodes (Pro K5)
 // ---------------------------------------------------------------------------
 
-describe("§4.4 row 4: runner prediction (Pro K5) — constant defined, not yet applied", () => {
+describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches next turn cost very high", () => {
+  const corredorEn = (...nodos: string[]) => ({
+    zombies: nodos.map((nodo, i) => ({ id: `Z-000${i + 1}`, tipo: "corredor" as const, nodo })),
+    aristasBloqueadas: [] as string[],
+  });
+
   it("RUNNER_PREDICTION_PENALTY constant is defined and > WALKER_ADJACENT_PENALTY", () => {
     assert.ok(
       RUNNER_PREDICTION_PENALTY > WALKER_ADJACENT_PENALTY,
@@ -161,29 +166,63 @@ describe("§4.4 row 4: runner prediction (Pro K5) — constant defined, not yet 
     );
   });
 
-  it("calcularPeligros does NOT mark runner-adjacent nodes as prohibited (Pro feature off)", () => {
-    // Runner at N-0006. Its neighbours (N-0002, N-0005, N-0007, N-0010) should
-    // NOT be in nodosProhibidos for the runner-prediction rule (K5 off).
-    // They ARE prohibited because the runner occupies N-0006 (row 1 rule).
-    const mundo = {
-      zombies: [{ id: "Z-0001", tipo: "corredor" as const, nodo: "N-0003" }],
+  it("every node within two streets of a runner gets the penalty; farther nodes do not", () => {
+    // Runner at N-0003: 1 street → N-0002, N-0004; 2 streets → N-0001, N-0006, N-0008.
+    const p = calcularPeligros(corredorEn("N-0003"), indexado);
+    for (const nodo of ["N-0002", "N-0004", "N-0001", "N-0006", "N-0008"]) {
+      assert.equal(p.costosExtra.get(nodo), RUNNER_PREDICTION_PENALTY, `${nodo} is reachable by the runner`);
+    }
+    for (const nodo of ["N-0005", "N-0007", "N-0012"]) {
+      assert.equal(p.costosExtra.has(nodo), false, `${nodo} is three or more streets away`);
+    }
+  });
+
+  it("reachable nodes are penalized, not prohibited: a runner may move elsewhere", () => {
+    const p = calcularPeligros(corredorEn("N-0003"), indexado);
+    assert.ok(p.nodosProhibidos.has("N-0003"), "the runner's own node stays prohibited (row 1)");
+    assert.equal(p.nodosProhibidos.has("N-0001"), false);
+    assert.equal(p.nodosProhibidos.has("N-0006"), false);
+  });
+
+  it("a runner cannot use blocked streets, so nothing behind them is predicted", () => {
+    // C-0002 is the only short link N-0003 → N-0002.
+    const p = calcularPeligros({ ...corredorEn("N-0003"), aristasBloqueadas: ["C-0002"] }, indexado);
+    for (const nodo of ["N-0002", "N-0001", "N-0006"]) {
+      assert.equal(p.costosExtra.has(nodo), false, `${nodo} is behind a blocked street`);
+    }
+    assert.equal(p.costosExtra.get("N-0004"), RUNNER_PREDICTION_PENALTY);
+    assert.equal(p.costosExtra.get("N-0008"), RUNNER_PREDICTION_PENALTY);
+  });
+
+  it("two runners reaching the same node add up", () => {
+    // N-0002 is reachable from N-0003 (1 street) and from N-0006 (1 street).
+    const p = calcularPeligros(corredorEn("N-0003", "N-0006"), indexado);
+    assert.equal(p.costosExtra.get("N-0004"), RUNNER_PREDICTION_PENALTY, "only the first runner reaches N-0004");
+    assert.equal(p.costosExtra.get("N-0002"), 2 * RUNNER_PREDICTION_PENALTY);
+  });
+
+  it("walkers and hordes never get the runner prediction (sleepers: row 7)", () => {
+    const otros = {
+      zombies: [
+        { id: "Z-0001", tipo: "caminante" as const, nodo: "N-0003" },
+        { id: "Z-0002", tipo: "horda" as const, nodo: "N-0010" },
+      ],
       aristasBloqueadas: [],
     };
-    const p = calcularPeligros(mundo, indexado);
-    // N-0003 is the runner node → prohibited (row 1).
-    assert.ok(p.nodosProhibidos.has("N-0003"));
-    // N-0002 and N-0004 are neighbours of N-0003 → NOT prohibited by runner rule (K5 off).
-    // They MAY have a walker penalty if a walker were there, but there isn't one.
-    // The point: no extra prohibition from runner-prediction.
-    assert.ok(
-      !p.nodosProhibidos.has("N-0002") || indexado.vecinos("N-0003").includes("N-0002"),
-      // This assertion is intentionally loose: we only care that it wasn't ADDED by runner logic.
-    );
-    // No costosExtra from runner prediction.
-    assert.ok(
-      !p.costosExtra.has("N-0002") || (p.costosExtra.get("N-0002") ?? 0) < RUNNER_PREDICTION_PENALTY,
-      "runner prediction penalty must not be active in K2"
-    );
+    const p = calcularPeligros(otros, indexado);
+    // The walker's neighbour gets only the walker penalty; two streets away gets nothing.
+    assert.equal(p.costosExtra.get("N-0002"), WALKER_ADJACENT_PENALTY);
+    assert.equal(p.costosExtra.has("N-0001"), false);
+    // Two streets from the horde, outside its blocked zone: nothing either.
+    assert.equal(p.costosExtra.has("N-0012"), false);
+  });
+
+  it("A* prefers the equally short route that stays out of the runner's reach", () => {
+    // Survivor at N-0006, R-01 at N-0001 two streets away by N-0002 or by N-0005.
+    // Runner at N-0003 reaches N-0002 next turn but not N-0005.
+    const r = buscarRuta("N-0006", contexto, corredorEn("N-0003"));
+    assert.equal(r.tipo, "movimiento");
+    assert.equal(r.tipo === "movimiento" && r.siguienteNodo, "N-0005");
   });
 });
 
