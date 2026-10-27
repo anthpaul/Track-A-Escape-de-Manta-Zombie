@@ -41,9 +41,11 @@ test("a new horde raises an alert near the closest shelter", () => {
   assert.match(a.descripcion, /Faro de Manta/);
 });
 
-test("a collapsed bridge and a blocked street are told apart", () => {
+test("a collapsed bridge and a blocked street are told apart, without street codes", () => {
   const alertas = derivarAlertas(grafo, snap({}), snap({ turno: 2, aristasBloqueadas: ["C-0001", "C-0002"] }));
   assert.deepEqual(alertas.map((a) => a.titulo), ["Puente colapsado", "Calle bloqueada"]);
+  for (const a of alertas) assert.doesNotMatch(a.descripcion, /C-\d{4}/);
+  assert.match(alertas[1].descripcion, /cerca de Faro de Manta/);
 });
 
 test("a shelter that just filled up raises one alert, only once", () => {
@@ -53,10 +55,11 @@ test("a shelter that just filled up raises one alert, only once", () => {
   assert.deepEqual(derivarAlertas(grafo, snap(lleno), snap({ turno: 3, ...lleno })), []);
 });
 
-test("a newly bitten survivor is reported with its id", () => {
+test("a newly bitten survivor is reported as a person and a place, never as codes", () => {
   const previo = snap({ sobrevivientes: [{ id: "S-0011", nodo: "N-0001", estado: "en_ruta" }] });
   const [a] = derivarAlertas(grafo, previo, snap({ turno: 2, sobrevivientes: [{ id: "S-0011", nodo: "N-0001", estado: "mordido" }] }));
-  assert.deepEqual([a.tipo, a.titulo, a.sobrevivienteId], ["mordido", "S-0011 mordido", "S-0011"]);
+  assert.deepEqual([a.tipo, a.titulo, a.sobrevivienteId], ["mordido", "Sobreviviente 11 mordido", "S-0011"]);
+  assert.equal(a.descripcion, "Fue alcanzado cerca de Faro de Manta.");
 });
 
 test("several bitten in one turn become a single alert", () => {
@@ -65,6 +68,7 @@ test("several bitten in one turn become a single alert", () => {
   const alertas = derivarAlertas(grafo, previo, actual);
   assert.equal(alertas.length, 1);
   assert.equal(alertas[0].titulo, "2 sobrevivientes mordidos");
+  assert.equal(alertas[0].descripcion, "Entre ellos, Sobreviviente 1, cerca de Faro de Manta.");
 });
 
 test("alert ids are stable, so the same event never raises twice", () => {

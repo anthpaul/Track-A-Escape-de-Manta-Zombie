@@ -14,6 +14,7 @@ import {
   capaSeguidoEtiqueta,
 } from "@/features/mapa/map/layers/estilos";
 import { conVisibilidad } from "./visibilidad";
+import { nombreSobreviviente } from "@/features/mapa/domain/lugares";
 
 type Props = {
   grafo: Grafo;
@@ -39,7 +40,8 @@ export default function CapaSeleccion({ grafo, snapshot, anilloSobrevivienteId, 
   const anilloSobreviviente = useMemo(() => {
     const s = snapshot.sobrevivientes.find((x) => x.id === anilloSobrevivienteId);
     const nodo = s && grafo.nodos.find((n) => n.id === s.nodo);
-    return nodo ? punto(nodo.lng, nodo.lat, { id: s.id }) : vacio;
+    // "Sobreviviente 3" on the map, never the contract code S-0003.
+    return nodo ? punto(nodo.lng, nodo.lat, { id: s.id, nombre: nombreSobreviviente(s.id) }) : vacio;
   }, [grafo, snapshot.sobrevivientes, anilloSobrevivienteId]);
 
   const anilloRefugio = useMemo(() => {
