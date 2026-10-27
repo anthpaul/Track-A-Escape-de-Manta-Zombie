@@ -18,7 +18,7 @@ Rama: `feat/riel-interactivo` · Entrega: un PR con commits por unidad · Tests:
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
 | T1 | S6, S7 | inline | hecho (49 tests) | d6266ab |
-| T2 | S1, S5 | inline | hecho (54 tests) | pendiente de commit |
+| T2 | S1, S5 | inline | hecho (54 tests) | 9ed8347 |
 | T3 | S2, S3, S5 | inline | pendiente | |
 | T4 | S1–S4 | inline | pendiente | |
 
