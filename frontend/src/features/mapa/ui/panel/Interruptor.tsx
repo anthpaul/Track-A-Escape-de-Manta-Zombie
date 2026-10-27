@@ -20,7 +20,8 @@ export default function Interruptor({ activo, onCambiar, etiqueta }: Props) {
     >
       <span
         className={cn(
-          "absolute top-0.5 size-4 rounded-full bg-calabaza-900 transition-transform",
+          // left-0: inside a <button> an absolute child without an offset starts at the centered content.
+          "absolute left-0 top-0.5 size-4 rounded-full bg-calabaza-900 transition-transform",
           activo ? "translate-x-4.5" : "translate-x-0.5",
         )}
       />

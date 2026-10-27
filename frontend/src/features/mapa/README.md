@@ -23,7 +23,6 @@ mapa/
 │   ├── MapaVivo.tsx      Compone las capas (un solo chunk para el orden de capas)
 │   ├── config.ts         Centro, límites y estilo de Manta
 │   ├── tema-mapa.ts      Recolorea el mapa base de CARTO con la paleta 2
-│   ├── Brujula.tsx       Vuelve el mapa al norte
 │   ├── geojson/          Conversores puros dominio → GeoJSON, con tests
 │   └── layers/           Capas, estilos de MapLibre y registro de íconos
 ├── data/                 Fuentes de datos
