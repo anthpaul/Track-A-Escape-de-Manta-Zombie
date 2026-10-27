@@ -41,8 +41,9 @@ test("chip counts follow the current search", () => {
   assert.deepEqual(conteosFiltro(grafo, lista, "uleam"), { todos: 2, en_ruta: 1, mordido: 0, a_salvo: 1 });
 });
 
-test("shelter summary: totals, percent, on-the-way count and blocked accesses", () => {
+test("shelter summary: totals, percent, on-the-way count, blocked accesses and reachability", () => {
   const snap = {
+    zombies: [],
     aristasBloqueadas: ["C-0002"],
     refugios: [
       { id: "R-01", ocupacion: 7, capacidad: 10 },
@@ -54,10 +55,11 @@ test("shelter summary: totals, percent, on-the-way count and blocked accesses", 
   assert.equal(r.aSalvo, 11);
   assert.equal(r.capacidadLibre, 3);
   assert.deepEqual(
-    r.refugios.map((x) => [x.id, x.nombre, x.pct, x.lleno, x.enCamino, x.accesosBloqueados]),
+    r.refugios.map((x) => [x.id, x.nombre, x.pct, x.lleno, x.enCamino, x.accesosBloqueados, x.sinAcceso]),
     [
-      ["R-01", "Faro de Manta", 70, false, 1, 1],
-      ["R-02", "ULEAM", 100, true, 1, 1],
+      // Survivors on the road stand on N-0001; C-0002 is the only street into ULEAM (N-0003).
+      ["R-01", "Faro de Manta", 70, false, 1, 1, false],
+      ["R-02", "ULEAM", 100, true, 1, 1, true],
     ],
   );
 });

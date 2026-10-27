@@ -91,6 +91,33 @@ export const capaRefugiosEtiquetas: LayerProps = {
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
 
+// Shelter nobody can reach this turn: danger ring around the shelter and a "SIN ACCESO" tag under its name.
+export const capaRefugiosSinAcceso: LayerProps = {
+  id: "refugios-sin-acceso",
+  type: "circle",
+  paint: {
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 11, 16, 18],
+    "circle-color": "rgba(0,0,0,0)",
+    "circle-stroke-color": COLOR_CALLE.bloqueada,
+    "circle-stroke-width": 3,
+  },
+};
+
+export const capaRefugiosSinAccesoEtiqueta: LayerProps = {
+  id: "refugios-sin-acceso-etiqueta",
+  type: "symbol",
+  layout: {
+    "text-field": "SIN ACCESO",
+    "text-font": FUENTE_ETIQUETAS,
+    "text-size": 11,
+    "text-anchor": "top",
+    "text-offset": [0, 2.6],
+    "text-allow-overlap": true,
+    "text-ignore-placement": true,
+  },
+  paint: { "text-color": COLOR_CALLE.bloqueada, "text-halo-color": "#000000", "text-halo-width": 1.5 },
+};
+
 // Horde zone: the horde node and every neighbor (same set the router forbids). Only the horde node
 // gets one soft ring; each blocked neighbor is a small solid dot, so overlapping zones never pile
 // up into a red blob and every forbidden node stays readable.

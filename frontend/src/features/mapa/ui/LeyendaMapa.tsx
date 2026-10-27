@@ -72,6 +72,10 @@ export default function LeyendaMapa() {
             </span>
             Refugio
           </li>
+          <li className="flex items-center gap-2">
+            <span className="size-4 rounded-full border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
+            Refugio sin acceso
+          </li>
           {LINEAS.map(({ nombre, color, punteada }) => (
             <li key={nombre} className="flex items-center gap-2">
               <span

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
+import { refugiosSinAccesoAGeoJSON, sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
 // N-0001 — N-0002 — N-0003 — N-0004 (a line)
@@ -43,4 +43,25 @@ test("survivors become points with their state", () => {
     { id: "S-0001", estado: "en_ruta" },
     { id: "S-0002", estado: "mordido" },
   ]);
+});
+
+test("cut-off shelters become points with their name; reachable ones are not drawn", () => {
+  const conRefugios: Grafo = {
+    ...grafo,
+    refugios: [
+      { id: "R-01", nodo: "N-0004", nombre: "Faro", capacidad: 10 },
+      { id: "R-02", nodo: "N-0002", nombre: "ULEAM", capacidad: 10 },
+    ],
+  };
+  // The horde on N-0003 forbids N-0002..N-0004: both shelters are cut off from the survivor on N-0001.
+  const mundo = {
+    zombies: [{ id: "Z-1", tipo: "horda" as const, nodo: "N-0003" }],
+    aristasBloqueadas: [],
+    sobrevivientes: [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" as const }],
+  };
+  assert.deepEqual(
+    refugiosSinAccesoAGeoJSON(conRefugios, mundo).features.map((f) => f.properties),
+    [{ id: "R-01", nombre: "Faro" }, { id: "R-02", nombre: "ULEAM" }],
+  );
+  assert.deepEqual(refugiosSinAccesoAGeoJSON(conRefugios, { ...mundo, zombies: [] }).features, []);
 });

@@ -1,12 +1,13 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { EstadoSobreviviente, Grafo, Nodo, Sobreviviente, TipoZombie, Zombie } from "@/features/mapa/domain/tipos";
-import { nodosBloqueadosPorHordas } from "@/features/mapa/domain/grafo";
+import { nodosBloqueadosPorHordas, refugiosSinAcceso } from "@/features/mapa/domain/grafo";
 
 // Pure converters from live entities to GeoJSON for the map layers (zombies, survivors, horde zones).
 
 export type ZombieProps = { id: string; tipo: Exclude<TipoZombie, "dormido"> };
 export type SobrevivienteProps = { id: string; estado: EstadoSobreviviente };
 export type ZonaHordaProps = { nodo: string; origen: "horda" | "vecino" };
+export type RefugioSinAccesoProps = { id: string; nombre: string };
 
 const punto = <P>(nodo: Nodo, properties: P): Feature<Point, P> => ({
   type: "Feature",
@@ -46,6 +47,21 @@ export function sobrevivientesAGeoJSON(
   for (const s of sobrevivientes) {
     const nodo = nodos.get(s.nodo);
     if (nodo) features.push(punto(nodo, { id: s.id, estado: s.estado }));
+  }
+  return { type: "FeatureCollection", features };
+}
+
+// Shelters nobody can reach this turn (see refugiosSinAcceso), drawn with a danger ring and label.
+export function refugiosSinAccesoAGeoJSON(
+  grafo: Grafo,
+  mundo: Parameters<typeof refugiosSinAcceso>[1],
+): FeatureCollection<Point, RefugioSinAccesoProps> {
+  const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
+  const cortados = refugiosSinAcceso(grafo, mundo);
+  const features: Feature<Point, RefugioSinAccesoProps>[] = [];
+  for (const r of grafo.refugios) {
+    const nodo = nodos.get(r.nodo);
+    if (nodo && cortados.has(r.id)) features.push(punto(nodo, { id: r.id, nombre: r.nombre }));
   }
   return { type: "FeatureCollection", features };
 }
