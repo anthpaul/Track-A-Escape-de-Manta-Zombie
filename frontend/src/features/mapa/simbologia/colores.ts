@@ -1,9 +1,10 @@
 // Map symbology (palette 2): every color here carries meaning and is shared by the map layers
 // and the panel legend. They are NOT theme tokens on purpose.
+// Walkable network over the mauve base map: bright enough to read where survivors can go.
 export const COLOR_CALLE = {
-  avenida: "#ea75bd", // crimson-800
-  calle: "#a61a70", // crimson-600
-  callejon: "#7a1456",
+  avenida: "#fb8b24", // calabaza-500
+  calle: "#f4bade", // crimson-900
+  callejon: "#ea75bd", // crimson-800
   puente: "#74d1e8", // marea-800
   bloqueada: "#fb3055", // sangre-700: danger, same family as the horde border
 } as const;

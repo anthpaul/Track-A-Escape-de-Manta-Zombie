@@ -16,14 +16,35 @@ import {
 // Glyphs available on the CARTO Dark Matter font server.
 const FUENTE_ETIQUETAS = ["Montserrat SemiBold", "Open Sans Bold", "Noto Sans Regular"];
 
-// Only blocked streets are drawn over the base map: the clean map of the reference design, while the
-// collapsed bridge (R2) and the two blocked streets (R3) stay visible, as the challenge requires.
+// The walkable graph, colored by street type. Blocked streets are red, thicker and drawn on top
+// (line-sort-key), so the collapsed bridge (R2) and the blocked streets (R3) always stand out.
 export const capaCalles: LayerProps = {
   id: "calles",
   type: "line",
-  filter: ["==", ["get", "bloqueada"], true],
-  layout: { "line-cap": "round", "line-join": "round" },
-  paint: { "line-color": COLOR_CALLE.bloqueada, "line-width": 6, "line-opacity": 0.95 },
+  layout: {
+    "line-cap": "round",
+    "line-join": "round",
+    "line-sort-key": ["case", ["get", "bloqueada"], 1, 0],
+  },
+  paint: {
+    "line-color": [
+      "case",
+      ["get", "bloqueada"],
+      COLOR_CALLE.bloqueada,
+      ["match", ["get", "tipo"],
+        "avenida", COLOR_CALLE.avenida,
+        "puente", COLOR_CALLE.puente,
+        "callejon", COLOR_CALLE.callejon,
+        COLOR_CALLE.calle],
+    ],
+    "line-width": [
+      "case",
+      ["get", "bloqueada"],
+      6,
+      ["match", ["get", "tipo"], "avenida", 4, "puente", 4, "callejon", 1.5, 2.5],
+    ],
+    "line-opacity": ["case", ["get", "bloqueada"], 1, 0.85],
+  },
 };
 
 // Plain disc under the shelter icon: shelters stay visible even if the Lucide image fails to register.
@@ -156,7 +177,8 @@ export const capaSeguido: LayerProps = {
   },
 };
 
-// Selection overlay: shelter = square accent ring with its name below; survivor = tide ring with its id above.
+// Selection overlay: shelter = square accent ring (its name is already the shelter label);
+// survivor = tide ring with its id above.
 const ETIQUETA_SELECCION = {
   "text-font": FUENTE_ETIQUETAS,
   "text-size": 12,
@@ -172,12 +194,7 @@ export const capaRefugioSeleccionado: LayerProps = {
     "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.9, 16, 1.4],
     "icon-allow-overlap": true,
     "icon-ignore-placement": true,
-    ...ETIQUETA_SELECCION,
-    "text-field": ["get", "nombre"],
-    "text-anchor": "top",
-    "text-offset": [0, 1.8],
   },
-  paint: { "text-color": COLOR_SELECCION.refugio, "text-halo-color": "#13030d", "text-halo-width": 2 },
 };
 
 export const capaSeguidoEtiqueta: LayerProps = {
