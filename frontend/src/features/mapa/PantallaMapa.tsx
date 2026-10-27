@@ -125,7 +125,13 @@ export default function PantallaMapa() {
         />
       </div>
 
-      <RielIconos tab={panel.tab} abierto={abierto} noLeidas={noLeidas} onElegir={elegirTab} />
+      <RielIconos
+        tab={panel.tab}
+        abierto={abierto}
+        noLeidas={noLeidas}
+        onElegir={elegirTab}
+        onAlternarPanel={() => setAbierto((a) => !a)}
+      />
 
       {abierto && (
         <PanelLateral titulo={TITULOS[panel.tab]} resumen={resumen} generadoEn={snapshot.generadoEn} esPrueba={esPrueba}>
