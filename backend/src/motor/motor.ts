@@ -17,6 +17,7 @@ import { crearGrafo, type Grafo } from "@abcstack/shared";
 import grafoData from "@abcstack/shared/data/manta.json";
 import { buscarRuta, crearContextoGrafo, type ContextoGrafo, type ResultadoBusqueda } from "./astar";
 import { calcularPeligros } from "./peligros";
+import { elegirEscape } from "./evasion";
 import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
@@ -48,19 +49,15 @@ export interface SalidaMotor {
  * can call calcularPeligros once per turn and pass it to every survivor,
  * avoiding redundant re-computation for the same world snapshot.
  *
- * Never throws. Returns the current node as a safe fallback when no valid
- * move exists (AGENTS.md §4.3 rule 2).
+ * Never throws. With no reachable shelter it escapes to the legal option
+ * farthest from moving zombies, which may be staying put (AGENTS.md §4.3 rule 2).
  */
 export function calcularSiguienteNodo(
   entrada: EntradaMotor,
   peligrosDelTurno?: ReturnType<typeof calcularPeligros>,
 ): SalidaMotor {
-  const resultado = buscarRuta(
-    entrada.nodoActual,
-    contexto,
-    entrada.mundo,
-    peligrosDelTurno,
-  );
+  const peligros = peligrosDelTurno ?? calcularPeligros(entrada.mundo, contexto.indexado);
+  const resultado = buscarRuta(entrada.nodoActual, contexto, entrada.mundo, peligros);
 
   let siguienteNodo: string;
   switch (resultado.tipo) {
@@ -68,9 +65,11 @@ export function calcularSiguienteNodo(
       siguienteNodo = resultado.siguienteNodo;
       break;
     case "ya_en_refugio":
-    case "sin_ruta":
-      // Safe fallback: stay put (AGENTS.md §4.3).
       siguienteNodo = entrada.nodoActual;
+      break;
+    case "sin_ruta":
+      // Waiting next to a zombie gets the survivor bitten: move away instead.
+      siguienteNodo = elegirEscape(entrada.nodoActual, contexto, entrada.mundo, peligros);
       break;
   }
 

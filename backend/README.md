@@ -25,6 +25,27 @@ El motor depende de `FuenteMundo`, no del SDK de DynamoDB. La implementación
 `DynamoFuente` queda en `src/db/`; la interfaz y los errores de dominio están en
 `src/motor/fuente-mundo.ts`. No implementa A*, `/paso`, el candado ni el simulador.
 
+## Supervivencia: predicción de corredores (K5) y escape sin ruta
+
+- **K5** (`src/motor/peligros.ts`): cada nodo al que un corredor llega en su próximo
+  turno (hasta 2 calles no bloqueadas, igual que `moverZombie` en `shared/`) suma
+  `RUNNER_PREDICTION_PENALTY` (0,9). Se penaliza, no se prohíbe: prohibirlo dejó más
+  sobrevivientes sin ruta y bajó la supervivencia en las pruebas.
+- **Escape** (`src/motor/evasion.ts`): si el A* no encuentra ningún refugio alcanzable,
+  el sobreviviente ya no se queda quieto. Elige, entre quedarse y los vecinos legales,
+  el nodo más lejano (en calles) de los zombies que se mueven (AGENTS.md §4.3, regla 2).
+
+Medición local con los escenarios S4 de `tools/simulador`, el motor real en proceso y
+16 semillas por ronda (no mide red ni AWS; los escenarios no son los del jurado):
+
+| Ronda | Vivos antes | Vivos con K5 + escape |
+|---|---|---|
+| R1 | 95,6 % | 95,3 % |
+| R2 | 25,2 % | 34,1 % |
+| R3 | 13,8 % | 17,3 % |
+
+Cálculo de un paso en proceso: p95 de 3 ms y máximo de 20 ms sobre 75 301 pasos.
+
 ## `GET /api/sobrevivientes/:id/ruta` — K6
 
 `src/routes/sobrevivientes.ts` responde la ruta planificada completa de un
