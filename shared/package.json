@@ -5,7 +5,8 @@
   "type": "commonjs",
   "exports": {
     ".": "./index.ts",
-    "./data/manta.json": "./data/manta.json"
+    "./data/manta.json": "./data/manta.json",
+    "./data/fixture-mini.json": "./data/fixture-mini.json"
   },
   "scripts": {
     "test": "tsx --test *.test.ts",

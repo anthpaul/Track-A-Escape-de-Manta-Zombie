@@ -59,6 +59,18 @@ Más las funciones puras que **motor y simulador comparten** (`shared/grafo.ts`)
 
 **Aceptación del grafo en T0.2/T0.3:** aplicar `docs/CONTRATO_GRAFO.md`, sección «Aplicación en las tareas existentes». T0.2 incluye fixtures con geometrías válidas y pruebas de extremos exactos; al integrar el fixture común, se adapta el mock del frontend. T0.3 normaliza los extremos y comprueba el puente real de R2 después de simplificar. Q4 sigue pendiente: no se fijan capacidades finales ni se activa el límite Pro. Son precisiones de las tareas actuales, no nuevas fases ni cambios del cronograma.
 
+**T0.2 — implementación local verificada (Kevin):** schemas y tipos derivados en
+`shared/schemas.ts`, funciones indexadas en `shared/grafo.ts` y fixture de 12 nodos,
+15 calles, un puente y dos refugios. Uso documentado en `shared/README.md`.
+`npm test -w shared` pasa 18 pruebas y `npm run typecheck -w shared` pasa en modo
+strict; el schema también acepta el grafo real sin modificarlo. La suite del
+monorepo pasa; el typecheck global sigue fallando por problemas preexistentes
+(backend sin tsconfig y tipos/dependencias del frontend), reproducidos contra la
+versión base. La revisión independiente no encontró regresiones y comparó 20
+casos de los contratos anteriores. **La aprobación del PR por los tres sigue
+pendiente:** T0.2 no se marca completada en la sección 6. No se implementó K1/A*,
+T0.6, persistencia ni integración del frontend.
+
 ---
 
 ## 3. Cronograma con puntos de control

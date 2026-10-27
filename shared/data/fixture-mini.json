@@ -1,0 +1,38 @@
+{
+  "version": "fixture-mini-v1",
+  "nodos": [
+    { "id": "N-0001", "lat": -0.95, "lng": -80.72, "barrio": "tarqui" },
+    { "id": "N-0002", "lat": -0.95, "lng": -80.71, "barrio": "tarqui" },
+    { "id": "N-0003", "lat": -0.95, "lng": -80.70, "barrio": "tarqui" },
+    { "id": "N-0004", "lat": -0.95, "lng": -80.69, "barrio": "los_esteros" },
+    { "id": "N-0005", "lat": -0.96, "lng": -80.72, "barrio": "los_esteros" },
+    { "id": "N-0006", "lat": -0.96, "lng": -80.71, "barrio": "los_esteros" },
+    { "id": "N-0007", "lat": -0.96, "lng": -80.70, "barrio": "barbasquillo" },
+    { "id": "N-0008", "lat": -0.96, "lng": -80.69, "barrio": "barbasquillo" },
+    { "id": "N-0009", "lat": -0.97, "lng": -80.72, "barrio": "barbasquillo" },
+    { "id": "N-0010", "lat": -0.97, "lng": -80.71, "barrio": "jocay" },
+    { "id": "N-0011", "lat": -0.97, "lng": -80.70, "barrio": "jocay" },
+    { "id": "N-0012", "lat": -0.97, "lng": -80.69, "barrio": "jocay" }
+  ],
+  "calles": [
+    { "id": "C-0001", "desde": "N-0001", "hasta": "N-0002", "distancia_m": 120, "tipo": "calle", "geometria": [[-80.72, -0.95], [-80.71, -0.95]] },
+    { "id": "C-0002", "desde": "N-0002", "hasta": "N-0003", "distancia_m": 140, "tipo": "callejon", "geometria": [[-80.71, -0.95], [-80.70, -0.95]] },
+    { "id": "C-0003", "desde": "N-0003", "hasta": "N-0004", "distancia_m": 160, "tipo": "calle", "geometria": [[-80.70, -0.95], [-80.69, -0.95]] },
+    { "id": "C-0004", "desde": "N-0005", "hasta": "N-0006", "distancia_m": 180, "tipo": "avenida", "geometria": [[-80.72, -0.96], [-80.71, -0.96]] },
+    { "id": "C-0005", "desde": "N-0006", "hasta": "N-0007", "distancia_m": 200, "tipo": "puente", "geometria": [[-80.71, -0.96], [-80.70, -0.96]] },
+    { "id": "C-0006", "desde": "N-0007", "hasta": "N-0008", "distancia_m": 180, "tipo": "avenida", "geometria": [[-80.70, -0.96], [-80.69, -0.96]] },
+    { "id": "C-0007", "desde": "N-0009", "hasta": "N-0010", "distancia_m": 130, "tipo": "calle", "geometria": [[-80.72, -0.97], [-80.71, -0.97]] },
+    { "id": "C-0008", "desde": "N-0010", "hasta": "N-0011", "distancia_m": 150, "tipo": "callejon", "geometria": [[-80.71, -0.97], [-80.70, -0.97]] },
+    { "id": "C-0009", "desde": "N-0011", "hasta": "N-0012", "distancia_m": 130, "tipo": "calle", "geometria": [[-80.70, -0.97], [-80.69, -0.97]] },
+    { "id": "C-0010", "desde": "N-0001", "hasta": "N-0005", "distancia_m": 110, "tipo": "calle", "geometria": [[-80.72, -0.95], [-80.72, -0.96]] },
+    { "id": "C-0011", "desde": "N-0005", "hasta": "N-0009", "distancia_m": 110, "tipo": "calle", "geometria": [[-80.72, -0.96], [-80.72, -0.97]] },
+    { "id": "C-0012", "desde": "N-0004", "hasta": "N-0008", "distancia_m": 170, "tipo": "avenida", "geometria": [[-80.69, -0.95], [-80.69, -0.96]] },
+    { "id": "C-0013", "desde": "N-0008", "hasta": "N-0012", "distancia_m": 170, "tipo": "avenida", "geometria": [[-80.69, -0.96], [-80.69, -0.97]] },
+    { "id": "C-0014", "desde": "N-0002", "hasta": "N-0006", "distancia_m": 100, "tipo": "calle", "geometria": [[-80.71, -0.95], [-80.71, -0.96]] },
+    { "id": "C-0015", "desde": "N-0006", "hasta": "N-0010", "distancia_m": 100, "tipo": "calle", "geometria": [[-80.71, -0.96], [-80.71, -0.97]] }
+  ],
+  "refugios": [
+    { "id": "R-01", "nodo": "N-0001", "nombre": "Test shelter north", "capacidad": 200 },
+    { "id": "R-02", "nodo": "N-0012", "nombre": "Test shelter south", "capacidad": 200 }
+  ]
+}
