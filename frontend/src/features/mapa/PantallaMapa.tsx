@@ -49,9 +49,16 @@ export default function PantallaMapa() {
   // Alerts come from comparing each turn with the previous one; a new round starts a clean list.
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const previo = useRef<Snapshot | null>(null);
+  // Turns restart in every round, so alert ids carry the round number: an alert from a new round
+  // must never look already read just because an earlier round had the same event.
+  const numeroRonda = useRef(0);
   useEffect(() => {
     const nuevaRonda = previo.current !== null && snapshot.turno < previo.current.turno;
-    const nuevas = nuevaRonda ? [] : derivarAlertas(grafo, previo.current, snapshot);
+    if (nuevaRonda) numeroRonda.current += 1;
+    const nuevas = (nuevaRonda ? [] : derivarAlertas(grafo, previo.current, snapshot)).map((a) => ({
+      ...a,
+      id: `r${numeroRonda.current}:${a.id}`,
+    }));
     previo.current = snapshot;
     if (nuevaRonda) setAlertas([]);
     if (nuevas.length === 0) return;
