@@ -8,6 +8,7 @@ Motor de rutas en tiempo real sobre AWS. Cada 2 segundos los zombies se mueven p
 
 | Enlace | URL |
 |---|---|
+| Inicio (qué es y cómo funciona) | https://d2pm91xddlib8g.cloudfront.net/ |
 | Mapa en vivo | https://d2pm91xddlib8g.cloudfront.net/mapa |
 | `POST /paso` | `https://d2pm91xddlib8g.cloudfront.net/api/paso` (cabecera `x-api-key`) |
 | `GET /estado` | https://d2pm91xddlib8g.cloudfront.net/api/estado |
