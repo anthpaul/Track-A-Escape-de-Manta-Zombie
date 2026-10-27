@@ -50,7 +50,8 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <IndicadorEnVivo generadoEn={generadoEn} />
+          {/* Only real snapshots get "EN VIVO": simulated turns are always fresh, so their age proves nothing. */}
+          {(conexion === "en_vivo" || conexion === "reconectando") && <IndicadorEnVivo generadoEn={generadoEn} />}
           <span className="inline-flex items-center gap-1 text-calabaza-900">
             <HeartPulse className="size-3.5 text-crimson-700" aria-hidden />
             {resumen.supervivenciaPct}%
