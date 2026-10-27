@@ -288,6 +288,9 @@ GET  /api/estado                   público (solo lectura, sin secretos)
   200   { "turno": 142, "ronda": 2, "zombies": [{ "id", "tipo", "nodo" }], "aristasBloqueadas": ["C-0042"],
           "sobrevivientes": [{ "id", "nodo", "estado", "siguienteNodo" }], "refugios": [{ "id", "ocupacion", "capacidad" }],
           "metricas": { "vivos", "aSalvo", "mordidos", "p95ms" }, "generadoEn": "<ISO 8601>" }
+  Opcionales por sobreviviente: "refugio" (destino o null) y "callesRestantes". Los calcula el simulador en el
+  paso 5 del turno con la misma función de shared/ que usa /paso (200 rutas sobre ~300 nodos tardan milisegundos);
+  el mapa los usa para buscar por destino, "n calles" y "EN CAMINO (n)" sin pedir 200 rutas
   Cache-Control: no-store (cambia cada 2 s)
   Sin rutas: el snapshot queda chico. generadoEn alimenta el indicador "EN VIVO" (edad real del snapshot)
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { grafoMini } from "@/features/mapa/data/mock/grafo-mini";
+import { grafoManta } from "@/features/mapa/data/real/grafo-manta";
 import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
 import MedidorFps from "@/features/mapa/ui/MedidorFps";
@@ -23,15 +23,15 @@ const MapaVivo = dynamic(() => import("@/features/mapa/map/MapaVivo"), {
 });
 
 // R3-sized mock round (200 survivors) to check the map stays smooth at the real load.
-const CONFIG_MOCK: ConfigSimulacion = { sobrevivientes: 200, caminantes: 4, corredores: 2, hordas: 1, semilla: 7 };
+const CONFIG_MOCK: ConfigSimulacion = { sobrevivientes: 200, caminantes: 12, corredores: 4, hordas: 2, semilla: 7 };
 
 // Container (the only one in the feature): picks the data sources and wires map + sidebar.
-// Mock graph and mock snapshots until manta.json (T0.3)
-// and GET /api/estado (S5) exist; N4 swaps the hook for real polling.
+// N4 swaps the mock snapshots for real polling of GET /api/estado.
 export default function PantallaMapa() {
-  const grafo = grafoMini;
+  // Real graph (T0.3) with simulated rounds until GET /api/estado exists (S5).
+  const grafo = grafoManta;
   const snapshot = useSimulacionMock(grafo, CONFIG_MOCK);
-  const esPrueba = grafo.version.startsWith("mock");
+  const esPrueba = true; // the snapshot is simulated in the browser
 
   // Same Set instance while the blocked list is unchanged, so street GeoJSON is not rebuilt every turn.
   const clave = snapshot.aristasBloqueadas.join(",");
