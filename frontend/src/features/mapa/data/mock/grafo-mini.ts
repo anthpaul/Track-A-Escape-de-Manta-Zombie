@@ -16,6 +16,12 @@ for (let fila = 0; fila < FILAS; fila++) {
   }
 }
 
+const porId = new Map(nodos.map((n) => [n.id, n]));
+const coordenadas = (id: string): [number, number] => {
+  const nodo = porId.get(id)!;
+  return [nodo.lng, nodo.lat];
+};
+
 const calles: Calle[] = [];
 const agregarCalle = (desde: string, hasta: string, tipo: TipoCalle) => {
   calles.push({
@@ -24,7 +30,8 @@ const agregarCalle = (desde: string, hasta: string, tipo: TipoCalle) => {
     hasta,
     distancia_m: 300,
     tipo,
-    geometria: [], // drawn straight between nodes
+    // Straight street: its two nodes, never [] (docs/CONTRATO_GRAFO.md, T0.2).
+    geometria: [coordenadas(desde), coordenadas(hasta)],
   });
 };
 
