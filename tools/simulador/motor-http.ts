@@ -17,17 +17,21 @@ import type { ClienteMotor, PedidoPaso, RespuestaPaso } from "./motor-falso";
 export interface OpcionesMotorHttp {
   url?: string;
   apiKey?: string;
+  /** Request cut in ms. Defaults to the official 500 ms; only a warm-up should wait longer. */
+  timeoutMs?: number;
 }
 
 export class MotorHttp implements ClienteMotor {
   private readonly url: string;
   private readonly apiKey: string;
+  private readonly timeoutMs: number;
   /** Recorded response times in ms, one per /paso call. */
   readonly latencias: number[] = [];
 
   constructor(opts: OpcionesMotorHttp = {}) {
     this.url = opts.url ?? process.env.PASO_URL ?? "";
     this.apiKey = opts.apiKey ?? process.env.PASO_KEY ?? "";
+    this.timeoutMs = opts.timeoutMs ?? 500;
     if (!this.url) throw new Error("PASO_URL is required (env var or constructor option)");
     if (!this.apiKey) throw new Error("PASO_KEY is required (env var or constructor option)");
   }
@@ -35,7 +39,7 @@ export class MotorHttp implements ClienteMotor {
   async pedirPaso(pedido: PedidoPaso, signal?: AbortSignal): Promise<RespuestaPaso> {
     const inicio = performance.now();
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 500);
+    const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
     const abort = () => controller.abort();
     signal?.addEventListener("abort", abort, { once: true });
     if (signal?.aborted) controller.abort();

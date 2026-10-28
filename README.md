@@ -210,7 +210,7 @@ Durante una ronda HTTP, cada turno guarda además el p95 de la ronda hasta ese m
 
 **La prueba de fuego se mide desde AWS, no desde una laptop.** Medido desde Ecuador, solo conectarse a `us-east-2` cuesta unos 76 ms y el p95 queda en 214–241 ms aunque la Lambda del API tarde 44–70 ms: se estaría midiendo internet, no el servicio. Por eso `tools/demo/demo.sh evaluar <1|2|3> [semilla]` invoca la Lambda del simulador en modo evaluación, que:
 
-1. calienta el API con tres oleadas simultáneas del tamaño de la ronda (20, 80 o 200 pedidos), con un cliente aparte para que esas latencias no cuenten;
+1. calienta el API con cuatro oleadas simultáneas del tamaño de la ronda (20, 80 o 200 pedidos), con un cliente aparte para que esas latencias no cuenten. Cada pedido del calentamiento espera hasta 3 s: una instancia nueva tarda más de 500 ms en arrancar y conectarse a DynamoDB, y cortarla antes solo hace que la oleada siguiente pida otra instancia fría;
 2. juega los 150 turnos llamando a `POST /paso` por HTTP directo a API Gateway, con el mismo corte de 500 ms;
 3. responde con las oleadas de calentamiento y las métricas de la ronda (p50/p95/p99, errores, eficiencia).
 

@@ -59,8 +59,8 @@ resource "aws_lambda_function" "simulador" {
   runtime          = "nodejs24.x"
   handler          = "lambda.handler"
   architectures    = ["arm64"]
-  memory_size      = 512
-  timeout          = 900 # a round lasts 5 minutes; 15 minutes is the Lambda ceiling
+  memory_size      = 1024 # evaluation rounds send up to 200 requests at once; more CPU keeps the client from adding delay
+  timeout          = 900  # a round lasts 5 minutes; 15 minutes is the Lambda ceiling
   role             = aws_iam_role.simulador.arn
   filename         = data.archive_file.simulador.output_path
   source_code_hash = data.archive_file.simulador.output_base64sha256
