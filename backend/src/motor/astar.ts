@@ -1,24 +1,25 @@
 /**
- * A* router — K1 + K2 implementation (AGENTS.md §4.4, HOJA_DE_RUTA §4.1 items 3–4).
+ * Ruteador A*: implementación de K1 + K2 (AGENTS.md §4.4, HOJA_DE_RUTA §4.1, ítems 3–4).
  *
- * Finds the next node a survivor should move to in order to reach the nearest
- * reachable shelter with minimum turns, breaking ties by travel time.
+ * Encuentra el siguiente nodo al que debe moverse un sobreviviente para llegar
+ * al refugio alcanzable más cercano en la menor cantidad de turnos; los empates
+ * se desempatan por tiempo de recorrido.
  *
- * Danger awareness (full K1+K2 scope):
- *   - Blocked edges (city events)                       K1
- *   - Horde-blocked nodes (node + all static neighbors) K1 via peligros.ts
- *   - Any node with a visible zombie                    K2 via peligros.ts
- *   - Walker-adjacent nodes (high-cost penalty)         K2 via peligros.ts
- *   - Cross-traffic edges (cruce de frente)             K2 via peligros.ts
+ * Peligros considerados (alcance completo de K1+K2):
+ *   - Aristas bloqueadas (eventos de ciudad)                 K1
+ *   - Nodos bloqueados por hordas (nodo + vecinos estáticos) K1 vía peligros.ts
+ *   - Cualquier nodo con un zombie visible                   K2 vía peligros.ts
+ *   - Nodos vecinos de un caminante (penalización alta)      K2 vía peligros.ts
+ *   - Aristas con cruce de frente                            K2 vía peligros.ts
  *
- * NOT handled here (future tasks):
- *   - Runner prediction (Pro, K5)
+ * NO se maneja acá (tareas futuras):
+ *   - Predicción de corredores (Pro, K5)
  *
- * Cost model (adjustment A3 — PLAN_IMPLEMENTACION §6):
- *   edge cost = 1 + ε × (distancia_m / velocidad_m_s) + danger_penalty
+ * Modelo de costo (ajuste A3, PLAN_IMPLEMENTACION §6):
+ *   costo de arista = 1 + ε × (distancia_m / velocidad_m_s) + penalización_por_peligro
  *
- * The leading "1" makes the search minimize TURNS (hops), not travel time.
- * ε = 0.0001; max ε×time ≈ 0.2 << 1 turn — safe tiebreaker.
+ * El "1" inicial hace que la búsqueda minimice TURNOS (saltos), no tiempo de recorrido.
+ * ε = 0.0001; el máximo de ε×tiempo ≈ 0.2 << 1 turno: es un desempate seguro.
  */
 
 import type { Grafo, Refugio } from "@abcstack/shared";
@@ -26,11 +27,11 @@ import { VELOCIDADES_M_S, type GrafoIndexado } from "@abcstack/shared";
 import { MinHeap } from "./min-heap";
 import { calcularPeligros, costoPeligroArista, type MundoPeligros, type Peligros } from "./peligros";
 
-// Re-export so callers only need to import from astar.ts
+// Se reexporta para que quien llame solo necesite importar desde astar.ts
 export type { Peligros };
 export { calcularPeligros };
 
-/** Tiebreaker weight for travel time inside the edge cost formula. */
+/** Peso de desempate del tiempo de recorrido dentro de la fórmula de costo de arista. */
 const EPSILON = 0.0001;
 
 export type ResultadoBusqueda =
@@ -39,7 +40,7 @@ export type ResultadoBusqueda =
   | { tipo: "sin_ruta"; nodo: string };
 
 // ---------------------------------------------------------------------------
-// Haversine distance helper (admissible heuristic input)
+// Distancia de Haversine (insumo de la heurística admisible)
 // ---------------------------------------------------------------------------
 
 function distanciaHaversine(
@@ -58,19 +59,19 @@ function distanciaHaversine(
 }
 
 // ---------------------------------------------------------------------------
-// Routing context — built once per Lambda warm start
+// Contexto de ruteo: se construye una sola vez por instancia caliente de Lambda
 // ---------------------------------------------------------------------------
 
 export interface ContextoGrafo {
-  /** Indexed graph for neighbor/edge lookups. */
+  /** Grafo indexado para buscar vecinos y aristas. */
   indexado: GrafoIndexado;
-  /** Node coordinates for the heuristic. */
+  /** Coordenadas de los nodos para la heurística. */
   coordenadas: ReadonlyMap<string, { lat: number; lng: number }>;
-  /** All four shelters with their node IDs. */
+  /** Los cuatro refugios con los IDs de sus nodos. */
   refugios: readonly Readonly<Refugio>[];
 }
 
-/** Build a routing context from the static graph. Freeze and cache the result. */
+/** Construye el contexto de ruteo a partir del grafo estático. El resultado se congela y se cachea. */
 export function crearContextoGrafo(grafo: Grafo, indexado: GrafoIndexado): ContextoGrafo {
   const coordenadas = new Map(grafo.nodos.map((n) => [n.id, { lat: n.lat, lng: n.lng }]));
   return Object.freeze({
@@ -81,12 +82,12 @@ export function crearContextoGrafo(grafo: Grafo, indexado: GrafoIndexado): Conte
 }
 
 // ---------------------------------------------------------------------------
-// Admissible heuristic
+// Heurística admisible
 // ---------------------------------------------------------------------------
 
 /**
- * Lower-bound cost (in turns) from `nodo` to the nearest shelter.
- * Uses straight-line distance / max possible speed — never overestimates.
+ * Cota inferior del costo (en turnos) desde `nodo` hasta el refugio más cercano.
+ * Usa distancia en línea recta / velocidad máxima posible: nunca sobreestima.
  */
 function heuristica(
   nodoId: string,
@@ -109,35 +110,35 @@ function heuristica(
 }
 
 // ---------------------------------------------------------------------------
-// Core A* search
+// Búsqueda A* principal
 // ---------------------------------------------------------------------------
 
 interface NodoAstar {
   id: string;
-  /** g = cost from start to this node. */
+  /** g = costo desde el inicio hasta este nodo. */
   g: number;
-  /** First step taken from the origin (to reconstruct the next move). */
+  /** Primer paso dado desde el origen (para reconstruir el siguiente movimiento). */
   primerPaso: string;
-  /** Which shelter we are heading towards. */
+  /** Refugio hacia el que se dirige. */
   refugioDestino: string;
 }
 
 /**
- * Run A* from `nodoActual` towards every reachable shelter and return
- * whichever route reaches a shelter with minimum cost.
+ * Ejecuta A* desde `nodoActual` hacia todos los refugios alcanzables y devuelve
+ * la ruta que llega a un refugio con el menor costo.
  *
- * Returns the NEXT NODE to move to (one step), not the full path.
- * Returns the current node if no move is valid (safe fallback).
+ * Devuelve el SIGUIENTE NODO al que moverse (un paso), no el camino completo.
+ * Devuelve el nodo actual si ningún movimiento es válido (fallback seguro).
  *
- * Accepts optional pre-computed peligros for shared use across survivors
- * in the same turn (avoids redundant computation).
+ * Acepta, de forma opcional, peligros precalculados para compartirlos entre los
+ * sobrevivientes del mismo turno (evita cálculos repetidos).
  */
 export function buscarRuta(
   nodoActual: string,
   contexto: ContextoGrafo,
   mundo: MundoPeligros,
   peligrosPrecomputados?: Peligros,
-  // Shelter capacity (Pro, cupos.ts): only these shelters count as destinations; undefined = all.
+  // Capacidad de refugios (Pro, cupos.ts): solo estos refugios cuentan como destino; undefined = todos.
   refugiosPermitidos?: ReadonlySet<string>,
 ): ResultadoBusqueda {
   const { indexado } = contexto;
@@ -149,7 +150,7 @@ export function buscarRuta(
     (r) => permitido(r) && !peligros.nodosProhibidos.has(r.nodo),
   );
 
-  // Already at a shelter? Waiting at the door of a full one does not count: keep looking.
+  // ¿Ya está en un refugio? Esperar en la puerta de uno lleno no cuenta: se sigue buscando.
   const refugioActual = contexto.refugios.find((r) => r.nodo === nodoActual && permitido(r));
   if (refugioActual) {
     return { tipo: "ya_en_refugio", nodo: nodoActual, refugio: refugioActual.id };
@@ -174,25 +175,25 @@ export function buscarRuta(
     const { value: current } = heap.pop()!;
     const key = stateKey(current.id, current.refugioDestino);
 
-    // Skip stale entries (lazy deletion).
+    // Se saltan las entradas obsoletas (borrado perezoso).
     if (current.g > (gCost.get(key) ?? INFINITY)) continue;
 
-    // Goal check: reached the target shelter.
+    // Condición de meta: se llegó al refugio destino.
     const refugioMeta = contexto.refugios.find((r) => r.id === current.refugioDestino);
     if (refugioMeta && current.id === refugioMeta.nodo) {
       const siguienteNodo = current.primerPaso === nodoActual ? current.id : current.primerPaso;
       return { tipo: "movimiento", siguienteNodo, refugio: current.refugioDestino, costoTotal: current.g };
     }
 
-    // Expand neighbors.
+    // Expandir vecinos.
     for (const vecino of indexado.vecinos(current.id)) {
-      // Skip edges blocked by city events first (edge doesn't exist).
+      // Primero se saltan las aristas bloqueadas por eventos de ciudad (la arista no existe).
       if (!indexado.esMovimientoValido(current.id, vecino, aristasBloqueadas)) continue;
 
       const calle = indexado.calleEntre(current.id, vecino);
       if (!calle) continue;
 
-      // K2: apply danger cost. Infinity = forbidden, positive = penalty.
+      // K2: se aplica el costo de peligro. Infinity = prohibido; positivo = penalización.
       const edgeKey = `${current.id}|${vecino}`;
       const peligroCosto = costoPeligroArista(peligros, vecino, edgeKey);
       if (peligroCosto === Infinity) continue;

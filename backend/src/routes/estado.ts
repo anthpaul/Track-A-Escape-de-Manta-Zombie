@@ -1,21 +1,21 @@
 /**
- * GET /api/estado — live world snapshot for the frontend map.
+ * GET /api/estado: snapshot del mundo en vivo para el mapa del frontend.
  *
- * Returns the last complete turn of the active game.
- * Public endpoint — no API key required (AGENTS.md §5).
- * Cache-Control: no-store (changes every 2 s).
+ * Devuelve el último turno completo de la partida activa.
+ * Endpoint público: no requiere API key (AGENTS.md §5).
+ * Cache-Control: no-store (cambia cada 2 s).
  *
- * Response on success (200):
+ * Respuesta exitosa (200):
  *   { turno, ronda, zombies, aristasBloqueadas, sobrevivientes, metricas, generadoEn }
  *
- * Response when no game is running (200 — not a 404, the map must always render):
+ * Respuesta cuando no hay partida en curso (200, no 404: el mapa siempre debe renderizarse):
  *   { ok: false, error: { code, message } }
  */
 import type { Context } from "hono";
 import { EstadoRepo, ErrorEstado } from "../db/estado-repo";
 
 // ---------------------------------------------------------------------------
-// Factory — injects the repo so tests can swap it out
+// Fábrica: inyecta el repositorio para que los tests puedan reemplazarlo
 // ---------------------------------------------------------------------------
 
 export function crearRutaEstado(repo: EstadoRepo) {
@@ -27,14 +27,14 @@ export function crearRutaEstado(repo: EstadoRepo) {
       return c.json(estado);
     } catch (error) {
       if (error instanceof ErrorEstado) {
-        // Known failure modes — return a clean 200 so the frontend can display
-        // a "no game running" state rather than an error screen.
+        // Fallas conocidas: se responde un 200 limpio para que el frontend muestre
+        // el estado "no hay partida en curso" en lugar de una pantalla de error.
         return c.json(
           { ok: false, error: { code: error.code, message: error.message } },
           200,
         );
       }
-      // Unexpected error — let Hono's error handler deal with it (returns 500).
+      // Error inesperado: lo maneja el manejador de errores de Hono (responde 500).
       throw error;
     }
   };

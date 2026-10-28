@@ -1,4 +1,4 @@
-/** POST /api/paso: one production handler, also used by dependency-injected tests. */
+/** POST /api/paso: un único handler de producción, que también usan los tests con dependencias inyectadas. */
 import { createHash, timingSafeEqual } from "node:crypto";
 import { Hono } from "hono";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
@@ -18,7 +18,7 @@ export interface OpcionesRutaPaso {
 }
 
 function comparacionTiempoConstante(provided: string, expected: string): boolean {
-  // Fixed-length digests cover the complete key, including suffixes beyond byte 256.
+  // Los digests de largo fijo cubren la key completa, incluidos los sufijos después del byte 256.
   const digest = (value: string) => createHash("sha256").update(value).digest();
   return timingSafeEqual(digest(provided), digest(expected));
 }
@@ -35,7 +35,7 @@ async function conPresupuesto<T>(promise: Promise<T>, budgetMs: number): Promise
   }
 }
 
-/** Never invent an empty world: without a snapshot, staying put is the only valid fallback. */
+/** Nunca inventar un mundo vacío: sin snapshot, quedarse quieto es el único fallback válido. */
 function pasoDeRespaldo(nodoActual: string, mundo: MundoTurno | undefined): string {
   if (!mundo) return nodoActual;
   const peligros = calcularPeligrosDelTurno(mundo, contextoGrafo.indexado);
@@ -89,8 +89,8 @@ export function crearRutaPaso(opts: OpcionesRutaPaso): Hono {
     try {
       siguienteNodo = await conPresupuesto(work(), opts.budgetMs ?? 300);
     } catch {
-      // Absent games, world read failures and motor errors share a valid fallback.
-      // Never log the API key, request or raw provider error.
+      // La falta de partida, las fallas al leer el mundo y los errores del motor comparten un fallback válido.
+      // Nunca se registra en el log la API key, el pedido ni el error crudo del proveedor.
     }
     const valido = siguienteNodo !== undefined && mundoDisponible !== undefined
       && PasoOutputSchema.safeParse({ siguienteNodo }).success
@@ -100,7 +100,7 @@ export function crearRutaPaso(opts: OpcionesRutaPaso): Hono {
   return ruta;
 }
 
-// Read clients and the static graph are reused per warm instance; no request writes.
+// Los clientes de lectura y el grafo estático se reutilizan por instancia caliente; ningún pedido escribe.
 const dynamo = DynamoDBDocument.from(new DynamoDB({ region: process.env.AWS_REGION ?? "us-east-2" }));
 const table = process.env.DDB_TABLE ?? "spookython_mundo";
 export const rutaPaso = crearRutaPaso({

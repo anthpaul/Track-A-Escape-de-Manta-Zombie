@@ -1,25 +1,25 @@
 /**
- * K2 danger cost tests — AGENTS.md §4.4, HOJA_DE_RUTA §4.1 item 4.
+ * Tests del costo de peligro de K2 (AGENTS.md §4.4, HOJA_DE_RUTA §4.1, ítem 4).
  *
- * Acceptance criteria: one test per row of the §4.4 table.
+ * Criterio de aceptación: un test por cada fila de la tabla de §4.4.
  *
- * §4.4 table rows (in order):
- *   1. Node with visible zombie            → Prohibited
- *   2. Horde: node + all neighbours        → Prohibited  (shared/ + peligros.ts)
- *   3. Blocked edge (city event)           → Non-existent (K1, not re-tested here)
- *   4. Runner reachable next turn          → Very high    (Pro K5)
- *   5. Neighbours of a walker              → High penalty
- *   6. Cross-traffic edge (cruce)          → Prohibited
- *   7. Near possible sleeper               → No cost
+ * Filas de la tabla de §4.4 (en orden):
+ *   1. Nodo con zombie visible               → Prohibido
+ *   2. Horda: nodo + todos sus vecinos       → Prohibido    (shared/ + peligros.ts)
+ *   3. Arista bloqueada (evento de ciudad)   → No existe    (K1, no se vuelve a probar acá)
+ *   4. Alcanzable por un corredor el próximo turno → Muy alto (Pro K5)
+ *   5. Vecinos de un caminante               → Penalización alta
+ *   6. Arista con cruce de frente            → Prohibido
+ *   7. Cerca de un posible dormido           → Sin costo
  *
- * Fixture topology reminder:
+ * Recordatorio de la topología del fixture:
  *   N-0001 —C-0001— N-0002 —C-0002— N-0003 —C-0003— N-0004
  *     |C-0010          |C-0014                           |C-0012
  *   N-0005 —C-0004— N-0006 —C-0005— N-0007 —C-0006— N-0008
  *     |C-0011          |C-0015                           |C-0013
  *   N-0009 —C-0007— N-0010 —C-0008— N-0011 —C-0009— N-0012
  *
- *   Shelters: R-01 @ N-0001, R-02 @ N-0012
+ *   Refugios: R-01 @ N-0001, R-02 @ N-0012
  */
 
 import assert from "node:assert/strict";
@@ -36,7 +36,7 @@ import {
 import { buscarRuta, crearContextoGrafo } from "./astar";
 
 // ---------------------------------------------------------------------------
-// Shared setup
+// Preparación compartida
 // ---------------------------------------------------------------------------
 
 const indexado = crearGrafo(fixture);
@@ -44,7 +44,7 @@ const contexto = crearContextoGrafo(fixture as Grafo, indexado);
 const sinPeligro = { zombies: [], aristasBloqueadas: [] };
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 1 — Node with visible zombie → Prohibited
+// §4.4 Fila 1: nodo con zombie visible → Prohibido
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 1: node with any visible zombie is prohibited", () => {
@@ -76,14 +76,14 @@ describe("§4.4 row 1: node with any visible zombie is prohibited", () => {
   });
 
   it("A* does not enter a node occupied by a walker", () => {
-    // Walker on N-0002; direct path N-0001←N-0002 is blocked.
-    // Survivor at N-0003 wants to reach R-01 (N-0001) — must detour.
+    // Caminante en N-0002; el camino directo N-0001←N-0002 queda bloqueado.
+    // El sobreviviente en N-0003 quiere llegar a R-01 (N-0001): debe desviarse.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0002" }],
       aristasBloqueadas: [],
     };
     const r = buscarRuta("N-0003", contexto, mundo);
-    // N-0002 is prohibited; the survivor must not step onto it.
+    // N-0002 está prohibido; el sobreviviente no debe pisarlo.
     if (r.tipo === "movimiento") {
       assert.notEqual(r.siguienteNodo, "N-0002",
         "A* must not move to a walker-occupied node");
@@ -100,7 +100,7 @@ describe("§4.4 row 1: node with any visible zombie is prohibited", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 2 — Horde: node + all static neighbours → Prohibited
+// §4.4 Fila 2: horda, nodo + todos sus vecinos estáticos → Prohibido
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 2: horde blocks its node and all static neighbours", () => {
@@ -118,8 +118,8 @@ describe("§4.4 row 2: horde blocks its node and all static neighbours", () => {
   });
 
   it("horde zone does NOT include nodes two hops away", () => {
-    // N-0006 neighbours: N-0002, N-0005, N-0007, N-0010.
-    // N-0001 is a neighbour of N-0002 but NOT a neighbour of N-0006 → not blocked.
+    // Vecinos de N-0006: N-0002, N-0005, N-0007, N-0010.
+    // N-0001 es vecino de N-0002 pero NO de N-0006 → no queda bloqueado.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "horda" as const, nodo: "N-0006" }],
       aristasBloqueadas: [],
@@ -138,11 +138,11 @@ describe("§4.4 row 2: horde blocks its node and all static neighbours", () => {
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(mundo, indexado);
-    // N-0002 zone: N-0002, N-0001, N-0003, N-0006
+    // Zona de N-0002: N-0002, N-0001, N-0003, N-0006
     for (const n of ["N-0002", "N-0001", "N-0003", "N-0006"]) {
       assert.ok(p.nodosProhibidos.has(n), `${n} must be in horde-2 zone`);
     }
-    // N-0010 zone: N-0010, N-0009, N-0011, N-0006, N-0015 (C-0015 connects N-0006↔N-0010)
+    // Zona de N-0010: N-0010, N-0009, N-0011, N-0006, N-0015 (C-0015 conecta N-0006↔N-0010)
     for (const n of ["N-0010", "N-0009", "N-0011"]) {
       assert.ok(p.nodosProhibidos.has(n), `${n} must be in horde-10 zone`);
     }
@@ -150,7 +150,7 @@ describe("§4.4 row 2: horde blocks its node and all static neighbours", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 4 — Runner reachable nodes (Pro K5)
+// §4.4 Fila 4: nodos alcanzables por un corredor (Pro K5)
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches next turn cost very high", () => {
@@ -167,7 +167,7 @@ describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches nex
   });
 
   it("every node within two streets of a runner gets the penalty; farther nodes do not", () => {
-    // Runner at N-0003: 1 street → N-0002, N-0004; 2 streets → N-0001, N-0006, N-0008.
+    // Corredor en N-0003: a 1 calle → N-0002, N-0004; a 2 calles → N-0001, N-0006, N-0008.
     const p = calcularPeligros(corredorEn("N-0003"), indexado);
     for (const nodo of ["N-0002", "N-0004", "N-0001", "N-0006", "N-0008"]) {
       assert.equal(p.costosExtra.get(nodo), RUNNER_PREDICTION_PENALTY, `${nodo} is reachable by the runner`);
@@ -185,7 +185,7 @@ describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches nex
   });
 
   it("a runner cannot use blocked streets, so nothing behind them is predicted", () => {
-    // C-0002 is the only short link N-0003 → N-0002.
+    // C-0002 es el único enlace corto N-0003 → N-0002.
     const p = calcularPeligros({ ...corredorEn("N-0003"), aristasBloqueadas: ["C-0002"] }, indexado);
     for (const nodo of ["N-0002", "N-0001", "N-0006"]) {
       assert.equal(p.costosExtra.has(nodo), false, `${nodo} is behind a blocked street`);
@@ -195,7 +195,7 @@ describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches nex
   });
 
   it("two runners reaching the same node add up", () => {
-    // N-0002 is reachable from N-0003 (1 street) and from N-0006 (1 street).
+    // N-0002 es alcanzable desde N-0003 (1 calle) y desde N-0006 (1 calle).
     const p = calcularPeligros(corredorEn("N-0003", "N-0006"), indexado);
     assert.equal(p.costosExtra.get("N-0004"), RUNNER_PREDICTION_PENALTY, "only the first runner reaches N-0004");
     assert.equal(p.costosExtra.get("N-0002"), 2 * RUNNER_PREDICTION_PENALTY);
@@ -210,16 +210,16 @@ describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches nex
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(otros, indexado);
-    // The walker's neighbour gets only the walker penalty; two streets away gets nothing.
+    // El vecino del caminante recibe solo la penalización del caminante; a dos calles no recibe nada.
     assert.equal(p.costosExtra.get("N-0002"), WALKER_ADJACENT_PENALTY);
     assert.equal(p.costosExtra.has("N-0001"), false);
-    // Two streets from the horde, outside its blocked zone: nothing either.
+    // A dos calles de la horda, fuera de su zona bloqueada: tampoco recibe nada.
     assert.equal(p.costosExtra.has("N-0012"), false);
   });
 
   it("A* prefers the equally short route that stays out of the runner's reach", () => {
-    // Survivor at N-0006, R-01 at N-0001 two streets away by N-0002 or by N-0005.
-    // Runner at N-0003 reaches N-0002 next turn but not N-0005.
+    // Sobreviviente en N-0006; R-01 en N-0001, a dos calles por N-0002 o por N-0005.
+    // El corredor en N-0003 llega a N-0002 el próximo turno, pero no a N-0005.
     const r = buscarRuta("N-0006", contexto, corredorEn("N-0003"));
     assert.equal(r.tipo, "movimiento");
     assert.equal(r.tipo === "movimiento" && r.siguienteNodo, "N-0005");
@@ -227,14 +227,14 @@ describe("§4.4 row 4: runner prediction (Pro K5) — nodes a runner reaches nex
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 5 — Neighbours of a walker → High penalty (not prohibited)
+// §4.4 Fila 5: vecinos de un caminante → Penalización alta (no prohibido)
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
   it("calcularPeligros adds WALKER_ADJACENT_PENALTY to each walker neighbour", () => {
-    // Walker at N-0006. Neighbours: N-0002, N-0005, N-0007, N-0010.
-    // BUT N-0006 is prohibited (row 1), so its neighbours that are not themselves
-    // occupied get the walker-adjacent penalty.
+    // Caminante en N-0006. Vecinos: N-0002, N-0005, N-0007, N-0010.
+    // N-0006 está prohibido (fila 1), así que sus vecinos que no están ocupados
+    // reciben la penalización por estar junto a un caminante.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0006" }],
       aristasBloqueadas: [],
@@ -252,8 +252,8 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
   });
 
   it("penalty accumulates when a node is adjacent to two walkers", () => {
-    // Two walkers: N-0005 and N-0002. Both are neighbours of N-0001.
-    // N-0001 should accumulate 2 × WALKER_ADJACENT_PENALTY.
+    // Dos caminantes: N-0005 y N-0002. Ambos son vecinos de N-0001.
+    // N-0001 debería acumular 2 × WALKER_ADJACENT_PENALTY.
     const mundo = {
       zombies: [
         { id: "Z-0001", tipo: "caminante" as const, nodo: "N-0005" },
@@ -262,7 +262,7 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(mundo, indexado);
-    // N-0001 is a neighbour of both N-0005 and N-0002.
+    // N-0001 es vecino tanto de N-0005 como de N-0002.
     assert.ok(
       indexado.vecinos("N-0005").includes("N-0001"),
       "N-0001 must be a neighbour of N-0005 in the fixture"
@@ -286,7 +286,7 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(mundo, indexado);
-    // N-0002 is adjacent to the walker at N-0006 but not occupied by any zombie.
+    // N-0002 es adyacente al caminante en N-0006, pero ningún zombie lo ocupa.
     if (indexado.vecinos("N-0006").includes("N-0002")) {
       assert.ok(!p.nodosProhibidos.has("N-0002"),
         "walker-adjacent node must not be outright prohibited");
@@ -294,7 +294,7 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
   });
 
   it("WALKER_ADJACENT_PENALTY is > max ε×time so it meaningfully steers A*", () => {
-    // Max ε×time = 0.0001 × (2000 m / 1.0 m·s⁻¹) = 0.2
+    // Máximo de ε×tiempo = 0.0001 × (2000 m / 1.0 m·s⁻¹) = 0.2
     const maxEpsilonTime = 0.0001 * (2000 / 1.0);
     assert.ok(
       WALKER_ADJACENT_PENALTY > maxEpsilonTime,
@@ -303,16 +303,16 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
   });
 
   it("A* prefers a safe route over a walker-adjacent one when both have the same hop count", () => {
-    // Walker at N-0002. Route N-0003 → N-0002 → N-0001 uses the walker node
-    // (prohibited), so A* must find an alternative detour.
-    // Even if we place the walker at a non-direct-path node, the penalty
-    // should make the router prefer the safer path.
+    // Caminante en N-0002. La ruta N-0003 → N-0002 → N-0001 usa el nodo del
+    // caminante (prohibido), así que A* debe encontrar un desvío alternativo.
+    // Aunque el caminante esté en un nodo fuera del camino directo, la
+    // penalización debería hacer que el ruteador prefiera el camino más seguro.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0002" }],
       aristasBloqueadas: [],
     };
     const r = buscarRuta("N-0003", contexto, mundo);
-    // N-0002 is prohibited (row 1 — walker is on it).
+    // N-0002 está prohibido (fila 1: el caminante está encima).
     if (r.tipo === "movimiento") {
       assert.notEqual(r.siguienteNodo, "N-0002", "must not step onto walker node");
     }
@@ -320,19 +320,19 @@ describe("§4.4 row 5: walker-adjacent nodes get a high-cost penalty", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 6 — Cross-traffic edge (cruce de frente) → Prohibited
+// §4.4 Fila 6: arista con cruce de frente → Prohibido
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () => {
   it("walker at N-0002 forbids the survivor from moving N-0001 → N-0002", () => {
-    // Zombie at N-0002, survivor wants to go N-0001 → N-0002.
-    // Zombie could come back N-0002 → N-0001 through C-0001 → cruce.
+    // Zombie en N-0002; el sobreviviente quiere ir N-0001 → N-0002.
+    // El zombie podría venir N-0002 → N-0001 por C-0001 → cruce.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0002" }],
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(mundo, indexado);
-    // Forbidden direction for survivor: N-0001 → N-0002
+    // Dirección prohibida para el sobreviviente: N-0001 → N-0002
     assert.ok(
       p.aristasCrucePeligroso.has("N-0001|N-0002"),
       "survivor direction N-0001→N-0002 must be forbidden when zombie is at N-0002"
@@ -359,8 +359,8 @@ describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () 
       aristasBloqueadas: [],
     };
     const p = calcularPeligros(mundo, indexado);
-    // Hordes don't move; no cross-traffic risk.
-    // The zone is already prohibited — the cross-traffic set should be empty for hordes.
+    // Las hordas no se mueven; no hay riesgo de cruce.
+    // La zona ya está prohibida: el conjunto de cruces debería quedar vacío para las hordas.
     for (const vecino of indexado.vecinos("N-0006")) {
       assert.ok(
         !p.aristasCrucePeligroso.has(`${vecino}|N-0006`),
@@ -370,9 +370,9 @@ describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () 
   });
 
   it("sleeper does NOT create cross-traffic entries (invisible)", () => {
-    // dormido type arrives via world snapshot only when it has woken up.
-    // In practice dormido never appears in the snapshot, but if it did,
-    // the motor should not generate cross-traffic for it.
+    // El tipo dormido llega en el snapshot del mundo solo cuando ya despertó.
+    // En la práctica nunca aparece en el snapshot, pero si apareciera,
+    // el motor no debería generar cruces por él.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "dormido" as const, nodo: "N-0006" }],
       aristasBloqueadas: [],
@@ -387,7 +387,7 @@ describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () 
       { zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0002" }], aristasBloqueadas: [] },
       indexado,
     );
-    // Survivor direction N-0001 → N-0002 is forbidden.
+    // La dirección N-0001 → N-0002 del sobreviviente está prohibida.
     assert.equal(
       costoPeligroArista(p, "N-0002", "N-0001|N-0002"),
       Infinity,
@@ -396,9 +396,9 @@ describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () 
   });
 
   it("A* does not take a cross-traffic edge even when it is the shortest path", () => {
-    // Walker at N-0008. Shortest path from N-0007 to R-02 (N-0012) is
-    // N-0007 → N-0008 → N-0012. But N-0008 is the walker node (prohibited).
-    // The test verifies the survivor doesn't cross INTO N-0008.
+    // Caminante en N-0008. El camino más corto de N-0007 a R-02 (N-0012) es
+    // N-0007 → N-0008 → N-0012, pero N-0008 es el nodo del caminante (prohibido).
+    // El test verifica que el sobreviviente no ENTRE a N-0008.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0008" }],
       aristasBloqueadas: [],
@@ -412,7 +412,7 @@ describe("§4.4 row 6: cross-traffic edges (cruce de frente) are forbidden", () 
 });
 
 // ---------------------------------------------------------------------------
-// §4.4 Row 7 — Sleeper locations → No cost (motor does not cheat)
+// §4.4 Fila 7: posiciones de dormidos → Sin costo (el motor no hace trampa)
 // ---------------------------------------------------------------------------
 
 describe("§4.4 row 7: sleeper locations carry no cost (motor has no data)", () => {
@@ -440,7 +440,7 @@ describe("§4.4 row 7: sleeper locations carry no cost (motor has no data)", () 
 });
 
 // ---------------------------------------------------------------------------
-// costoPeligroArista — unit tests for the helper
+// costoPeligroArista: tests unitarios de la función auxiliar
 // ---------------------------------------------------------------------------
 
 describe("costoPeligroArista helper", () => {
@@ -462,12 +462,12 @@ describe("costoPeligroArista helper", () => {
       { zombies: [{ id: "Z-0001", tipo: "corredor" as const, nodo: "N-0006" }], aristasBloqueadas: [] },
       indexado,
     );
-    // Runner at N-0006 → survivor cannot go N-0005 → N-0006
+    // Corredor en N-0006 → el sobreviviente no puede ir N-0005 → N-0006
     assert.equal(costoPeligroArista(p, "N-0006", "N-0005|N-0006"), Infinity);
   });
 
   it("returns the walker penalty when destination is only walker-adjacent (not prohibited)", () => {
-    // Walker at N-0006, check neighbour N-0002 (not itself occupied).
+    // Caminante en N-0006; se revisa el vecino N-0002 (que no está ocupado).
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "caminante" as const, nodo: "N-0006" }],
       aristasBloqueadas: [],
@@ -483,7 +483,7 @@ describe("costoPeligroArista helper", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Integration: peligrosPrecomputados parameter in buscarRuta
+// Integración: parámetro peligrosPrecomputados de buscarRuta
 // ---------------------------------------------------------------------------
 
 describe("integration: buscarRuta accepts pre-computed Peligros", () => {
@@ -500,7 +500,7 @@ describe("integration: buscarRuta accepts pre-computed Peligros", () => {
   });
 
   it("all 200 survivors in R3 can share one pre-computed Peligros per turn", () => {
-    // Simulate 200 survivors sharing the same world snapshot.
+    // Se simulan 200 sobrevivientes que comparten el mismo snapshot del mundo.
     const mundo = {
       zombies: [
         { id: "Z-0001", tipo: "caminante" as const, nodo: "N-0006" },
@@ -509,7 +509,7 @@ describe("integration: buscarRuta accepts pre-computed Peligros", () => {
       aristasBloqueadas: ["C-0005"],
     };
     const precomputed = calcularPeligros(mundo, indexado);
-    // Run buscarRuta for every fixture node using the shared peligros.
+    // Se ejecuta buscarRuta para cada nodo del fixture con los peligros compartidos.
     for (const nodo of (fixture as Grafo).nodos) {
       assert.doesNotThrow(
         () => buscarRuta(nodo.id, contexto, mundo, precomputed),

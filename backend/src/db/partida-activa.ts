@@ -1,16 +1,16 @@
 /**
- * Active partition resolver (AGENTS.md §4.5).
+ * Resolución de la partición activa (AGENTS.md §4.5).
  *
- * POST /paso does not receive a partidaId — the contract is fixed.
- * The motor discovers the active partition by reading the distributed lock
- * item CONTROL / PARTIDA_ACTIVA written by the simulator.
+ * POST /paso no recibe un partidaId: el contrato es fijo.
+ * El motor descubre la partición activa leyendo el ítem de candado distribuido
+ * CONTROL / PARTIDA_ACTIVA que escribe el simulador.
  *
- * Caching rules (AGENTS.md §4.5):
- *   - The lock is cached for at most 1 second.
- *   - If the incoming `turno` is <= the last known turno for this partidaId,
- *     the lock is re-read — a new partition may have started.
- *   - If DynamoDB is unavailable, we re-throw; /paso must return the safe
- *     fallback (nodoActual) rather than routing blind.
+ * Reglas de cache (AGENTS.md §4.5):
+ *   - El candado se cachea como máximo 1 segundo.
+ *   - Si el `turno` entrante es <= al último turno conocido de este partidaId,
+ *     se vuelve a leer el candado: puede haber empezado una partición nueva.
+ *   - Si DynamoDB no está disponible, se relanza el error; /paso debe responder
+ *     el fallback seguro (nodoActual) en lugar de rutear a ciegas.
  */
 
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
@@ -18,7 +18,7 @@ import { z } from "zod";
 import { KEYS } from "./keys";
 
 // ---------------------------------------------------------------------------
-// Minimal DynamoDB read surface (same pattern as DynamoFuente)
+// Superficie mínima de lectura de DynamoDB (mismo patrón que DynamoFuente)
 // ---------------------------------------------------------------------------
 
 export interface ClienteLecturaPartida {
@@ -41,12 +41,12 @@ const CandadoSchema = z.object({
 export type Candado = z.infer<typeof CandadoSchema>;
 
 // ---------------------------------------------------------------------------
-// Resolver
+// Resolución
 // ---------------------------------------------------------------------------
 
 interface CacheEntry {
   candado: Candado;
-  /** Epoch ms when the entry was stored. */
+  /** Epoch en ms en que se guardó la entrada. */
   cachedAt: number;
 }
 
@@ -65,13 +65,13 @@ export class PartidaActivaResolver {
   }
 
   /**
-   * Return the active partition ID.
+   * Devuelve el ID de la partición activa.
    *
-   * Re-reads DynamoDB when:
-   *   - Cache is empty or older than 1 s.
-   *   - The incoming turno <= last known turnoActual (new partition may have started).
+   * Vuelve a leer DynamoDB cuando:
+   *   - La cache está vacía o tiene más de 1 s.
+   *   - El turno entrante es <= al último turnoActual conocido (puede haber empezado una partición nueva).
    *
-   * Throws when no active partition exists or the item is malformed.
+   * Lanza un error si no hay partición activa o si el ítem está mal formado.
    */
   async resolverPartidaId(turnoSolicitado: number): Promise<string> {
     const now = this.ahora();
@@ -102,7 +102,7 @@ export class PartidaActivaResolver {
 
     const candado = parsed.data;
 
-    // The lock itself carries an expiraEn TTL (epoch s).
+    // El propio candado lleva un TTL expiraEn (epoch en segundos).
     if (candado.expiraEn <= Math.floor(now / 1000)) {
       throw new ErrorPartidaActiva("LOCK_EXPIRED", "Active partition lock has expired");
     }
@@ -113,7 +113,7 @@ export class PartidaActivaResolver {
 }
 
 // ---------------------------------------------------------------------------
-// Domain error
+// Error de dominio
 // ---------------------------------------------------------------------------
 
 type CodigoErrorPartida =

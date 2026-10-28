@@ -9,20 +9,20 @@ import { crearRutaSobrevivientes } from "./routes/sobrevivientes";
 import { contextoGrafo } from "./motor/motor";
 
 // ---------------------------------------------------------------------------
-// DynamoDB client — initialized once per Lambda warm start
+// Cliente de DynamoDB: se inicializa una sola vez por instancia caliente de Lambda
 // ---------------------------------------------------------------------------
 
 const dynamoClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE_NAME = process.env.DDB_TABLE ?? "spookython_mundo";
 
 // ---------------------------------------------------------------------------
-// Repos
+// Repositorios
 // ---------------------------------------------------------------------------
 
 const estadoRepo = new EstadoRepo(dynamoClient, TABLE_NAME);
 
 // ---------------------------------------------------------------------------
-// App — CloudFront forwards /api/* without stripping the prefix
+// App: CloudFront reenvía /api/* sin quitar el prefijo
 // ---------------------------------------------------------------------------
 
 export const app = new Hono().basePath("/api");

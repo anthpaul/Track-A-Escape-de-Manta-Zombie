@@ -1,4 +1,4 @@
-/** Compatibility adapter: all request handling lives in the production factory. */
+/** Adaptador de compatibilidad: todo el manejo de pedidos vive en la fábrica de producción. */
 import { crearRutaPaso } from "./paso";
 import type { FuenteMundo } from "../motor/fuente-mundo";
 import { ErrorPartidaActiva } from "../db/partida-activa";

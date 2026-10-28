@@ -1,9 +1,9 @@
 /**
- * Tests for GET /api/estado — S5 acceptance criteria.
+ * Tests de GET /api/estado: criterios de aceptación de S5.
  *
- * All tests use fake DynamoDB clients; no real AWS calls.
- * We test through the Hono app (integration-style) so the route wiring is
- * also verified.
+ * Todos los tests usan clientes falsos de DynamoDB; no hay llamadas reales a AWS.
+ * Se prueba a través de la app de Hono (estilo integración), así también se
+ * verifica el cableado de la ruta.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -15,7 +15,7 @@ import { Hono } from "hono";
 import { KEYS } from "../db/keys";
 
 // ---------------------------------------------------------------------------
-// Fake DynamoDB client builder
+// Constructor del cliente falso de DynamoDB
 // ---------------------------------------------------------------------------
 
 type FakeItems = {
@@ -26,8 +26,8 @@ type FakeItems = {
 function crearClienteFake({ control, turnos = [] }: FakeItems = {}) {
   return {
     send(command: GetCommand | QueryCommand): Promise<{ Item?: unknown; Items?: unknown[] }> {
-      // Detect by the presence of key fields instead of instanceof to avoid
-      // module-identity issues with multiple require() calls in tests.
+      // Se detecta por la presencia de campos clave en lugar de instanceof, para
+      // evitar problemas de identidad de módulos con varios require() en los tests.
       const input = command.input as Record<string, unknown>;
       if ("Key" in input) {
         // GetCommand
@@ -37,7 +37,7 @@ function crearClienteFake({ control, turnos = [] }: FakeItems = {}) {
         }
         return Promise.resolve({ Item: undefined });
       }
-      // QueryCommand → return the turnos list
+      // QueryCommand → devuelve la lista de turnos
       return Promise.resolve({ Items: turnos });
     },
   };
@@ -47,7 +47,7 @@ function crearClienteFake({ control, turnos = [] }: FakeItems = {}) {
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const AHORA_MS = 1_700_000_000_000;  // fixed clock for tests
+const AHORA_MS = 1_700_000_000_000;  // reloj fijo para los tests
 const AHORA_S = Math.floor(AHORA_MS / 1000);
 
 const candadoValido = {
@@ -56,7 +56,7 @@ const candadoValido = {
   partidaId: "demo-r1-12345",
   modo: "demo",
   turnoActual: 5,
-  expiraEn: AHORA_S + 30,  // not expired
+  expiraEn: AHORA_S + 30,  // no expirado
 };
 
 const turnoCompletoDato = {
@@ -73,7 +73,7 @@ const turnoCompletoDato = {
   ],
 };
 
-// DynamoDB item shape wrapping the data field
+// Forma del ítem de DynamoDB que envuelve el campo data
 const itemTurno = {
   PK: `PARTIDA#demo-r1-12345`,
   SK: KEYS.turno("demo-r1-12345", 5).SK,
@@ -82,7 +82,7 @@ const itemTurno = {
 };
 
 // ---------------------------------------------------------------------------
-// Helper: build a test Hono app with the injected repo
+// Auxiliar: arma una app de Hono de prueba con el repositorio inyectado
 // ---------------------------------------------------------------------------
 
 function crearAppTest(items: FakeItems = {}) {
@@ -163,7 +163,7 @@ test("returns ok:false when the game lock has expired", async () => {
 });
 
 test("returns ok:false when no complete turn exists yet", async () => {
-  // Lock is valid but no turns have been written yet.
+  // El candado es válido, pero todavía no se escribió ningún turno.
   const testApp = crearAppTest({ control: candadoValido, turnos: [] });
 
   const res = await testApp.request("/api/estado");
@@ -182,7 +182,7 @@ test("skips incomplete turns and returns the last complete one", async () => {
   };
   const testApp = crearAppTest({
     control: candadoValido,
-    // DynamoDB returns newest first; turno 6 is incomplete, turno 5 is complete.
+    // DynamoDB devuelve primero el más nuevo; el turno 6 está incompleto y el 5, completo.
     turnos: [turnoIncompleto, itemTurno],
   });
 
@@ -196,8 +196,8 @@ test("dormido zombies are filtered out from the response", async () => {
     ...itemTurno,
     data: {
       ...turnoCompletoDato,
-      // ZombieVisibleSchema only allows caminante/corredor/horda in shared turns,
-      // but /estado adds an extra defensive filter.
+      // ZombieVisibleSchema solo admite caminante/corredor/horda en los turnos de shared,
+      // pero /estado agrega un filtro defensivo extra.
       zombies: [
         { id: "Z-0001", tipo: "caminante", nodo: "N-0001" },
       ],
