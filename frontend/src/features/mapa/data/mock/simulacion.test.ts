@@ -108,3 +108,13 @@ test("on the real graph survivors start in the four neighborhoods and only walk 
     snap = siguiente;
   }
 });
+
+test("the local simulation never fills a shelter past its capacity, like the real simulator", () => {
+  const chico = { ...grafoMini, refugios: grafoMini.refugios.map((r) => ({ ...r, capacidad: 3 })) };
+  let snap = crearSimulacion(chico, config, AHORA);
+  for (let i = 0; i < 80; i++) {
+    snap = avanzarTurno(chico, snap, AHORA);
+    for (const r of snap.refugios) assert.ok(r.ocupacion <= r.capacidad, `turn ${snap.turno}: ${r.id} has ${r.ocupacion}/${r.capacidad}`);
+  }
+  assert.ok(snap.refugios.some((r) => r.ocupacion === r.capacidad), "some shelter should fill up in 80 turns");
+});
