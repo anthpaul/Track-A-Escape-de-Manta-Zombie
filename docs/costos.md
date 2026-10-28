@@ -1,6 +1,6 @@
 # Costos: estimación y gasto real
 
-**Escenario de referencia: USD 63.69 por 30 días de demo automática y uso ligero
+**Escenario de referencia: USD 85.45 por 30 días de demo automática y uso ligero
 del mapa, antes de créditos, franquicias gratuitas e impuestos.** No es el gasto
 real ni un límite de facturación. Las cantidades no medidas son supuestos;
 varias tarifas son referencias públicas pendientes de confirmación regional
@@ -17,7 +17,7 @@ la configuración desplegada.
 | Horizonte | 30 días, demo habilitada todo el día | Supuesto; no es la duración real del evento |
 | Demo | R2; el Scheduler intenta cada minuto y las rondas quedan casi seguidas (ciclo medio de 5,5 minutos) | Valores por defecto de `infra/variables.tf` |
 | Ronda | 300 segundos, 150 turnos de 2 segundos | Supuesto de ronda completa; puede terminar antes |
-| Lambda simulador | 512 MB = 0.5 GB, arm64 | `infra/simulador.tf` |
+| Lambda simulador | 1024 MB = 1 GB, arm64 | `infra/simulador.tf` (subió de 512 MB el 27 de octubre; para la prueba de fuego se usa 2048 MB solo durante la evaluación) |
 | Lambda API | 1024 MB = 1 GB, arm64 | Valor por defecto de `infra/variables.tf` |
 | Duración media facturable API | 100 ms por petición | Supuesto; no es el p95 ni una medición |
 | Uso del mapa | 100 horas-navegador mensuales, polling cada 2 s | Supuesto agregado entre todos los usuarios |
@@ -113,7 +113,7 @@ de redondear, no sumando filas ya redondeadas.
 
 | Componente | Fórmula en USD | Costo mensual |
 |---|---|---:|
-| Lambda simulador | `7,855 × 0.5 × 300 × 0.0000133334 + 35,345 × 0.5 × 1 × 0.0000133334 + 43,200/1e6 × 0.20` | 15.9544 |
+| Lambda simulador | `7,855 × 1 × 300 × 0.0000133334 + 35,345 × 1 × 1 × 0.0000133334 + 43,200/1e6 × 0.20` | 31.9001 |
 | Lambda API | `190,000 × 1 × 0.1 × 0.0000133334 + 190,000/1e6 × 0.20` | 0.2913 |
 | API Gateway | `190,000/1e6 × 1.00` | 0.1900 |
 | DynamoDB escrituras | `80,187,765/1e6 × 0.625` | 50.1174 |
@@ -127,7 +127,9 @@ de redondear, no sumando filas ya redondeadas.
 | CloudWatch Logs | `0.25 × 0.50 + 0.1 × 0.03` | 0.1280 |
 | SNS | `100/1e6 × 0.50 + 100/100,000 × 2.00` | 0.0021 |
 | Budget de seguimiento | Sin acciones automáticas ni reportes de pago | 0.0000 |
-| **Total de referencia** | **Redondeado desde 69.5040656** | **69.50** |
+| **Total de referencia** | **Redondeado desde 85.4497996** | **85.45** |
+
+Equivale a unos **USD 2.85 por día** con la demo encendida todo el día. Con la demo apagada (`demo_enabled = false`), las escrituras de DynamoDB y la Lambda del simulador, que son el 96 % del total, desaparecen.
 
 ### Sensibilidad
 
@@ -136,9 +138,9 @@ almacenamiento medio proporcionalmente:
 
 | Turno facturable | Almacenamiento medio | Total mensual bruto |
 |---|---:|---:|
-| 8 KiB | 1 GB | USD 45.25 |
-| 16 KiB | 2 GB | USD 69.50 |
-| 32 KiB | 4 GB | USD 118.01 |
+| 8 KiB | 1 GB | USD 61.20 |
+| 16 KiB | 2 GB | USD 85.45 |
+| 32 KiB | 4 GB | USD 133.96 |
 
 Son escenarios, no un intervalo estadístico ni un máximo. Más tráfico, tamaños,
 demoras o reintentos pueden superar esos valores. Rondas que terminan antes
@@ -152,31 +154,23 @@ provisioned concurrency. La transferencia real de API Gateway y la geografía de
 entrega de CloudFront requieren validación. CARTO es externo a esta estimación
 AWS; no se presupone un contrato comercial.
 
-## 4. Gasto real del evento: pendiente de evidencia
+## 4. Gasto real del evento
 
-**Todavía no disponible. No se registra como USD 0.00 ni se sustituye por la
-estimación mensual.** No se afirma un saldo de créditos o plan gratuito.
+**Unos USD 0.02 hasta el 28 de octubre de 2026.** La capa gratuita y los créditos de la cuenta nueva cubren casi todo el uso del evento; no se afirma el saldo de créditos.
 
-Alex o su compañero compartirán una captura o exportación de Billing / Cost
-Explorer del período real, sin Account ID, ARN, correos, credenciales ni datos de
-otros proyectos. Si hay otras cargas en la cuenta, documentar la atribución:
-no adjudicar toda la cuenta al proyecto.
-
-| Dato requerido | Estado |
+| Dato | Valor |
 |---|---|
-| Inicio y fin del período, con zona horaria | Pendiente de confirmar |
-| Fecha/hora de consulta y fuente | Pendiente de evidencia |
-| Consumo por servicio antes de créditos/reembolsos | Pendiente de evidencia |
-| Créditos, descuentos, ajustes e impuestos aplicables | Pendiente de evidencia |
-| Importe neto atribuible al evento | Pendiente de evidencia |
-| Captura/exportación anonimizada | Pendiente de evidencia |
+| Período | Octubre de 2026 hasta la madrugada del 28 (hora de Ecuador) |
+| Fuente y fecha de consulta | AWS Budgets y Cost Explorer (CLI, solo lectura), 28 de octubre de 2026 |
+| Gasto real del mes según el Budget | **USD 0.019** |
+| Consumo por servicio en Cost Explorer (`Unblended cost`, agrupado por servicio) | USD 0.00 en cada servicio: Lambda, API Gateway, DynamoDB, CloudFront, S3, CloudWatch, EventBridge, SNS |
+| Budget configurado | `spookython-mensual`: USD 20 por mes, con alertas al 50 % y 80 % del gasto real y al 100 % del pronóstico |
+| Importe neto atribuible al evento | ~USD 0.02 |
+| Captura | `docs/budget.png` muestra el Budget; la captura del gasto queda pendiente |
 
-En Cost Explorer: seleccionar el período, agrupar por servicio y registrar
-`Unblended cost`, excluyendo créditos/reembolsos para el consumo bruto. Registrar
-esos ajustes por separado y conciliar el neto con Billing; no sumar descuentos
-dos veces. Los datos recientes pueden estar incompletos: rotular
-**provisional al [fecha/hora]**, no factura final.
-Fuente: [actualización de Cost Explorer](https://docs.aws.amazon.com/cost-management/latest/userguide/ce-what-is.html).
+Cost Explorer puede tardar hasta 24 horas en mostrar el último gasto, y cada consulta por API cuesta USD 0.01 (este registro hizo dos). La cuenta no tiene otras cargas, así que todo el gasto se atribuye al proyecto.
+
+**Lo que sigue costando:** solo la demo encendida, unos USD 2.85 por día sin capa gratuita (escenario de la sección 3). Después del evento se apaga con `demo_enabled = false` y el costo vuelve a casi cero.
 
 ## 5. Decisiones y controles
 
