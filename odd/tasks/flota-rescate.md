@@ -18,7 +18,7 @@ Rama: `feat/flota-rescate` · Entrega: un PR con commits por unidad · Tests: `n
 |---|---|---|---|---|
 | T1 | S3, S4 (shared) | inline | hecho (shared 60) | ver log |
 | T2 | S2, S3 (simulador) | inline | hecho (simulador 56) | ver log |
-| T3 | S5 (backend /estado) | inline | pendiente | |
+| T3 | S5 (backend /estado) | inline | hecho (backend 160) | ver log |
 | T4 | S5 (mapa) | inline | pendiente | |
 | T5 | S6 | inline | pendiente | |
 

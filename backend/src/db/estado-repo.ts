@@ -52,6 +52,7 @@ const ItemTurnoEstadoSchema = EstadoTurnoSchema.pick({
   sobrevivientes: true,
   completo: true,
   p95ms: true,
+  vehiculos: true,
 });
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,8 @@ export interface RespuestaEstado {
   zombies: EstadoTurno["zombies"];
   aristasBloqueadas: string[];
   sobrevivientes: Sobreviviente[];
+  /** Rescue fleet (Pro): the vans of the turn, only in rounds with a fleet. */
+  vehiculos?: NonNullable<EstadoTurno["vehiculos"]>;
   metricas: {
     vivos: number;
     aSalvo: number;
@@ -164,6 +167,7 @@ export class EstadoRepo {
       zombies: zombiesVisibles,
       aristasBloqueadas: turnoCompleto.aristasBloqueadas,
       sobrevivientes: turnoCompleto.sobrevivientes,
+      ...(turnoCompleto.vehiculos && { vehiculos: turnoCompleto.vehiculos }),
       metricas: {
         vivos,
         aSalvo,

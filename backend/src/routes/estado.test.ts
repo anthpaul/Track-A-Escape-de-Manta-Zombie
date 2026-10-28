@@ -222,3 +222,13 @@ test("health endpoint is unaffected by the new route", async () => {
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), { ok: true, service: "api" });
 });
+
+test("the rescue vans of the turn are relayed as they were stored, and absent when the round has no fleet", async () => {
+  const vehiculos = [{ id: "V-1", nodo: "N-0001", pasajeros: ["S-0001"], destino: "N-0002" }];
+  const conFlota = { ...itemTurno, data: { ...turnoCompletoDato, vehiculos } };
+  const res = await crearAppTest({ control: candadoValido, turnos: [conFlota] }).request("/api/estado");
+  assert.deepEqual(((await res.json()) as { vehiculos?: unknown }).vehiculos, vehiculos);
+
+  const sinFlota = await crearAppTest({ control: candadoValido, turnos: [itemTurno] }).request("/api/estado");
+  assert.equal("vehiculos" in ((await sinFlota.json()) as object), false);
+});
