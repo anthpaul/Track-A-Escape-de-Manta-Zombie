@@ -1,117 +1,117 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { ChevronDown, Map as MapaIcono, TriangleAlert, UserRound, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE, COLOR_ZOMBIE, COLOR_ZONA_HORDA } from "@/features/mapa/simbologia/colores";
-import { ICONO_REFUGIO } from "@/features/mapa/simbologia/iconos";
+import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
+import { ICONO_REFUGIO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
 
-// Same colors the map draws (simbologia/), so the legend can never drift from the layers.
-const Punto = ({ color }: { color: string }) => (
-  <span className="size-2.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
-);
-const Anillo = ({ color }: { color: string }) => (
-  <span className="size-3 shrink-0 rounded-full border-2" style={{ borderColor: color }} aria-hidden />
-);
-const Linea = ({ color, estilo = "solid" }: { color: string; estilo?: "solid" | "dashed" }) => (
-  <span className="h-0 w-4 shrink-0 border-t-2" style={{ borderColor: color, borderTopStyle: estilo }} aria-hidden />
-);
-const Refugio = ({ borde }: { borde: string }) => (
-  <span
-    className="flex size-3.5 shrink-0 items-center justify-center rounded-sm border-2"
-    style={{ background: ICONO_REFUGIO.color, borderColor: borde }}
-    aria-hidden
-  >
-    <ICONO_REFUGIO.Icono className="size-2" style={{ color: ICONO_REFUGIO.borde }} />
-  </span>
-);
-
-type Item = { nombre: string; simbolo: ReactNode };
-const GRUPOS: { titulo: string; items: Item[] }[] = [
-  {
-    titulo: "Personas",
-    items: [
-      { nombre: "Sobreviviente", simbolo: <Punto color={COLOR_SOBREVIVIENTE.en_ruta} /> },
-      { nombre: "Mordido", simbolo: <Punto color={COLOR_SOBREVIVIENTE.mordido} /> },
-    ],
-  },
-  {
-    titulo: "Peligro",
-    items: [
-      { nombre: "Zombie", simbolo: <Punto color={COLOR_ZOMBIE.caminante} /> },
-      { nombre: "Horda (zona peligrosa)", simbolo: <Anillo color={COLOR_ZONA_HORDA.borde} /> },
-    ],
-  },
-  {
-    titulo: "Lugares y calles",
-    items: [
-      { nombre: "Refugio", simbolo: <Refugio borde={ICONO_REFUGIO.borde} /> },
-      { nombre: "Refugio sin acceso", simbolo: <Refugio borde={COLOR_CALLE.bloqueada} /> },
-      { nombre: "Calle cerrada", simbolo: <Linea color={COLOR_CALLE.bloqueada} /> },
-      { nombre: "Puente dañado", simbolo: <Linea color={COLOR_CALLE.danado} estilo="dashed" /> },
-      { nombre: "Ruta elegida", simbolo: <Linea color={COLOR_RUTA} estilo="dashed" /> },
-    ],
-  },
+// Same icons and colors the map draws (simbologia/), so the legend can never drift from the layers.
+const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string }[] = [
+  { nombre: "Caminante", ...ICONOS_ZOMBIE.caminante },
+  { nombre: "Corredor (persigue)", ...ICONOS_ZOMBIE.corredor },
+  { nombre: "Horda (bloquea la zona)", ...ICONOS_ZOMBIE.horda },
 ];
 
-// The three dots on the pill are the three things to tell apart first: people, bitten, zombies.
-const PUNTOS_PILDORA = [COLOR_SOBREVIVIENTE.en_ruta, COLOR_SOBREVIVIENTE.mordido, COLOR_ZOMBIE.caminante];
+// Bridges are a double line on the map; closed streets and damaged bridges carry the same traffic
+// sign the map draws on them (no-entry disc, danger triangle).
+type Linea = { nombre: string; color: string; punteada?: boolean; doble?: boolean; senal?: "prohibido" | "peligro" };
+const LINEAS: Linea[] = [
+  { nombre: "Ruta planificada", color: COLOR_RUTA, punteada: true },
+  { nombre: "Avenida", color: COLOR_CALLE.avenida },
+  { nombre: "Calle", color: COLOR_CALLE.calle },
+  { nombre: "Puente", color: COLOR_CALLE.puente, doble: true },
+  { nombre: "Calle bloqueada", color: COLOR_CALLE.bloqueada, senal: "prohibido" },
+  { nombre: "Puente dañado", color: COLOR_CALLE.danado, doble: true, punteada: true, senal: "peligro" },
+];
 
-// Map legend: closed by default behind a pill, and it closes by itself as soon as the map is touched,
-// so it never covers what the operator is looking at.
+function SimboloLinea({ color, punteada, doble, senal }: Linea) {
+  const estilo = punteada ? "dashed" : "solid";
+  return (
+    <span className="relative flex h-3 w-5 shrink-0 items-center" aria-hidden>
+      <span
+        className={cn("w-full", doble ? "h-1.5 border-y-2" : "h-0 border-t-2")}
+        style={{ borderColor: color, borderTopStyle: estilo, borderBottomStyle: estilo }}
+      />
+      {senal === "prohibido" && (
+        <span className="absolute left-1/2 flex size-2.5 -translate-x-1/2 items-center justify-center rounded-full" style={{ background: color }}>
+          <span className="h-0.5 w-1.5 bg-white" />
+        </span>
+      )}
+      {senal === "peligro" && (
+        <TriangleAlert className="absolute left-1/2 size-3 -translate-x-1/2" style={{ fill: color, color: "#13030d" }} />
+      )}
+    </span>
+  );
+}
+
+// Map legend: open on wide screens, a small button on phones so it never hides the map.
 export default function LeyendaMapa() {
   const [abierta, setAbierta] = useState(false);
-  const caja = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (!abierta) return;
-    const alTocarFuera = (e: PointerEvent) => {
-      if (caja.current && !caja.current.contains(e.target as Node)) setAbierta(false);
-    };
-    document.addEventListener("pointerdown", alTocarFuera);
-    return () => document.removeEventListener("pointerdown", alTocarFuera);
-  }, [abierta]);
+  useEffect(() => setAbierta(window.matchMedia("(min-width: 768px)").matches), []);
 
   return (
     <aside
-      ref={caja}
       aria-label="Leyenda del mapa"
       // Above the OSM/CARTO attribution, which must stay visible.
-      className="absolute bottom-8 right-3 z-10 flex w-64 flex-col items-end gap-2 text-xs text-calabaza-900"
+      className="absolute bottom-8 right-3 z-10 w-56 rounded-lg border border-crimson-300 bg-crimson-100/90 text-xs text-calabaza-900 backdrop-blur"
     >
-      {abierta && (
-        <div id="leyenda-contenido" className="w-full space-y-3 rounded-lg border border-crimson-600 bg-crimson-100/95 p-3 backdrop-blur">
-          {GRUPOS.map(({ titulo, items }) => (
-            <section key={titulo}>
-              <h3 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-crimson-700">{titulo}</h3>
-              <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {items.map(({ nombre, simbolo }) => (
-                  <li key={nombre} className="flex items-center gap-2">
-                    {simbolo}
-                    {nombre}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
       <button
         type="button"
         onClick={() => setAbierta((a) => !a)}
         aria-expanded={abierta}
-        aria-controls="leyenda-contenido"
-        className={cn(
-          "inline-flex items-center gap-2 rounded-full border bg-crimson-100/95 px-3 py-1.5 font-semibold backdrop-blur",
-          abierta ? "border-calabaza-900" : "border-crimson-600 hover:border-calabaza-500",
-        )}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 font-semibold"
       >
-        <span className="inline-flex gap-0.5" aria-hidden>
-          {PUNTOS_PILDORA.map((color) => (
-            <span key={color} className="size-1.5 rounded-full" style={{ background: color }} />
-          ))}
+        <span className="inline-flex items-center gap-1.5">
+          <MapaIcono className="size-3.5 text-calabaza-500" aria-hidden />
+          Leyenda
         </span>
-        {abierta ? "Cerrar leyenda" : "Leyenda"}
+        <ChevronDown className={cn("size-3.5 transition-transform", abierta && "rotate-180")} aria-hidden />
       </button>
+      {abierta && (
+        <ul className="space-y-1.5 px-3 pb-3">
+          <li className="flex items-center gap-2">
+            <span className="size-3 rounded-full" style={{ background: COLOR_SOBREVIVIENTE.en_ruta }} aria-hidden />
+            Sobreviviente en camino
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="size-3 rounded-full" style={{ background: COLOR_SOBREVIVIENTE.mordido }} aria-hidden />
+            Sobreviviente mordido
+          </li>
+          {ZOMBIES.map(({ nombre, Icono, color }) => (
+            <li key={nombre} className="flex items-center gap-2">
+              <span className="flex size-4 items-center justify-center rounded-full" style={{ background: color }} aria-hidden>
+                <Icono className="size-2.5 text-white" />
+              </span>
+              {nombre}
+            </li>
+          ))}
+          <li className="flex items-center gap-2">
+            <span
+              className="flex size-4 items-center justify-center rounded-sm border"
+              style={{ background: ICONO_REFUGIO.color, borderColor: ICONO_REFUGIO.borde }}
+              aria-hidden
+            >
+              <ICONO_REFUGIO.Icono className="size-2.5" style={{ color: ICONO_REFUGIO.borde }} />
+            </span>
+            Refugio
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="size-4 rounded-full border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
+            Refugio sin acceso
+          </li>
+          {LINEAS.map((linea) => (
+            <li key={linea.nombre} className="flex items-center gap-2">
+              <SimboloLinea {...linea} />
+              {linea.nombre}
+            </li>
+          ))}
+          <li className="flex items-center gap-2 pt-1 text-crimson-800">
+            <UserRound className="size-3" aria-hidden />
+            Toca un sobreviviente para seguir su ruta
+          </li>
+        </ul>
+      )}
     </aside>
   );
 }
