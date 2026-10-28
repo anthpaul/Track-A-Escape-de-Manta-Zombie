@@ -44,7 +44,7 @@ export default function TabAlertas({ alertas, turnoActual, leidas, onUbicar }: P
                       disabled={!ubicable}
                       onClick={() => onUbicar(a)}
                       className={cn(
-                        "flex w-full items-start gap-2.5 rounded-md px-2 py-2 text-left enabled:hover:bg-crimson-100",
+                        "flex w-full items-start gap-2.5 px-2 py-2 text-left enabled:hover:bg-crimson-100",
                         leidas.has(a.id) && "opacity-60",
                       )}
                     >

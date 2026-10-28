@@ -40,8 +40,9 @@ export default function TabRefugios(p: Props) {
             onClick={() => p.onSeleccionar(r.id)}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && p.onSeleccionar(r.id)}
             className={cn(
-              "cursor-pointer rounded-md px-2 py-3 transition-colors",
-              elegido ? "bg-crimson-100 ring-1 ring-calabaza-500" : "hover:bg-crimson-100/60",
+              // Square corners everywhere in the panel; the selected shelter gets a pumpkin edge on the left.
+              "cursor-pointer border-l-2 px-3 py-3 transition-colors",
+              elegido ? "border-calabaza-500 bg-crimson-100" : "border-transparent hover:bg-crimson-100/60",
             )}
           >
             <div className="flex items-baseline justify-between gap-2">
@@ -55,8 +56,8 @@ export default function TabRefugios(p: Props) {
                 </span>
               )}
             </div>
-            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-crimson-300">
-              <div className={cn("h-full rounded-full", colorBarra(r.pct))} style={{ width: `${r.pct}%` }} />
+            <div className="mt-1.5 h-1 overflow-hidden bg-crimson-300">
+              <div className={cn("h-full", colorBarra(r.pct))} style={{ width: `${r.pct}%` }} />
             </div>
             <p className={cn("mt-1.5 text-xs", estado.clase)}>{estado.texto}</p>
             {elegido && (
@@ -67,7 +68,7 @@ export default function TabRefugios(p: Props) {
                     e.stopPropagation();
                     p.onAlternarRuta();
                   }}
-                  className="font-pixel text-[10px]"
+                  className="rounded-none font-pixel text-[10px]"
                 >
                   {p.mostrarRuta ? "OCULTAR RUTA" : "VER RUTA"}
                 </Button>
@@ -78,7 +79,7 @@ export default function TabRefugios(p: Props) {
                     e.stopPropagation();
                     p.onVerEnCamino(r.nombre);
                   }}
-                  className="border-crimson-600 bg-transparent font-pixel text-[10px] text-calabaza-900"
+                  className="rounded-none border-crimson-600 bg-transparent font-pixel text-[10px] text-calabaza-900"
                 >
                   EN CAMINO ({r.enCamino})
                 </Button>

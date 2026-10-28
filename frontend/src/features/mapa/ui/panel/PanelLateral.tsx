@@ -56,7 +56,7 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
           {/* Only real snapshots get "EN VIVO": simulated turns are always fresh, so their age proves nothing. */}
           {(conexion === "en_vivo" || conexion === "reconectando") && <IndicadorEnVivo generadoEn={generadoEn} />}
           {aviso && (
-            <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold", aviso.clase)}>
+            <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold", aviso.clase)}>
               <aviso.Icono className="size-3" aria-hidden />
               {aviso.texto}
             </span>
