@@ -7,7 +7,7 @@ import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
 import { USAR_MOCKS, useEstadoEnVivo } from "@/features/mapa/data/real/useEstadoEnVivo";
 import { useRutaEnVivo } from "@/features/mapa/data/real/useRutaEnVivo";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
-import { derivarAlertas, esUrgente, resumenTurno, type Alerta } from "@/features/mapa/domain/alertas";
+import { alertasVisibles, derivarAlertas, esUrgente, resumenTurno, type Alerta } from "@/features/mapa/domain/alertas";
 import { estadoInicialPanel, reducirPanel, type Tab } from "@/features/mapa/domain/panel";
 import { resumenPanel } from "@/features/mapa/domain/resumen";
 import { elegirSeguido } from "@/features/mapa/domain/seleccion";
@@ -186,7 +186,7 @@ export default function PantallaMapa() {
           )}
           {panel.tab === "alert" && (
             <TabAlertas
-              alertas={alertas}
+              alertas={alertasVisibles(alertas, snapshot.turno)}
               turnoActual={snapshot.turno}
               leidas={panel.alertasLeidas}
               onUbicar={(alerta) => dispatch({ tipo: "ubicarAlerta", alerta })}

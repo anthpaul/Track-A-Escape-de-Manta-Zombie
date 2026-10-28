@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { derivarAlertas, resumenTurno } from "./alertas";
+import { alertasVisibles, derivarAlertas, resumenTurno } from "./alertas";
 import type { Grafo, Snapshot } from "./tipos";
 
 const grafo: Grafo = {
@@ -140,4 +140,10 @@ test("bites and arrivals carry how many people they cover", () => {
   const previo = snap({ sobrevivientes: ["S-0001", "S-0002"].map((id) => ({ id, nodo: "N-0001", estado: "en_ruta" as const })) });
   const actual = snap({ turno: 2, sobrevivientes: ["S-0001", "S-0002"].map((id) => ({ id, nodo: "N-0001", estado: "mordido" as const })) });
   assert.equal(derivarAlertas(grafo, previo, actual)[0].cantidad, 2);
+});
+
+test("the alert list keeps arrivals only for the current turn, so bad news is not buried", () => {
+  const a = (id: string, turno: number, tipo: "llegada" | "mordido") => ({ id, turno, tipo, titulo: "", descripcion: "" });
+  const lista = [a("1", 19, "llegada"), a("2", 18, "llegada"), a("3", 18, "mordido"), a("4", 17, "llegada")];
+  assert.deepEqual(alertasVisibles(lista, 19).map((x) => x.id), ["1", "3"]);
 });

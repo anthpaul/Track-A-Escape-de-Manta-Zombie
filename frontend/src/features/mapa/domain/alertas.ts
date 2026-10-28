@@ -169,3 +169,8 @@ export function resumenTurno(alertas: Alerta[], turno: number): ChipResumen[] {
   ];
   return chips.filter((c): c is ChipResumen => c !== null);
 }
+
+// The alert list: arrivals only for the current turn (older ones are already in each shelter's
+// count), so past turns show only what went wrong and arrival-only turns drop out.
+export const alertasVisibles = (alertas: Alerta[], turnoActual: number) =>
+  alertas.filter((a) => esUrgente(a) || a.turno === turnoActual);
