@@ -56,9 +56,9 @@ Arriba del panel, siempre visibles: ronda y turno, **EN VIVO** con la edad real 
 
 CloudFront sirve el frontend desde S3 privado mediante OAC y envía `/api/*`, sin caché, a API Gateway y la Lambda del API.
 El estado compartido vive en DynamoDB; el mapa consulta `/api/estado` cada 2 segundos y recibe el último turno completo.
-EventBridge Scheduler inicia las rondas demo en la Lambda del simulador, que calcula movimientos en proceso y publica los turnos.
+EventBridge Scheduler intenta cada minuto iniciar una ronda demo en la Lambda del simulador, que calcula movimientos en proceso (con la flota de rescate), publica los turnos y encadena la siguiente ronda mientras le alcance el tiempo.
 Las rondas de evaluación corren en la misma Lambda del simulador con `"modo": "evaluacion"`: calientan el API y consultan `/api/paso` por HTTP con API key desde `us-east-2`; la demo no mide esa latencia.
-El diagrama representa el código del repositorio, no una inspección de la cuenta AWS.
+El diagrama refleja el despliegue del 28 de octubre de 2026, verificado con consultas de solo lectura a la cuenta (Lambdas, Scheduler y Budget). Los permisos IAM de cada Lambda se limitan a su tabla y a su propio log group.
 
 [Fuente editable en diagrams.net](docs/arquitectura.drawio) · [Flujos y archivos de referencia](docs/arquitectura.md).
 
@@ -66,10 +66,10 @@ El diagrama representa el código del repositorio, no una inspección de la cuen
 |---|---|
 | Sitio y dominio único | CloudFront + S3 |
 | API | API Gateway HTTP API (throttling 300 rps / 600 burst) |
-| Cómputo | Lambda `nodejs24.x` arm64, 1024 MB |
+| Cómputo | Lambda API `nodejs24.x` arm64, 1024 MB · Lambda simulador 1024 MB (2048 MB en la prueba de fuego) |
 | Estado del mundo | DynamoDB on-demand, single-table |
 | Demo automática | Lambda del simulador + EventBridge Scheduler |
-| Monitoreo | CloudWatch |
+| Monitoreo y costos | CloudWatch · AWS Budget (US$ 20/mes) con aviso por SNS |
 | Infraestructura como código | Terraform (`infra/`) |
 
 Detalle: `INFRA.md`.
