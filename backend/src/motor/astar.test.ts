@@ -317,3 +317,21 @@ describe("MinHeap", () => {
     assert.ok(h.isEmpty());
   });
 });
+
+describe("shelter capacity (Pro): only the allowed shelters count", () => {
+  it("heads to the allowed shelter even when another is closer", () => {
+    // From N-0002, R-01 (N-0001) is 1 street away; only R-02 (N-0012) is allowed.
+    const r = buscarRuta("N-0002", contexto, sinPeligro, undefined, new Set(["R-02"]));
+    assert.equal(r.tipo, "movimiento");
+    if (r.tipo === "movimiento") assert.equal(r.refugio, "R-02");
+  });
+
+  it("standing at the door of a shelter you are not allowed into is not arriving", () => {
+    const r = buscarRuta("N-0001", contexto, sinPeligro, undefined, new Set(["R-02"]));
+    assert.equal(r.tipo, "movimiento");
+  });
+
+  it("without a restriction it behaves as before", () => {
+    assert.equal(buscarRuta("N-0001", contexto, sinPeligro).tipo, "ya_en_refugio");
+  });
+});

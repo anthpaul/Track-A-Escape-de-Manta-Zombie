@@ -15,6 +15,7 @@ import { SobrevivienteIdSchema } from "@abcstack/shared";
 import { ErrorEstado, type EstadoRepo } from "../db/estado-repo";
 import type { ContextoGrafo } from "../motor/astar";
 import { calcularRutaCompleta } from "../motor/ruta";
+import { asignarCupos } from "../motor/cupos";
 
 export function crearRutaSobrevivientes(repo: Pick<EstadoRepo, "obtenerEstado">, contexto: ContextoGrafo): Hono {
   const ruta = new Hono();
@@ -49,7 +50,13 @@ export function crearRutaSobrevivientes(repo: Pick<EstadoRepo, "obtenerEstado">,
     if (sobreviviente.estado !== "en_ruta") {
       return c.json({ ...base, refugio: sobreviviente.refugio ?? null, ruta: [], estado: sobreviviente.estado });
     }
-    return c.json({ ...base, ...calcularRutaCompleta(sobreviviente.nodo, contexto, estado) });
+    // Same shelter allocation as /paso (Pro capacity), so the drawn route matches the steps taken.
+    const cupos = asignarCupos(contexto, estado);
+    let rutaCompleta = calcularRutaCompleta(sobreviviente.nodo, contexto, estado, cupos?.refugiosPara(sobrevivienteId));
+    if (rutaCompleta.refugio === null && cupos && cupos.conLugar.size > 0) {
+      rutaCompleta = calcularRutaCompleta(sobreviviente.nodo, contexto, estado, cupos.conLugar);
+    }
+    return c.json({ ...base, ...rutaCompleta });
   });
 
   return ruta;

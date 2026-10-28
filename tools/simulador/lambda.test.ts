@@ -193,3 +193,15 @@ test("an evaluation round without PASO_URL / PASO_KEY fails before taking the lo
     if (antes.key !== undefined) process.env.PASO_KEY = antes.key;
   }
 });
+
+test("the in-process motor sees who is where, so demo rounds respect shelter capacity too", async () => {
+  const uleam = grafoData.refugios.find((r) => r.nombre.includes("ULEAM"))!;
+  const puerta = grafo.vecinos(uleam.nodo)[0]!;
+  const dentro = Array.from({ length: uleam.capacidad }, (_, i) => ({ id: `S-${String(i + 100).padStart(4, "0")}`, nodo: uleam.nodo, estado: "a_salvo" as const }));
+  const yo = { id: "S-0001", nodo: puerta, estado: "en_ruta" as const };
+  const pedido = { sobrevivienteId: "S-0001", nodoActual: puerta, turno: 3 };
+  const conLugar = crearMotorEnProceso(() => [], () => [], () => [yo]);
+  const lleno = crearMotorEnProceso(() => [], () => [], () => [...dentro, yo]);
+  assert.equal((await conLugar.pedirPaso(pedido)).siguienteNodo, uleam.nodo);
+  assert.notEqual((await lleno.pedirPaso(pedido)).siguienteNodo, uleam.nodo);
+});

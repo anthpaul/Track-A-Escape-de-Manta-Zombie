@@ -18,3 +18,24 @@ test("with every shelter taken by a walker, the survivor escapes instead of wait
   assert.ok(indexado.esMovimientoValido(nodoActual, siguienteNodo, []), "the escape is a legal street");
   assert.notEqual(siguienteNodo, corredor);
 });
+
+test("Pro capacity: with ULEAM full, a survivor at its door is sent to another shelter", () => {
+  const uleam = contextoGrafo.refugios.find((r) => r.nombre.includes("ULEAM"))!;
+  // N-0274 is ULEAM's only way in (one street from its node).
+  const puerta = contextoGrafo.indexado.vecinos(uleam.nodo)[0]!;
+  const dentro = Array.from({ length: uleam.capacidad }, (_, i) => ({
+    id: `S-${String(i + 100).padStart(4, "0")}`,
+    nodo: uleam.nodo,
+    estado: "a_salvo" as const,
+  }));
+  const yo = { id: "S-0001", nodo: puerta, estado: "en_ruta" as const };
+  const base = { partidaId: "p", turno: 5, zombies: [], aristasBloqueadas: [] };
+
+  const libre = calcularSiguienteNodo({ sobrevivienteId: "S-0001", nodoActual: puerta, mundo: { ...base, sobrevivientes: [yo] } });
+  assert.equal(libre.siguienteNodo, uleam.nodo, "with room, it walks in");
+
+  const lleno = calcularSiguienteNodo({ sobrevivienteId: "S-0001", nodoActual: puerta, mundo: { ...base, sobrevivientes: [...dentro, yo] } });
+  assert.notEqual(lleno.siguienteNodo, uleam.nodo, "full: it never walks into ULEAM");
+  assert.equal(lleno.resultado.tipo, "movimiento");
+  if (lleno.resultado.tipo === "movimiento") assert.notEqual(lleno.resultado.refugio, uleam.id);
+});

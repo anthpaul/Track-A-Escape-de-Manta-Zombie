@@ -38,7 +38,7 @@ function expectCode(code: ErrorFuenteMundo["code"]) {
   return (error: unknown) => error instanceof ErrorFuenteMundo && error.code === code;
 }
 
-test("reads an incomplete turn strongly through KEYS and returns immutable danger only", async () => {
+test("reads an incomplete turn strongly through KEYS and returns immutable danger and survivor positions", async () => {
   const item = snapshot();
   const original = structuredClone(item);
   const client = new FakeDynamo(() => ({ Item: item }));
@@ -47,6 +47,8 @@ test("reads an incomplete turn strongly through KEYS and returns immutable dange
   assert.deepEqual(world, {
     partidaId: "game-a", turno: 3,
     zombies: item.data.zombies, aristasBloqueadas: item.data.aristasBloqueadas,
+    // Shelter capacity (Pro) needs who is where; only id, node and state, nothing else of the survivor.
+    sobrevivientes: [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" }],
   });
   assert.ok(client.commands[0] instanceof GetCommand);
   assert.deepEqual(client.commands[0].input, {
@@ -57,6 +59,7 @@ test("reads an incomplete turn strongly through KEYS and returns immutable dange
   assert.ok(Object.isFrozen(world));
   assert.ok(Object.isFrozen(world.zombies));
   assert.ok(Object.isFrozen(world.aristasBloqueadas));
+  assert.ok(Object.isFrozen(world.sobrevivientes));
   assert.equal(Reflect.set(world.zombies[0], "nodo", "N-9999"), false);
   assert.deepEqual(item, original);
   assert.equal(typeof acceptRealClient, "function");

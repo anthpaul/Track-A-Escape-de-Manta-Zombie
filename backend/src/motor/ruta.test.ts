@@ -56,3 +56,10 @@ test("with every exit blocked the route is just the current node and says why", 
     motivo: "sin_ruta",
   });
 });
+
+test("Pro capacity: the drawn route goes to the shelter the survivor has a place in", () => {
+  // From N-0002 the closest shelter is R-01 (N-0001); with only R-02 allowed the route ends at N-0012.
+  const r = calcularRutaCompleta("N-0002", contexto, MUNDO_LIBRE, new Set(["R-02"]));
+  assert.equal(r.refugio, "R-02");
+  assert.equal(r.ruta.at(-1), "N-0012");
+});

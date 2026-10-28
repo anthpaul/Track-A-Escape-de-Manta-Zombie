@@ -16,7 +16,7 @@ Rama: `feat/k4-capacidad` · Entrega: un PR con commits por unidad · Tests: `np
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
 | T1 | S1, S2 | inline | hecho (shared 52, simulador 52, backend 149, front 129) | ver log |
-| T2 | S3, S4 | inline | pendiente | |
+| T2 | S3, S4 | inline | hecho (backend 159, simulador 53; RED confirmado contra el código viejo) | ver log |
 | T3 | S5 + medición | inline | pendiente | |
 
 Hora de corte acordada: 02:00 (si no está, queda en su rama sin mergear y se pasa a los entregables).
