@@ -10,7 +10,8 @@ import EstadoRonda from "@/features/mapa/ui/inicio/EstadoRonda";
 import FondoGrafo from "@/features/mapa/ui/inicio/FondoGrafo";
 import RefugiosInicio, { type FilaRefugio } from "@/features/mapa/ui/inicio/RefugiosInicio";
 
-// Only what the engine really does: routes every turn, predicts runners and never sends anyone to a full shelter.
+// Only what the engine really does: routes every turn, predicts runners, never sends anyone to a full shelter
+// and runs a rescue fleet in the demo rounds.
 const PASOS = [
   {
     titulo: "Turnos de 2 segundos",
@@ -22,7 +23,7 @@ const PASOS = [
   },
   {
     titulo: "Hacia el refugio",
-    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores. Cada refugio tiene 50 lugares y nadie es enviado a uno lleno. Responde en milisegundos.",
+    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores. Cada refugio tiene 50 lugares y nadie es enviado a uno lleno, y cinco camionetas de rescate buscan primero a quien está en peligro. Responde en milisegundos.",
   },
 ];
 

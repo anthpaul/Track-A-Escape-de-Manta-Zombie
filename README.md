@@ -116,6 +116,27 @@ Como sale solo del turno, todos los pedidos de `/paso` de ese turno coinciden si
 
 Medición local (8 semillas por ronda, cupo de 50 en el simulador): en la R3, sin el reparto, hubo **275 turnos-persona parados en la puerta de un refugio lleno**; con el reparto, **0**. La supervivencia no cambia (14,7 %) y en R1 y R2 ningún refugio llega a llenarse.
 
+### Flota de rescate (nivel Pro)
+
+Cinco camionetas salen de los refugios, avanzan hasta **2 calles por turno** (el doble que una persona a pie) y llevan **hasta 4 personas**. Nunca pisan un nodo con zombie visible, una zona de horda ni una calle bloqueada, y quien va arriba no puede ser mordido ni pide `/paso`. La decisión de **a quién recoger y en qué orden** está en `shared/flota.ts` (pura, determinista y con tests):
+
+1. primero, quien tiene un zombie visible a 2 calles o menos;
+2. si no hay nadie en peligro, una camioneta solo va a buscar a alguien si llega antes de lo que esa persona tardaría en llegar sola a un refugio, y prefiere a quien está más lejos de ponerse a salvo;
+3. cada camioneta, en orden, toma el mejor candidato según esa prioridad menos su propia distancia;
+4. con 4 a bordo, o sin nadie que valga la pena buscar, va al refugio más cercano con lugar y baja a quienes entren (respeta la capacidad).
+
+La flota corre en las **rondas demo** (las que se ven en el mapa público) y con `"flota": true` en el evento del simulador. Las rondas de evaluación R1–R3 no la usan, así que la prueba de fuego y `/paso` quedan iguales. `/estado` publica las camionetas y el mapa las dibuja con cuántas personas llevan.
+
+Medición local (8 semillas por ronda, motor con capacidad):
+
+| Ronda | Sin flota | Con flota | Llevados por la flota |
+|---|---|---|---|
+| R1 | 91,9 % a salvo | 92,5 % | 105 (66 %) |
+| R2 | 30,5 % a salvo | **50,2 %** | 210 (33 %) |
+| R3 | 14,7 % a salvo | **16,5 %** | 146 (9 %) |
+
+En la R3, con 200 personas y zombies por todos lados, 5 camionetas de 4 lugares no alcanzan: la mayoría de los mordidos cae en los primeros turnos.
+
 ### Estado compartido y latencia
 
 - **El estado que cambia vive en DynamoDB, no en la memoria de la Lambda.** Cada instancia puede atender cualquier pedido, y lo que guarda en memoria (el grafo estático) no cambia durante la partida.
@@ -269,7 +290,7 @@ queda pendiente de evidencia de facturación.
 - **Latencia medida de la R3:** depende de la CPU del simulador que la mide. Con 200 pedidos a la vez hace falta correrlo a 2048 MB (`demo.sh modo-prueba`); a 1024 MB el p95 medido sube a ~200 ms aunque el API responda igual de rápido.
 - **Simulador del jurado (pregunta abierta a la organización):** si el jurado corre su propio simulador, el motor necesita leer los zombies de su `/estado`. La lectura del mundo está detrás de una interfaz (`FuenteMundo`), pero hoy solo existe la implementación que lee nuestro DynamoDB.
 - **Capacidad de refugios (Pro):** el valor de 50 por refugio es nuestro; si la organización fija otro, se cambia en `shared/data/manta.json`.
-- **Flota de rescate (Pro):** no implementada.
+- **Flota de rescate (Pro):** solo en las rondas demo; la simulación local del mapa (sin servidor) no la muestra, porque el front no puede importar el código de `shared/` con Turbopack.
 - **Escenarios de prueba propios:** las cantidades de zombies y los turnos de los eventos son nuestros, no los oficiales; sirven para comparar versiones del motor, no para predecir el puntaje.
 - **El motor no conoce la posición de los dormidos** hasta que despiertan: no usa información invisible.
 - **Las rondas demo** calculan los pasos dentro de la propia Lambda (no miden `/paso`), y mientras corren ocupan una ejecución de Lambda; se apagan antes de evaluar.
