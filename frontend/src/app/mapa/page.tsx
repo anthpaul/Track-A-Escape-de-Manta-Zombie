@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PantallaMapa } from "@/features/mapa";
 
 export const metadata: Metadata = {
-  title: "Mapa en vivo · Escape de Manta Zombie",
+  title: "Mapa en vivo · Spondylus Z",
   description: "Zombies, sobrevivientes, rutas y refugios de Manta en tiempo real.",
 };
 

@@ -1,4 +1,4 @@
-import type { CircleLayerSpecification, ExpressionSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, SymbolLayerSpecification } from "maplibre-gl";
 import type { LayerProps } from "react-map-gl/maplibre";
 import {
   COLOR_CALLE,
@@ -133,12 +133,12 @@ export const capaRefugiosEtiquetas: LayerProps = {
 // Refugio que nadie puede alcanzar en este turno: anillo de peligro alrededor y una etiqueta "SIN ACCESO" bajo su nombre.
 export const capaRefugiosSinAcceso: LayerProps = {
   id: "refugios-sin-acceso",
-  type: "circle",
-  paint: {
-    "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 11, 16, 18],
-    "circle-color": "rgba(0,0,0,0)",
-    "circle-stroke-color": COLOR_CALLE.bloqueada,
-    "circle-stroke-width": 3,
+  type: "symbol",
+  layout: {
+    "icon-image": "anillo-sin-acceso",
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.9, 16, 1.4],
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
   },
 };
 
@@ -202,25 +202,26 @@ export const capaVehiculos: LayerProps = {
 
 // Los sobrevivientes en camino y los mordidos son capas separadas para poder apagar cada una (pestaña Capas).
 // Los sobrevivientes que ya están en un refugio se cuentan en el panel, no se dibujan.
-const pinturaPersona = (color: string): CircleLayerSpecification["paint"] => ({
-  "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 3, 16, 7],
-  "circle-color": color,
-  "circle-stroke-color": "#13030d",
-  "circle-stroke-width": 1,
+// Personas: bolita del color de su estado con el ícono de persona en negro (con una X si fue mordida).
+const disposicionPersona = (imagen: string): SymbolLayerSpecification["layout"] => ({
+  "icon-image": imagen,
+  "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.32, 16, 0.62],
+  "icon-allow-overlap": true,
+  "icon-ignore-placement": true,
 });
 
 export const capaSobrevivientes: LayerProps = {
   id: "sobrevivientes",
-  type: "circle",
+  type: "symbol",
   filter: ["==", ["get", "estado"], "en_ruta"],
-  paint: pinturaPersona(COLOR_SOBREVIVIENTE.en_ruta),
+  layout: disposicionPersona("persona"),
 };
 
 export const capaMordidos: LayerProps = {
   id: "mordidos",
-  type: "circle",
+  type: "symbol",
   filter: ["==", ["get", "estado"], "mordido"],
-  paint: pinturaPersona(COLOR_SOBREVIVIENTE.mordido),
+  layout: disposicionPersona("persona-mordida"),
 };
 
 export const capaZombies: LayerProps = {

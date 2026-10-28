@@ -25,8 +25,8 @@ export default function RegistroIconos() {
         try {
           if (mapa.hasImage(nombre)) continue;
           const imagen = new Image(LADO_ICONO, LADO_ICONO);
-          const { fondo, forma, borde } = ICONOS_MAPA[nombre];
-          imagen.src = svgIconoMapa(svg.outerHTML, fondo, forma, borde);
+          const { fondo, forma, borde, halo } = ICONOS_MAPA[nombre];
+          imagen.src = svgIconoMapa(svg.outerHTML, fondo, forma, borde, halo);
           await imagen.decode();
           // Se vuelve a verificar después del await: una llamada en paralelo (styleimagemissing) puede haberlo agregado ya.
           if (!cancelado && !mapa.hasImage(nombre)) mapa.addImage(nombre, imagen, { pixelRatio: 2 });

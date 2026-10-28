@@ -28,10 +28,10 @@ export default function RielIconos({ tab, abierto, noLeidas, onElegir, onAlterna
     >
       <span
         className="hidden font-pixel text-xl text-calabaza-500 [text-shadow:2px_2px_0_#9a031e] md:mb-2 md:block"
-        title="Escape de Manta Zombie"
+        title="Spondylus Z"
         aria-hidden
       >
-        EM
+        SZ
       </span>
       {/* Muestra u oculta el panel lateral (hoja inferior en teléfonos); el mapa se queda. */}
       <button
