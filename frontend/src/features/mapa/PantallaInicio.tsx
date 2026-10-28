@@ -10,7 +10,7 @@ import EstadoRonda from "@/features/mapa/ui/inicio/EstadoRonda";
 import FondoGrafo from "@/features/mapa/ui/inicio/FondoGrafo";
 import RefugiosInicio, { type FilaRefugio } from "@/features/mapa/ui/inicio/RefugiosInicio";
 
-// Only what the engine really does (no shelter-capacity claims: that Pro feature is not built).
+// Only what the engine really does: routes every turn, predicts runners and never sends anyone to a full shelter.
 const PASOS = [
   {
     titulo: "Turnos de 2 segundos",
@@ -22,7 +22,7 @@ const PASOS = [
   },
   {
     titulo: "Hacia el refugio",
-    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores, y responde en milisegundos.",
+    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores. Cada refugio tiene 50 lugares y nadie es enviado a uno lleno. Responde en milisegundos.",
   },
 ];
 

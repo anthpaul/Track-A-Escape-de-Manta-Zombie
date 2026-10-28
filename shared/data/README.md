@@ -9,7 +9,7 @@ Su estructura respeta `docs/CONTRATO_GRAFO.md`: `version`, `nodos`, `calles` y
 - 284 nodos y 384 calles; red conectada, con alternativas y geometrías reales.
 - Tipos: 101 avenidas, 225 calles, 42 callejones y 16 tramos de puente.
 - Los cuatro barrios de inicio están representados.
-- Cuatro refugios elegidos por Alex, con capacidad provisional de 200 cada uno.
+- Cuatro refugios elegidos por Alex, con capacidad de 50 cada uno (Pro: 200 lugares para los 200 sobrevivientes de la R3; la organización no fijó un valor).
 - `C-0199` es un puente real con un desvío disponible al quitar esa calle.
 
 El archivo `manta.provenance.json` contiene los hashes de los originales, mapeos

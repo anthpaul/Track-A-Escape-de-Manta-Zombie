@@ -342,15 +342,28 @@ export function resolverMordidasPorCruce(
  * Mark survivors that have reached a refuge node as "a_salvo".
  * Call this AFTER resolving bites so a bitten survivor at a refuge is "mordido",
  * not "a_salvo".
+ *
+ * With `capacidades` (refuge node → capacity, Pro), a full refuge admits nobody else: whoever
+ * arrives stays "en_ruta" at the door. Simultaneous arrivals get in by id until it is full.
  */
 export function resolverLlegadas(
   sobrevivientes: Sobreviviente[],
   nodosRefugio: ReadonlySet<string>,
+  capacidades?: ReadonlyMap<string, number>,
 ): void {
+  const ocupacion = new Map<string, number>();
   for (const s of sobrevivientes) {
-    if (s.estado === "en_ruta" && nodosRefugio.has(s.nodo)) {
-      s.estado = "a_salvo";
-    }
+    if (s.estado === "a_salvo") ocupacion.set(s.nodo, (ocupacion.get(s.nodo) ?? 0) + 1);
+  }
+  const llegando = sobrevivientes
+    .filter((s) => s.estado === "en_ruta" && nodosRefugio.has(s.nodo))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  for (const s of llegando) {
+    const capacidad = capacidades?.get(s.nodo) ?? Infinity;
+    const dentro = ocupacion.get(s.nodo) ?? 0;
+    if (dentro >= capacidad) continue;
+    s.estado = "a_salvo";
+    ocupacion.set(s.nodo, dentro + 1);
   }
 }
 

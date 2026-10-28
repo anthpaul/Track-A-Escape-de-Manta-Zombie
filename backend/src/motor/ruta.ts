@@ -20,6 +20,8 @@ export function calcularRutaCompleta(
   nodoActual: string,
   contexto: ContextoGrafo,
   mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,
+  // Shelter capacity (Pro): the same allowed shelters /paso uses for this survivor (cupos.ts).
+  refugiosPermitidos?: ReadonlySet<string>,
 ): RutaCompleta {
   const peligros = calcularPeligros(mundo, contexto.indexado);
   const ruta = [nodoActual];
@@ -28,7 +30,7 @@ export function calcularRutaCompleta(
 
   // A simple path never has more nodes than the graph, so this always ends.
   for (let i = 0; i < contexto.coordenadas.size; i++) {
-    const paso = buscarRuta(ruta[ruta.length - 1], contexto, mundo, peligros);
+    const paso = buscarRuta(ruta[ruta.length - 1], contexto, mundo, peligros, refugiosPermitidos);
     if (paso.tipo === "ya_en_refugio") return { refugio: paso.refugio, ruta };
     if (paso.tipo === "sin_ruta") break;
     refugio = paso.refugio;

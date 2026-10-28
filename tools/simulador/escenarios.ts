@@ -135,6 +135,9 @@ interface OpcionesEscenario {
   modo?: "evaluacion" | "demo";
 }
 
+// Refuge node → capacity (Pro): a full refuge admits nobody else (shared/reglas.ts resolverLlegadas).
+const CAPACIDAD_REFUGIO: ReadonlyMap<string, number> = new Map(cargarGrafo().refugios.map((r) => [r.nodo, r.capacidad]));
+
 // 150 turns × 2 s = 5 minutes (official round duration)
 const TOTAL_TURNOS = 150;
 
@@ -175,6 +178,7 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
     partidaId: nuevaIdentidad(1, opts.modo),
     ronda: 1,
     nodosRefugio,
+    capacidadRefugio: CAPACIDAD_REFUGIO,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
@@ -241,6 +245,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     partidaId: nuevaIdentidad(2, opts.modo),
     ronda: 2,
     nodosRefugio,
+    capacidadRefugio: CAPACIDAD_REFUGIO,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
@@ -313,6 +318,7 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     partidaId: nuevaIdentidad(3, opts.modo),
     ronda: 3,
     nodosRefugio,
+    capacidadRefugio: CAPACIDAD_REFUGIO,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.

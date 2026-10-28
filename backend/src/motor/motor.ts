@@ -16,6 +16,7 @@ import { crearGrafo, type Grafo } from "@abcstack/shared";
 // manta.json is bundled by esbuild alongside handler.js; it is never fetched at runtime.
 import grafoData from "@abcstack/shared/data/manta.json";
 import { buscarRuta, crearContextoGrafo, type ContextoGrafo, type ResultadoBusqueda } from "./astar";
+import { asignarCupos } from "./cupos";
 import { calcularPeligros } from "./peligros";
 import { elegirEscape } from "./evasion";
 import type { MundoTurno } from "./fuente-mundo";
@@ -57,7 +58,13 @@ export function calcularSiguienteNodo(
   peligrosDelTurno?: ReturnType<typeof calcularPeligros>,
 ): SalidaMotor {
   const peligros = peligrosDelTurno ?? calcularPeligros(entrada.mundo, contexto.indexado);
-  const resultado = buscarRuta(entrada.nodoActual, contexto, entrada.mundo, peligros);
+  // Shelter capacity (Pro): head only where this survivor has a place; if none of those is reachable
+  // this turn, any shelter with room; only then escape.
+  const cupos = asignarCupos(contexto, entrada.mundo);
+  let resultado = buscarRuta(entrada.nodoActual, contexto, entrada.mundo, peligros, cupos?.refugiosPara(entrada.sobrevivienteId));
+  if (resultado.tipo === "sin_ruta" && cupos && cupos.conLugar.size > 0) {
+    resultado = buscarRuta(entrada.nodoActual, contexto, entrada.mundo, peligros, cupos.conLugar);
+  }
 
   let siguienteNodo: string;
   switch (resultado.tipo) {

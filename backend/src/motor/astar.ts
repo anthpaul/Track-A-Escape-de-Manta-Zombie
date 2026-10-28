@@ -137,17 +137,20 @@ export function buscarRuta(
   contexto: ContextoGrafo,
   mundo: MundoPeligros,
   peligrosPrecomputados?: Peligros,
+  // Shelter capacity (Pro, cupos.ts): only these shelters count as destinations; undefined = all.
+  refugiosPermitidos?: ReadonlySet<string>,
 ): ResultadoBusqueda {
   const { indexado } = contexto;
   const peligros = peligrosPrecomputados ?? calcularPeligros(mundo, indexado);
   const aristasBloqueadas = new Set(mundo.aristasBloqueadas);
 
+  const permitido = (r: Readonly<Refugio>) => !refugiosPermitidos || refugiosPermitidos.has(r.id);
   const refugiosDisponibles = contexto.refugios.filter(
-    (r) => !peligros.nodosProhibidos.has(r.nodo),
+    (r) => permitido(r) && !peligros.nodosProhibidos.has(r.nodo),
   );
 
-  // Already at a shelter?
-  const refugioActual = contexto.refugios.find((r) => r.nodo === nodoActual);
+  // Already at a shelter? Waiting at the door of a full one does not count: keep looking.
+  const refugioActual = contexto.refugios.find((r) => r.nodo === nodoActual && permitido(r));
   if (refugioActual) {
     return { tipo: "ya_en_refugio", nodo: nodoActual, refugio: refugioActual.id };
   }

@@ -123,3 +123,11 @@ test("demo rounds stop once nobody is on the road; evaluation rounds always play
     assert.equal(crear({ semilla: 1, modo: "demo" }).config.detenerSinActivos, true);
   }
 });
+
+test("every round enforces the shelter capacities from the graph (Pro)", () => {
+  for (const crear of [crearEscenarioR1, crearEscenarioR2, crearEscenarioR3]) {
+    const { config } = crear({ semilla: 1 });
+    assert.equal(config.capacidadRefugio?.size, 4);
+    assert.ok([...config.capacidadRefugio!.values()].every((c) => c === 50));
+  }
+});

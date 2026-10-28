@@ -23,7 +23,7 @@ const ItemTurnoSchema = z.object({
   SK: z.string().refine((key) => key.startsWith(KEYS.prefixes.turnos)
     && /^\d{6}$/.test(key.slice(KEYS.prefixes.turnos.length))),
   ttl: z.number().int().nonnegative(),
-  data: EstadoTurnoSchema.pick({ zombies: true, aristasBloqueadas: true, completo: true }).extend({
+  data: EstadoTurnoSchema.pick({ zombies: true, aristasBloqueadas: true, completo: true, sobrevivientes: true }).partial({ sobrevivientes: true }).extend({
     // Optional duplicated identity must agree with the authoritative keys, when present.
     partidaId: z.string().min(1).optional(),
     turno: NumeroTurnoSchema.optional(),
@@ -98,6 +98,10 @@ export class DynamoFuente implements FuenteMundo {
       partidaId, turno: actualTurn,
       zombies: Object.freeze(item.data.zombies.map((zombie) => Object.freeze(zombie))),
       aristasBloqueadas: Object.freeze(item.data.aristasBloqueadas),
+      // Shelter capacity (Pro): who is where this turn. Only id, node and state reach the motor.
+      ...(item.data.sobrevivientes && {
+        sobrevivientes: Object.freeze(item.data.sobrevivientes.map(({ id, nodo, estado }) => Object.freeze({ id, nodo, estado }))),
+      }),
     });
     // Cache under the real turn, never alias an older fallback as the requested N.
     this.cache.set(cacheKey(partidaId, actualTurn), { mundo, ttl: item.ttl });

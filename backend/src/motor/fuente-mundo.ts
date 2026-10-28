@@ -6,6 +6,8 @@ export type MundoTurno = Readonly<{
   turno: number;
   zombies: readonly Readonly<EstadoTurno["zombies"][number]>[];
   aristasBloqueadas: readonly string[];
+  // Survivors of the turn (Pro: shelter capacity). Optional: without them the motor ignores capacity.
+  sobrevivientes?: readonly Readonly<Pick<EstadoTurno["sobrevivientes"][number], "id" | "nodo" | "estado">>[];
 }>;
 
 export interface FuenteMundo {

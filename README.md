@@ -104,7 +104,17 @@ Las penalizaciones son menores que un turno a propósito: desvían la ruta cuand
 
 ### Elección y capacidad de refugios
 
-El A* busca a la vez hacia los cuatro refugios y se queda con el de menor costo total, descartando los que están dentro de una zona prohibida. La capacidad de cada refugio es provisional (200, a confirmar con la organización) y el límite de capacidad del nivel Pro **no está implementado**: el mapa muestra la ocupación, pero el motor todavía no evita refugios llenos.
+El A* busca a la vez hacia los cuatro refugios y se queda con el de menor costo total, descartando los que están dentro de una zona prohibida.
+
+**Capacidad (nivel Pro): ningún sobreviviente llega a un refugio lleno.** Cada refugio admite **50 personas** (200 lugares para los 200 de la R3; la organización no fijó un valor). El simulador lo hace cumplir: un refugio lleno no deja entrar a nadie más y quien llega queda esperando en la puerta. El motor reparte los lugares en cada turno sin escribir nada (`backend/src/motor/cupos.ts`):
+
+1. lugares libres = capacidad − quienes ya están a salvo en ese refugio (lo lee del mismo turno que usa para los zombies);
+2. todos los pares (sobreviviente en ruta, refugio) ordenados por distancia en calles, sin calles bloqueadas, y después por id: cada uno se queda con el refugio más cercano que todavía tiene lugar;
+3. el A* solo apunta a su refugio y a los lugares que nadie reclamó; si ninguno es alcanzable ese turno, a cualquier refugio con lugar; recién después, el escape.
+
+Como sale solo del turno, todos los pedidos de `/paso` de ese turno coinciden sin coordinarse, y la latencia no cambia. La ruta que dibuja el mapa y las rondas demo usan el mismo reparto.
+
+Medición local (8 semillas por ronda, cupo de 50 en el simulador): en la R3, sin el reparto, hubo **275 turnos-persona parados en la puerta de un refugio lleno**; con el reparto, **0**. La supervivencia no cambia (14,7 %) y en R1 y R2 ningún refugio llega a llenarse.
 
 ### Estado compartido y latencia
 
@@ -258,7 +268,7 @@ queda pendiente de evidencia de facturación.
 
 - **Latencia medida de la R3:** depende de la CPU del simulador que la mide. Con 200 pedidos a la vez hace falta correrlo a 2048 MB (`demo.sh modo-prueba`); a 1024 MB el p95 medido sube a ~200 ms aunque el API responda igual de rápido.
 - **Simulador del jurado (pregunta abierta a la organización):** si el jurado corre su propio simulador, el motor necesita leer los zombies de su `/estado`. La lectura del mundo está detrás de una interfaz (`FuenteMundo`), pero hoy solo existe la implementación que lee nuestro DynamoDB.
-- **Capacidad de refugios (Pro):** no implementada; capacidades provisionales de 200.
+- **Capacidad de refugios (Pro):** el valor de 50 por refugio es nuestro; si la organización fija otro, se cambia en `shared/data/manta.json`.
 - **Flota de rescate (Pro):** no implementada.
 - **Escenarios de prueba propios:** las cantidades de zombies y los turnos de los eventos son nuestros, no los oficiales; sirven para comparar versiones del motor, no para predecir el puntaje.
 - **El motor no conoce la posición de los dormidos** hasta que despiertan: no usa información invisible.

@@ -11896,25 +11896,25 @@
     {
       "id": "R-01",
       "nombre": "Universidad ULEAM",
-      "capacidad": 200,
+      "capacidad": 50,
       "nodo": "N-0273"
     },
     {
       "id": "R-02",
       "nombre": "Faro de Manta",
-      "capacidad": 200,
+      "capacidad": 50,
       "nodo": "N-0241"
     },
     {
       "id": "R-03",
       "nombre": "Faro de Jaramijó",
-      "capacidad": 200,
+      "capacidad": 50,
       "nodo": "N-0090"
     },
     {
       "id": "R-04",
       "nombre": "Aeropuerto Eloy Alfaro",
-      "capacidad": 200,
+      "capacidad": 50,
       "nodo": "N-0249"
     }
   ]

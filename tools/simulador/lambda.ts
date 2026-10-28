@@ -81,13 +81,20 @@ export function crearHandler(deps: {
     const motorHttp = modo === "evaluacion" ? crearMotorHttp() : undefined;
     // The demo motor reads the live round config, which only exists once the scenario is built.
     let vivo: ConfigRonda | undefined;
-    const motor = motorHttp ?? crearMotorEnProceso(() => vivo?.zombies ?? [], () => vivo?.aristasBloqueadas ?? []);
+    const motor =
+      motorHttp ??
+      crearMotorEnProceso(() => vivo?.zombies ?? [], () => vivo?.aristasBloqueadas ?? [], () => vivo?.sobrevivientes ?? []);
     const escenario = crear({ semilla, motor, reloj: deps.reloj ?? relojReal, modo });
     const { config } = escenario;
     vivo = config;
     // Publish each survivor's next step so the map draws its arrow; free here because the motor runs in process.
     config.planificarSiguiente = (s) =>
-      siguientePasoEnProceso({ sobrevivienteId: s.id, nodoActual: s.nodo, turno: 0 }, config.zombies, config.aristasBloqueadas);
+      siguientePasoEnProceso(
+        { sobrevivienteId: s.id, nodoActual: s.nodo, turno: 0 },
+        config.zombies,
+        config.aristasBloqueadas,
+        config.sobrevivientes,
+      );
 
     const persistencia = new DynamoPersistencia(deps.cliente, deps.tabla, config.partidaId, ronda);
     // The map panel shows the live /paso p95 of evaluation rounds (AGENTS.md §5 metricas.p95ms).

@@ -284,6 +284,28 @@ test("resolverLlegadas: survivor not at a refuge stays en_ruta", () => {
   assert.equal(ss[0]!.estado, "en_ruta");
 });
 
+test("resolverLlegadas: a full shelter admits nobody else; the rest wait at the door, in id order", () => {
+  const ss: Sobreviviente[] = [
+    { id: "S-0001", nodo: "N-0001", estado: "a_salvo" }, // already inside: 1 of 3
+    { id: "S-0004", nodo: "N-0001", estado: "en_ruta" },
+    { id: "S-0002", nodo: "N-0001", estado: "en_ruta" },
+    { id: "S-0003", nodo: "N-0001", estado: "en_ruta" },
+  ];
+  resolverLlegadas(ss, new Set(["N-0001"]), new Map([["N-0001", 3]]));
+  assert.deepEqual(ss.map((s) => [s.id, s.estado]), [
+    ["S-0001", "a_salvo"],
+    ["S-0004", "en_ruta"], // no room left once S-0002 and S-0003 got in
+    ["S-0002", "a_salvo"],
+    ["S-0003", "a_salvo"],
+  ]);
+});
+
+test("resolverLlegadas: without capacities every arrival gets in, as before", () => {
+  const ss: Sobreviviente[] = ["S-0001", "S-0002"].map((id) => ({ id, nodo: "N-0001", estado: "en_ruta" as const }));
+  resolverLlegadas(ss, new Set(["N-0001"]));
+  assert.deepEqual(ss.map((s) => s.estado), ["a_salvo", "a_salvo"]);
+});
+
 test("resolverLlegadas: bitten survivor at a refuge stays mordido (bite takes priority)", () => {
   const ss: Sobreviviente[] = [{ id: "S-0001", nodo: "N-0001", estado: "mordido" }];
   resolverLlegadas(ss, new Set(["N-0001"]));
