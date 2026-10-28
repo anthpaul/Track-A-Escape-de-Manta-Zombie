@@ -1,4 +1,4 @@
-import type { CircleLayerSpecification } from "maplibre-gl";
+import type { CircleLayerSpecification, ExpressionSpecification } from "maplibre-gl";
 import type { LayerProps } from "react-map-gl/maplibre";
 import {
   COLOR_CALLE,
@@ -16,11 +16,14 @@ import {
 // Glyphs available on the CARTO Dark Matter font server.
 const FUENTE_ETIQUETAS = ["Montserrat SemiBold", "Open Sans Bold", "Noto Sans Regular"];
 
-// The walkable graph, colored by street type. Blocked streets are red, thicker and drawn on top
-// (line-sort-key), so the collapsed bridge (R2) and the blocked streets (R3) always stand out.
+const esPuenteDanado: ExpressionSpecification = ["all", ["get", "bloqueada"], ["==", ["get", "tipo"], "puente"]];
+
+// The walkable graph, colored by street type. Bridges are a double line (line-gap-width). Blocked
+// streets are red, thicker and drawn on top (line-sort-key); damaged bridges have their own layer.
 export const capaCalles: LayerProps = {
   id: "calles",
   type: "line",
+  filter: ["!", esPuenteDanado],
   layout: {
     "line-cap": "round",
     "line-join": "round",
@@ -40,9 +43,10 @@ export const capaCalles: LayerProps = {
     "line-width": [
       "case",
       ["get", "bloqueada"],
-      6,
-      ["match", ["get", "tipo"], "avenida", 3.5, "puente", 4, "callejon", 1.2, 2],
+      5,
+      ["match", ["get", "tipo"], "avenida", 3.5, "puente", 1.5, "callejon", 1.2, 2],
     ],
+    "line-gap-width": ["match", ["get", "tipo"], "puente", 2.5, 0],
     // Quiet network: only blocked streets and bridges are fully opaque.
     "line-opacity": [
       "case",
@@ -50,6 +54,41 @@ export const capaCalles: LayerProps = {
       1,
       ["match", ["get", "tipo"], "puente", 0.9, "avenida", 0.7, "callejon", 0.4, 0.6],
     ],
+  },
+};
+
+// Damaged bridge (S1): the same double line, dashed in warning orange.
+export const capaPuentesDanados: LayerProps = {
+  id: "puentes-danados",
+  type: "line",
+  filter: esPuenteDanado,
+  layout: { "line-cap": "butt", "line-join": "round" },
+  paint: {
+    "line-color": COLOR_CALLE.danado,
+    "line-width": 2,
+    "line-gap-width": 2.5,
+    "line-dasharray": [2, 1.5],
+  },
+};
+
+// Traffic signs on blocked streets (S1). Stop bars are rotated by the street bearing so they cross it.
+export const capaSenales: LayerProps = {
+  id: "senales",
+  type: "symbol",
+  layout: {
+    "icon-image": ["concat", "senal-", ["get", "tipo"]],
+    "icon-size": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      // The triangle has no badge behind it, so it is scaled up to read as large as the disc.
+      12, ["match", ["get", "tipo"], "tope", 0.3, "peligro", 0.6, 0.4],
+      16, ["match", ["get", "tipo"], "tope", 0.5, "peligro", 1.05, 0.75],
+    ],
+    "icon-rotate": ["match", ["get", "tipo"], "tope", ["get", "rumbo"], 0],
+    "icon-rotation-alignment": "map",
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
   },
 };
 

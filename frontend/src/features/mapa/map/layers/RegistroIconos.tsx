@@ -45,8 +45,8 @@ export default function RegistroIconos() {
 
   return (
     <div ref={contenedor} hidden aria-hidden>
-      {Object.entries(ICONOS_MAPA).map(([nombre, { Icono, trazo, relleno }]) => (
-        <Icono key={nombre} data-icono={nombre} size={32} color={trazo} fill={relleno ?? "none"} strokeWidth={2.25} />
+      {Object.entries(ICONOS_MAPA).map(([nombre, { Icono, trazo, relleno, grosor }]) => (
+        <Icono key={nombre} data-icono={nombre} size={32} color={trazo} fill={relleno ?? "none"} strokeWidth={grosor ?? 2.25} />
       ))}
     </div>
   );
