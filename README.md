@@ -284,7 +284,8 @@ AWS Budget con alerta desde el primer día (alertas por SNS al 50 %, 80 % y 100 
 gratuitas. Incluye supuestos no medidos y tarifas de referencia pendientes de
 confirmación regional; no es una factura ni un máximo. **Gasto real del evento:
 USD 0.50** en octubre hasta la mañana del 28 (historial del AWS Budget, captura en
-`docs/costos-reales.png`), bajo un Budget de USD 20 con alertas. Lo que cuesta es la demo encendida (~USD 2.85 por día sin capa
+`docs/costos-reales.png`), bajo un Budget de USD 20 con alertas. Crece unos USD 0.11 por día
+mientras la demo está encendida (USD 0.39 el 27, USD 0.50 el 28). Lo que cuesta es la demo encendida (~USD 2.85 por día sin capa
 gratuita); apagada, el costo vuelve a casi cero.
 
 ## Limitaciones

@@ -166,14 +166,14 @@ AWS; no se presupone un contrato comercial.
 | Fuente y fecha de consulta | Historial de costos mensuales de AWS Budgets (consola), 28 de octubre de 2026 |
 | Gasto real del mes según el Budget | **USD 0.50** de USD 20 presupuestados (varianza de USD 19.50, el 97.49 % del presupuesto sin usar) |
 | Meses anteriores | USD 0.00 de octubre de 2025 a septiembre de 2026: la cuenta no tiene otras cargas |
-| Lectura anterior | USD 0.019 en la madrugada del 28 (CLI, solo lectura); Cost Explorer mostraba USD 0.00 por servicio, por su demora de hasta 24 horas |
+| Cómo evoluciona | Crece mientras la demo está encendida: USD 0.39 el 27 de octubre y USD 0.50 el 28, unos **USD 0.11 por día** con la capa gratuita. La CLI leyó USD 0.019 en la madrugada del 28 porque el Budget se actualiza con hasta 24 horas de demora |
 | Budget configurado | `spookython-mensual`: USD 20 por mes, con alertas al 50 % y 80 % del gasto real y al 100 % del pronóstico |
 | Importe neto atribuible al evento | USD 0.50 |
 | Capturas | `docs/budget.png` muestra el Budget y sus alertas; `docs/costos-reales.png`, el historial de gasto |
 
 Cost Explorer puede tardar hasta 24 horas en mostrar el último gasto, y cada consulta por API cuesta USD 0.01 (este registro hizo dos). La cuenta no tiene otras cargas, así que todo el gasto se atribuye al proyecto.
 
-**Lo que sigue costando:** solo la demo encendida, unos USD 2.85 por día sin capa gratuita (escenario de la sección 3). Después del evento se apaga con `demo_enabled = false` y el costo vuelve a casi cero.
+**Lo que sigue costando:** solo la demo encendida. Hoy son unos USD 0.11 por día porque la capa gratuita cubre casi todo; sin ella serían unos USD 2.85 por día (escenario de la sección 3). Hasta el pitch del viernes 30 se esperan menos de USD 1 en total. Después del evento se apaga con `demo_enabled = false` y el costo vuelve a casi cero.
 
 ## 5. Decisiones y controles
 
