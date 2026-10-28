@@ -12,14 +12,14 @@ set -euo pipefail
 
 export AWS_PROFILE="${AWS_PROFILE:-spookython}"
 export AWS_REGION="${AWS_REGION:-us-east-2}"
-export MSYS_NO_PATHCONV=1 # Git Bash would otherwise rewrite paths and "/api" arguments
+export MSYS_NO_PATHCONV=1 # si no, Git Bash reescribe las rutas y los argumentos "/api"
 
 SITIO="https://d2pm91xddlib8g.cloudfront.net"
 SCHEDULE="spookython-prod-demo-rondas"
 SIMULADOR="spookython-prod-lambda-simulador"
 
-# MSYS_NO_PATHCONV also stops Git Bash from translating temp paths, so a Windows aws or node would
-# look for /tmp/... under C:/tmp. Hand them the native path (a no-op outside Git Bash).
+# MSYS_NO_PATHCONV también impide que Git Bash traduzca las rutas temporales, así que un aws o node de
+# Windows buscaría /tmp/... en C:/tmp. Se les pasa la ruta nativa (no hace nada fuera de Git Bash).
 nativa() { if command -v cygpath > /dev/null; then cygpath -w "$1"; else printf '%s' "$1"; fi; }
 
 estado() {
@@ -35,7 +35,7 @@ estado() {
 cambiar_scheduler() {
   local estado_nuevo="$1" tmp
   tmp="$(mktemp)"
-  # update-schedule needs the whole schedule: read it, keep only writable fields, change State.
+  # update-schedule necesita el schedule completo: se lee, se dejan solo los campos escribibles y se cambia State.
   aws scheduler get-schedule --name "$SCHEDULE" --output json | node -e '
     let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
       const { Arn, CreationDate, LastModificationDate, ...resto } = JSON.parse(s);
@@ -58,9 +58,9 @@ ronda() {
   estado
 }
 
-# A running round holds the lock until it ends (a demo stops once nobody is on the road, at most
-# 5 minutes). Wait for it instead of failing, but only with the demos off: otherwise a new demo
-# would grab the lock again a minute later.
+# Una ronda en curso tiene el candado hasta que termina (una demo se detiene cuando ya nadie está en
+# ruta, como máximo 5 minutos). Se espera en vez de fallar, pero solo con las demos apagadas: si no,
+# una demo nueva volvería a tomar el candado un minuto después.
 esperar_candado() {
   if [ "$(aws scheduler get-schedule --name "$SCHEDULE" --query State --output text)" != "DISABLED" ]; then
     echo "Las rondas demo están prendidas: corré 'tools/demo/demo.sh modo-prueba' antes de evaluar." >&2
@@ -83,22 +83,23 @@ esperar_candado() {
   exit 1
 }
 
-# Fire-test round: the simulator Lambda warms the API, plays all 150 turns calling POST /paso over
-# HTTP from us-east-2 and answers with the metrics. Synchronous: it waits the ~5 minutes of the round.
+# Ronda de prueba de fuego: la Lambda del simulador calienta la API, juega los 150 turnos llamando a
+# POST /paso por HTTP desde us-east-2 y responde con las métricas. Es síncrona: espera los ~5 minutos
+# de la ronda.
 evaluar() {
   local numero="${1:?Uso: demo.sh evaluar <1|2|3> [semilla]}" semilla="${2:-42}" salida
   case "$numero" in 1 | 2 | 3) ;; *) echo "La ronda tiene que ser 1, 2 o 3." >&2; exit 1 ;; esac
   esperar_candado
   salida="$(mktemp)"
   echo "R$numero de evaluación (semilla $semilla): calentando y jugando 150 turnos, unos 5 minutos…"
-  # --cli-read-timeout 0: the CLI would otherwise give up after 60 s while the round is still running.
+  # --cli-read-timeout 0: si no, la CLI se rinde a los 60 s mientras la ronda sigue corriendo.
   aws lambda invoke --function-name "$SIMULADOR" --cli-read-timeout 0 \
     --cli-binary-format raw-in-base64-out --payload "{\"ronda\":$numero,\"semilla\":$semilla,\"modo\":\"evaluacion\"}" "$(nativa "$salida")" > /dev/null
   node -e '
     const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
     if (r.errorMessage) { console.log(`La ronda falló: ${r.errorMessage}`); process.exit(1); }
     if (!r.iniciada) { console.log("No arrancó: otra ronda tiene el candado. Pausá las demos y esperá a que termine la que corre."); process.exit(1); }
-    // An older simulator ignores "modo" and plays a demo: no warm-up, no HTTP, no metrics.
+    // Un simulador anterior ignora "modo" y juega una demo: sin calentamiento, sin HTTP y sin métricas.
     if (r.modo !== "evaluacion" || !r.metricas) { console.log("La Lambda jugó una ronda demo, no de evaluación: falta desplegar el simulador nuevo (npm run build:simulador y terraform apply)."); process.exit(1); }
     for (const o of r.calentamiento) console.log(`  calentamiento ${o.oleada}: ${o.pedidos} pedidos · errores ${o.errores} · p95 ${Math.round(o.p95Ms)} ms`);
     const m = r.metricas, pct = (x) => (x * 100).toFixed(2) + " %";
@@ -109,9 +110,9 @@ evaluar() {
   rm -f "$salida"
 }
 
-# The simulator measures /paso, so its own CPU is part of the measured latency: with 200 requests at
-# once (R3) it needs a full vCPU (2048 MB). The demos run on the same Lambda all day, so it goes back
-# to 1024 MB afterwards (the Terraform value) to keep them cheap.
+# El simulador mide /paso, así que su propia CPU forma parte de la latencia medida: con 200 pedidos a
+# la vez (R3) necesita una vCPU completa (2048 MB). Las demos corren todo el día en la misma Lambda, por
+# eso después vuelve a 1024 MB (el valor de Terraform) para que sigan siendo baratas.
 memoria_simulador() {
   aws lambda update-function-configuration --function-name "$SIMULADOR" --memory-size "$1" --query MemorySize --output text > /dev/null
   aws lambda wait function-updated --function-name "$SIMULADOR"

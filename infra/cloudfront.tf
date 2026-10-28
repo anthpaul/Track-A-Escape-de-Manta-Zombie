@@ -1,7 +1,7 @@
-# One distribution, one domain:
-#   /            -> S3 static export (frontend/out)
-#   /api/*       -> API Gateway, never cached (/paso and /estado change every turn)
-# Same origin for site and API, so the browser needs no CORS in production.
+# Una distribución, un dominio:
+#   /            -> export estático en S3 (frontend/out)
+#   /api/*       -> API Gateway, nunca en caché (/paso y /estado cambian en cada turno)
+# El sitio y la API comparten origen, así que el navegador no necesita CORS en producción.
 
 locals {
   s3_origin_id  = "site-s3"
@@ -10,7 +10,7 @@ locals {
 }
 
 data "aws_cloudfront_cache_policy" "caching_optimized" {
-  # Static site only; the API behavior uses caching_disabled.
+  # Solo para el sitio estático; el behavior de la API usa caching_disabled.
   name = "Managed-CachingOptimized"
 }
 
@@ -18,7 +18,7 @@ data "aws_cloudfront_cache_policy" "caching_disabled" {
   name = "Managed-CachingDisabled"
 }
 
-# API Gateway rejects requests whose Host header is the CloudFront domain.
+# API Gateway rechaza las solicitudes cuya cabecera Host es el dominio de CloudFront.
 data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
@@ -30,13 +30,13 @@ resource "aws_cloudfront_origin_access_control" "site" {
   signing_protocol                  = "sigv4"
 }
 
-# The static export writes /mapa as mapa.html. Map clean URLs to files:
+# El export estático escribe /mapa como mapa.html. Se traducen las URL limpias a archivos:
 #   / -> /index.html, /mapa -> /mapa.html, /mapa/ -> /mapa.html
 resource "aws_cloudfront_function" "rewrite_html" {
   name    = "${local.name_prefix}-rewrite-html"
   runtime = "cloudfront-js-2.0"
   publish = true
-  # Shared with its tests: node --test infra/functions/rewrite-html.test.mjs
+  # Compartido con sus tests: node --test infra/functions/rewrite-html.test.mjs
   code = file("${path.module}/functions/rewrite-html.js")
 }
 

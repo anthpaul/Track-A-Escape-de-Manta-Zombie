@@ -1,4 +1,4 @@
-# Single-table design: see AGENTS.md section 4 for key patterns and access patterns.
+# Diseño de tabla única: ver AGENTS.md sección 4 para los patrones de claves y de acceso.
 resource "aws_dynamodb_table" "main" {
   name         = var.table_name
   billing_mode = "PAY_PER_REQUEST"
@@ -44,7 +44,7 @@ resource "aws_dynamodb_table" "main" {
     enabled = true
   }
 
-  # Every item carries `ttl` (epoch seconds) so round data expires on its own (AGENTS.md §4.2).
+  # Cada ítem lleva `ttl` (epoch en segundos) para que los datos de la ronda expiren solos (AGENTS.md §4.2).
   ttl {
     attribute_name = "ttl"
     enabled        = true

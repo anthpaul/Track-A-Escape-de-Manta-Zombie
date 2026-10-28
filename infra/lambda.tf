@@ -1,4 +1,4 @@
-# Run `npm run build -w backend` first: archive_file zips backend/dist/handler.js.
+# Ejecutar primero `npm run build -w backend`: archive_file comprime backend/dist/handler.js.
 data "archive_file" "api" {
   type        = "zip"
   source_file = "${path.module}/../backend/dist/handler.js"

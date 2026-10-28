@@ -1,4 +1,4 @@
-"""Download original Manta OSM data; do not simplify or export the game graph."""
+"""Descarga los datos OSM originales de Manta; no simplifica ni exporta el grafo del juego."""
 
 import argparse
 import hashlib
@@ -41,7 +41,7 @@ def main(argv=None):
     started = datetime.now(timezone.utc)
     output = args.output_dir / started.strftime("%Y%m%dT%H%M%S%fZ")
     output.mkdir(parents=True, exist_ok=False)
-    # These responses are source artifacts, not disposable HTTP cache.
+    # Estas respuestas son artefactos de origen, no una caché HTTP descartable.
     ox.settings.use_cache = True
     ox.settings.cache_folder = output / "responses"
     ox.settings.logs_folder = Path(tempfile.gettempdir()) / "manta-osmnx-logs"
@@ -57,7 +57,7 @@ def main(argv=None):
     graph_path = output / "manta-original.graphml"
     ox.save_graphml(graph, filepath=graph_path)
 
-    # Save the graph first: a failed label request must not lose street data.
+    # Primero se guarda el grafo: si falla la consulta de etiquetas no se deben perder los datos de calles.
     report = {
         "started_at": started.isoformat(), "bbox_west_south_east_north": args.bbox,
         "osmnx_version": ox.__version__, "network_type": "walk",
