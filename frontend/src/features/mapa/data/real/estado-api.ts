@@ -10,7 +10,10 @@ const SobrevivienteSchema = z.object({
   siguienteNodo: z.string().optional(),
   refugio: z.string().nullable().optional(),
   callesRestantes: z.number().int().nonnegative().optional(),
+  vehiculo: z.string().optional(),
 });
+
+const VehiculoSchema = z.object({ id: z.string(), nodo: z.string(), pasajeros: z.array(z.string()), destino: z.string().nullable() });
 
 const EstadoSchema = z.object({
   turno: z.number().int().nonnegative(),
@@ -18,6 +21,7 @@ const EstadoSchema = z.object({
   zombies: z.array(z.object({ id: z.string(), tipo: z.enum(["caminante", "corredor", "horda", "dormido"]), nodo: z.string() })),
   aristasBloqueadas: z.array(z.string()),
   sobrevivientes: z.array(SobrevivienteSchema),
+  vehiculos: z.array(VehiculoSchema).optional(),
   // Optional until the simulator publishes shelter occupancy.
   refugios: z.array(z.object({ id: z.string(), ocupacion: z.number().int().nonnegative(), capacidad: z.number().int().nonnegative() })).optional(),
   metricas: z.object({

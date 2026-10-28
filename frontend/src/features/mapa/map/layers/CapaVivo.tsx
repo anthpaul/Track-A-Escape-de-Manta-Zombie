@@ -5,6 +5,7 @@ import { Layer, Source } from "react-map-gl/maplibre";
 import {
   refugiosSinAccesoAGeoJSON,
   sobrevivientesAGeoJSON,
+  vehiculosAGeoJSON,
   zombiesAGeoJSON,
   zonasHordaAGeoJSON,
 } from "@/features/mapa/map/geojson/entidades";
@@ -14,6 +15,7 @@ import {
   capaRefugiosSinAcceso,
   capaRefugiosSinAccesoEtiqueta,
   capaSobrevivientes,
+  capaVehiculos,
   capaZombies,
   capaZonasHorda,
 } from "@/features/mapa/map/layers/estilos";
@@ -32,6 +34,7 @@ export default function CapaVivo({ grafo, snapshot, capas }: Props) {
   );
   const zombies = useMemo(() => zombiesAGeoJSON(grafo, snapshot.zombies), [grafo, snapshot.zombies]);
   const sinAcceso = useMemo(() => refugiosSinAccesoAGeoJSON(grafo, snapshot), [grafo, snapshot]);
+  const vehiculos = useMemo(() => vehiculosAGeoJSON(grafo, snapshot.vehiculos), [grafo, snapshot.vehiculos]);
 
   return (
     <>
@@ -45,6 +48,10 @@ export default function CapaVivo({ grafo, snapshot, capas }: Props) {
       <Source id="sobrevivientes" type="geojson" data={sobrevivientes}>
         <Layer {...conVisibilidad(capaSobrevivientes, capas.sobreviviente)} />
         <Layer {...conVisibilidad(capaMordidos, capas.mordido)} />
+      </Source>
+      {/* Rescue vans travel with the people layer: hiding survivors hides who carries them too. */}
+      <Source id="vehiculos" type="geojson" data={vehiculos}>
+        <Layer {...conVisibilidad(capaVehiculos, capas.sobreviviente)} />
       </Source>
       <Source id="zombies" type="geojson" data={zombies}>
         <Layer {...conFiltro(capaZombies, filtroZombies(capas))} />

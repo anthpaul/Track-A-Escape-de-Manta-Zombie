@@ -180,6 +180,26 @@ export const capaZonasHorda: LayerProps = {
   },
 };
 
+// Rescue vans (Pro): cream badge with a truck, and how many people ride it next to it.
+export const capaVehiculos: LayerProps = {
+  id: "vehiculos",
+  type: "symbol",
+  layout: {
+    "icon-image": "vehiculo",
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.45, 16, 0.85],
+    "icon-allow-overlap": true,
+    "icon-ignore-placement": true,
+    "text-field": ["case", [">", ["get", "pasajeros"], 0], ["concat", ["to-string", ["get", "pasajeros"]], "/4"], ""],
+    "text-font": FUENTE_ETIQUETAS,
+    "text-size": 11,
+    "text-anchor": "left",
+    "text-offset": [1.1, 0],
+    "text-allow-overlap": true,
+    "text-ignore-placement": true,
+  },
+  paint: { "text-color": "#fee8d3", "text-halo-color": "#13030d", "text-halo-width": 1.5 },
+};
+
 // Survivors on the road and bitten ones are separate layers so each can be switched off (Capas tab).
 // Survivors already in a shelter are counted in the panel, not drawn.
 const pinturaPersona = (color: string): CircleLayerSpecification["paint"] => ({

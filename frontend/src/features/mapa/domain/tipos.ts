@@ -35,7 +35,12 @@ export type Sobreviviente = {
   // Optional: filled by the simulator with the same shared/ route function (AGENTS.md §5).
   refugio?: string | null; // destination shelter id, null when no safe route
   callesRestantes?: number;
+  // Rescue fleet (Pro): the van this person is riding, if any.
+  vehiculo?: string;
 };
+
+// Rescue fleet (Pro): a van with up to 4 people on board, heading to `destino` this turn.
+export type Vehiculo = { id: string; nodo: string; pasajeros: string[]; destino: string | null };
 
 export type OcupacionRefugio = { id: string; ocupacion: number; capacidad: number };
 export type Metricas = { vivos: number; aSalvo: number; mordidos: number; p95ms: number | null };
@@ -55,6 +60,7 @@ export type Snapshot = {
   zombies: Zombie[]; // visible only: sleepers are never sent
   aristasBloqueadas: string[];
   sobrevivientes: Sobreviviente[];
+  vehiculos?: Vehiculo[]; // only in rounds with the rescue fleet
   refugios: OcupacionRefugio[];
   metricas: Metricas;
   generadoEn: string; // ISO 8601

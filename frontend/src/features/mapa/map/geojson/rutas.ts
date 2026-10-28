@@ -25,7 +25,8 @@ export function flechasAGeoJSON(
   // 200 survivors share few streets: one arrow per direction, with how many people take it.
   const conteo = new Map<string, number>();
   for (const s of sobrevivientes) {
-    if (s.estado !== "en_ruta" || !s.siguienteNodo || s.siguienteNodo === s.nodo) continue;
+    // A rider goes wherever the van goes: no arrow of their own.
+    if (s.estado !== "en_ruta" || s.vehiculo || !s.siguienteNodo || s.siguienteNodo === s.nodo) continue;
     if (!nodos.has(s.nodo) || !nodos.has(s.siguienteNodo)) continue;
     const clave = `${s.nodo}>${s.siguienteNodo}`;
     conteo.set(clave, (conteo.get(clave) ?? 0) + 1);

@@ -13,6 +13,7 @@
  * (zombies + blocked streets).  The dashboard reads via leerUltimoTurnoCompleto.
  */
 import type { Zombie, Sobreviviente } from "@abcstack/shared";
+import type { Vehiculo } from "@abcstack/shared";
 
 // -------------------------------------------------------------------------
 // Public types
@@ -29,6 +30,8 @@ export interface TurnoParcial {
 /** Full snapshot after phase 2 (complete = true). */
 export interface TurnoCompleto extends TurnoParcial {
   completo: true;
+  /** Rescue fleet (Pro): the vans after this turn, when the round has a fleet. */
+  vehiculos?: Vehiculo[];
 }
 
 export interface PersistenciaPartida {
@@ -46,6 +49,7 @@ export interface PersistenciaPartida {
     turno: number,
     decisiones: ReadonlyMap<string /* sobrevivienteId */, string /* siguienteNodo */>,
     sobrevivientesFinales?: readonly Sobreviviente[],
+    vehiculos?: readonly Vehiculo[],
   ): Promise<void>;
 
   /**
@@ -87,7 +91,7 @@ export function crearPersistenciaMemoria(): PersistenciaPartida {
       turnos.set(parcial.turno, { ...parcial, completo: false });
     },
 
-    async completarTurno(turno, decisiones, sobrevivientesFinales) {
+    async completarTurno(turno, decisiones, sobrevivientesFinales, vehiculos) {
       const existing = turnos.get(turno);
       if (!existing) throw new Error(`Turn ${turno} not found — call guardarTurnoIncompleto first`);
 
@@ -101,6 +105,7 @@ export function crearPersistenciaMemoria(): PersistenciaPartida {
         ...existing,
         sobrevivientes: sobrevivientesActualizados,
         completo: true,
+        ...(vehiculos && { vehiculos: vehiculos.map((v) => ({ ...v, pasajeros: [...v.pasajeros] })) }),
       };
 
       turnos.set(turno, completo);

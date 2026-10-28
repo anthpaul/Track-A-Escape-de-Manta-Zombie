@@ -16,6 +16,8 @@ export const COLOR_ZOMBIE = { caminante: "#fb8b24", corredor: "#e36414", horda: 
 export const COLOR_REFUGIO = { relleno: "#bae8f4", borde: "#0f4c5c" } as const;
 export const COLOR_SOBREVIVIENTE = { en_ruta: "#2fbadd", mordido: "#df319c" } as const;
 export const COLOR_ZONA_HORDA = { relleno: "#9a031e", borde: "#fb3055" } as const;
+// Rescue van (Pro): cream badge, the one light shape on the map that is not a person or a zombie.
+export const COLOR_VEHICULO = { relleno: "#fee8d3", borde: "#13030d" } as const; // calabaza-900
 export const COLOR_RUTA = "#2fbadd"; // marea-700, dashed
 export const COLOR_FLECHA = "#74d1e8"; // marea-800
 export const COLOR_SELECCION = { refugio: "#fb8b24", sobreviviente: "#2fbadd" } as const;

@@ -5,6 +5,7 @@ export const NodoIdSchema = z.string().regex(/^N-\d{4}$/);
 export const SobrevivienteIdSchema = z.string().regex(/^S-\d{4}$/);
 export const CalleIdSchema = z.string().regex(/^C-\d{4}$/);
 export const RefugioIdSchema = z.string().regex(/^R-\d{2}$/);
+export const VehiculoIdSchema = z.string().regex(/^V-\d$/);
 
 export const PasoInputSchema = z.object({
   sobrevivienteId: SobrevivienteIdSchema,
@@ -100,6 +101,16 @@ export const SobrevivienteSchema = z.object({
   siguienteNodo: NodoIdSchema.optional(),
   refugio: RefugioIdSchema.nullable().optional(),
   callesRestantes: z.number().int().nonnegative().optional(),
+  // Rescue fleet (Pro): the van this survivor is riding, if any.
+  vehiculo: VehiculoIdSchema.optional(),
+});
+
+// Rescue fleet (Pro): up to 4 people on board; destino is the node it is heading to this turn.
+export const VehiculoSchema = z.object({
+  id: VehiculoIdSchema,
+  nodo: NodoIdSchema,
+  pasajeros: z.array(SobrevivienteIdSchema).max(4),
+  destino: NodoIdSchema.nullable(),
 });
 
 // Shared snapshots contain visible zombies only, never sleeping zombies.
@@ -112,6 +123,7 @@ export const EstadoTurnoSchema = z.object({
   zombies: z.array(ZombieVisibleSchema),
   aristasBloqueadas: z.array(CalleIdSchema),
   sobrevivientes: z.array(SobrevivienteSchema),
+  vehiculos: z.array(VehiculoSchema).optional(),
   // p95 of every POST /paso latency of the round so far, written by the HTTP simulator when it
   // completes the turn; absent or null when nothing measured /paso (in-process demo rounds).
   p95ms: z.number().nonnegative().nullable().optional(),
@@ -130,3 +142,4 @@ export type Zombie = z.infer<typeof ZombieSchema>;
 export type EstadoSobreviviente = z.infer<typeof EstadoSobrevivienteSchema>;
 export type Sobreviviente = z.infer<typeof SobrevivienteSchema>;
 export type EstadoTurno = z.infer<typeof EstadoTurnoSchema>;
+export type VehiculoEstado = z.infer<typeof VehiculoSchema>;

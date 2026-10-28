@@ -269,7 +269,7 @@ export function resolverMordidasPorNodo(
     zombies.filter((z) => z.tipo !== "dormido").map((z) => z.nodo),
   );
   for (const s of sobrevivientes) {
-    if (s.estado !== "en_ruta") continue;
+    if (s.estado !== "en_ruta" || s.vehiculo) continue; // riding a rescue van: protected
     if (nodosZombieVisibles.has(s.nodo)) {
       s.estado = "mordido";
     }
@@ -317,7 +317,7 @@ export function resolverMordidasPorCruce(
 
   // Check each survivor: did they cross the same street in the OPPOSITE direction?
   for (const s of sobrevivientes) {
-    if (s.estado !== "en_ruta") continue;
+    if (s.estado !== "en_ruta" || s.vehiculo) continue; // riding a rescue van: protected
     const previo = previoSobrevivientes.find((p) => p.id === s.id);
     if (!previo || previo.nodo === s.nodo) continue;  // did not move
     const calle = grafo.calleEntre(previo.nodo, s.nodo);
@@ -356,7 +356,8 @@ export function resolverLlegadas(
     if (s.estado === "a_salvo") ocupacion.set(s.nodo, (ocupacion.get(s.nodo) ?? 0) + 1);
   }
   const llegando = sobrevivientes
-    .filter((s) => s.estado === "en_ruta" && nodosRefugio.has(s.nodo))
+    // People riding a rescue van get out when the van drops them off (flota.ts), not when it drives by.
+    .filter((s) => s.estado === "en_ruta" && !s.vehiculo && nodosRefugio.has(s.nodo))
     .sort((a, b) => a.id.localeCompare(b.id));
   for (const s of llegando) {
     const capacidad = capacidades?.get(s.nodo) ?? Infinity;
