@@ -23,8 +23,8 @@ Rama: `feat/mapa-rediseno` · Entrega: un PR con commits por unidad · Tests: `n
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1 | inline | en curso | |
-| T2 | S2 | inline | pendiente | |
+| T1 | S1 | inline | hecho (120 tests, capturas) | 187efce |
+| T2 | S2 | inline | hecho (captura) | ver log |
 | T3 | S3 | inline | bloqueada por pregunta | |
 | T4 | S4 | inline | bloqueada por paso 4 | |
 | T5 | S5 | inline | bloqueada por imagen | |
@@ -33,3 +33,5 @@ Rama: `feat/mapa-rediseno` · Entrega: un PR con commits por unidad · Tests: `n
 
 - **L1** (27 oct, Anthony): "te paso como quiero que se vea en caso de calle bloqueadas y punetes danados y calles blolqueadas y te mando como quiero que sea el rediseno de la interfaz asi se ve la leyenda y te mando como se ve la parte de ayuda y ademas te envio como seria el diseno movil pero no te lo puedo enviar"
 - **L2** Decisión: arrancar por T1 y T2, que no dependen de nada abierto. El naranja del puente dañado repite el de los zombies; se respeta el diseño porque el triángulo y el punteado lo distinguen.
+- **L3** T1: señales arriba de todas las capas (los zombies las tapaban). La tarjeta al tocar no se probó en captura (headless no hace clic); su texto está cubierto por tests.
+- **L4** T2: leyenda abajo a la derecha (el mapa ocupa todo el ancho bajo el panel; a la izquierda quedaría tapada). Se cierra sola al tocar fuera. Se agregó "Puente dañado" (viene de la imagen 5A).
