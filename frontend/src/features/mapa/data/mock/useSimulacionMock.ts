@@ -6,13 +6,13 @@ import { avanzarTurno, crearSimulacion, type ConfigSimulacion } from "@/features
 
 const TURNO_MS = 2000;
 
-// Emits a fake snapshot every 2 s, like polling GET /api/estado will (N4).
-// When nobody is left on the road, it restarts with the next seed so the demo never freezes.
-// Paused while real snapshots arrive, so the browser does not simulate a round nobody sees.
+// Emite un snapshot falso cada 2 s, como lo hará el polling de GET /api/estado (N4).
+// Cuando no queda nadie en camino, reinicia con la siguiente semilla para que la demo nunca se congele.
+// Se pausa mientras llegan snapshots reales, para que el navegador no simule una ronda que nadie ve.
 export function useSimulacionMock(grafo: Grafo, config: ConfigSimulacion, activo = true): Snapshot {
   const [snapshot, setSnapshot] = useState(() => crearSimulacion(grafo, config, new Date().toISOString()));
-  // Kept outside the state updater: React may run updaters twice in dev (StrictMode),
-  // so they must stay pure.
+  // Se mantiene fuera del updater del estado: React puede ejecutar los updaters dos veces en dev (StrictMode),
+  // así que deben ser puros.
   const actualRef = useRef(snapshot);
   const semillaRef = useRef(config.semilla);
 

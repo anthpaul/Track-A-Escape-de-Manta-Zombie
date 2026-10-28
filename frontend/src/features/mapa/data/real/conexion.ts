@@ -1,8 +1,8 @@
 import type { Conexion, Snapshot } from "@/features/mapa/domain/tipos";
 import type { ResultadoEstado } from "@/features/mapa/data/real/estado-api";
 
-// Three turns: one or two bad polls keep the last real world on screen instead of flashing to the
-// simulation and back (which would also fire alerts for a world that never existed).
+// Tres turnos: uno o dos polls fallidos mantienen en pantalla el último mundo real en lugar de saltar a la
+// simulación y volver (lo que además dispararía alertas de un mundo que nunca existió).
 export const GRACIA_MS = 6000;
 
 export type UltimoReal = { snapshot: Snapshot; recibidoEn: number };
@@ -10,7 +10,7 @@ export type UltimoReal = { snapshot: Snapshot; recibidoEn: number };
 type Entrada = {
   resultado: ResultadoEstado | "pendiente" | "error";
   ultimoReal: UltimoReal | null;
-  ahora: number; // time of the latest poll, success or failure
+  ahora: number; // momento del último poll, exitoso o fallido
 };
 
 type Salida = { snapshot: Snapshot | null; conexion: Conexion; ultimoReal: UltimoReal | null };
@@ -26,9 +26,9 @@ export function resolverConexion({ resultado, ultimoReal, ahora }: Entrada): Sal
   if (ultimoReal && ahora - ultimoReal.recibidoEn < GRACIA_MS) {
     return { snapshot: ultimoReal.snapshot, conexion: "reconectando", ultimoReal };
   }
-  // Between rounds the last real turn stays on screen (labelled "Esperando la próxima ronda"):
-  // jumping to the 200-survivor simulation would make the numbers leap. The simulation is only for a
-  // visitor who has not seen a real game yet, or a broken connection.
+  // Entre rondas el último turno real queda en pantalla (con la etiqueta "Esperando la próxima ronda"):
+  // saltar a la simulación de 200 sobrevivientes haría que los números brincaran. La simulación es solo para
+  // un visitante que todavía no vio una partida real, o para una conexión caída.
   if (resultado !== "error" && resultado.tipo === "sinPartida") {
     return { snapshot: ultimoReal?.snapshot ?? null, conexion: "sin_partida", ultimoReal };
   }

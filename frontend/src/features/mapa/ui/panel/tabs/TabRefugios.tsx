@@ -13,10 +13,10 @@ type Props = {
   onVerEnCamino: (nombre: string) => void;
 };
 
-// Occupancy bar: full → danger red, ≥60% → pumpkin, otherwise tide.
+// Barra de ocupación: lleno → rojo peligro, ≥60% → calabaza, en otro caso → marea.
 const colorBarra = (pct: number) => (pct >= 100 ? "bg-sangre-700" : pct >= 60 ? "bg-calabaza-500" : "bg-marea-700");
 
-// One plain line per shelter: no access (red), who is on the way and how many of them are in danger.
+// Una línea simple por refugio: sin acceso (rojo), quién va en camino y cuántos de ellos están en peligro.
 function estadoRefugio(r: RefugioVista): { texto: string; clase: string } {
   if (r.motivoSinAcceso === "horda") return { texto: "Sin acceso: hay una horda en la entrada", clase: "text-sangre-700" };
   if (r.motivoSinAcceso === "calle") return { texto: "Sin acceso: las calles de entrada están cerradas", clase: "text-sangre-700" };
@@ -40,7 +40,7 @@ export default function TabRefugios(p: Props) {
             onClick={() => p.onSeleccionar(r.id)}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && p.onSeleccionar(r.id)}
             className={cn(
-              // Square corners everywhere in the panel; the selected shelter gets a pumpkin edge on the left.
+              // Esquinas rectas en todo el panel; el refugio seleccionado lleva un borde calabaza a la izquierda.
               "cursor-pointer border-l-2 px-3 py-3 transition-colors",
               elegido ? "border-calabaza-500 bg-crimson-100" : "border-transparent hover:bg-crimson-100/60",
             )}

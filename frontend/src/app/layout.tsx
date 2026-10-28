@@ -3,7 +3,7 @@ import { Geist_Mono, Silkscreen, Space_Grotesk } from "next/font/google";
 import Providers from "./providers";
 import "./globals.css";
 
-// Pixel font for titles, IDs, buttons and short labels; Space Grotesk for running text.
+// Fuente pixel para títulos, IDs, botones y etiquetas cortas; Space Grotesk para el texto corrido.
 const silkscreen = Silkscreen({
   variable: "--font-silkscreen",
   weight: ["400", "700"],
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  viewportFit: "cover", // lets env(safe-area-inset-*) work on phones with a notch or home indicator
+  viewportFit: "cover", // permite que env(safe-area-inset-*) funcione en teléfonos con muesca o indicador de inicio
   themeColor: "#13030d",
 };
 

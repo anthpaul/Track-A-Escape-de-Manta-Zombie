@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type Props = { activo: boolean; onCambiar: () => void; etiqueta: string };
 
-// Accessible on/off switch: pumpkin when on, crimson when off.
+// Interruptor accesible de encendido/apagado: calabaza si está encendido, crimson si está apagado.
 export default function Interruptor({ activo, onCambiar, etiqueta }: Props) {
   return (
     <button
@@ -20,7 +20,7 @@ export default function Interruptor({ activo, onCambiar, etiqueta }: Props) {
     >
       <span
         className={cn(
-          // left-0: inside a <button> an absolute child without an offset starts at the centered content.
+          // left-0: dentro de un <button>, un hijo absoluto sin desplazamiento arranca en el contenido centrado.
           "absolute left-0 top-0.5 size-4 rounded-full bg-calabaza-900 transition-transform",
           activo ? "translate-x-4.5" : "translate-x-0.5",
         )}

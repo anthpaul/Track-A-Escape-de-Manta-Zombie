@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// Turns are 2 s apart: older than this means the feed stopped.
+// Los turnos van cada 2 s: algo más antiguo que esto significa que el flujo se detuvo.
 const LIMITE_MS = 5000;
 
-// "EN VIVO" based on the real age of the last snapshot, never decorative: a frozen map shows it.
+// "EN VIVO" según la edad real del último snapshot, nunca decorativo: un mapa congelado se nota.
 export default function IndicadorEnVivo({ generadoEn }: { generadoEn: string }) {
-  // The clock starts after mount: reading Date.now() during render would differ between the static
-  // prerender and the browser and break hydration.
+  // El reloj arranca después del montaje: leer Date.now() durante el render daría valores distintos entre el
+  // prerender estático y el navegador, y rompería la hidratación.
   const [ahora, setAhora] = useState<number | null>(null);
   useEffect(() => {
     setAhora(Date.now());

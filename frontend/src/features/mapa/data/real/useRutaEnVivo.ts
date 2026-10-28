@@ -4,9 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { API_URL } from "@/features/mapa/data/real/useEstadoEnVivo";
 import { leerRuta } from "@/features/mapa/data/real/ruta-api";
 
-// Planned route of the followed survivor from GET /api/sobrevivientes/:id/ruta (K6), asked once per turn.
-// While the next turn loads, the previous route of the same survivor stays, so the line never blinks.
-// Null when there is nothing real to draw yet: the caller decides the fallback.
+// Ruta planificada del sobreviviente seguido, desde GET /api/sobrevivientes/:id/ruta (K6), pedida una vez por turno.
+// Mientras carga el siguiente turno se mantiene la ruta anterior del mismo sobreviviente, así la línea nunca parpadea.
+// Null cuando todavía no hay nada real que dibujar: quien llama decide el respaldo.
 export function useRutaEnVivo(sobrevivienteId: string | null, turno: number): string[] | null {
   const consulta = useQuery({
     queryKey: ["ruta", sobrevivienteId, turno],
@@ -16,7 +16,7 @@ export function useRutaEnVivo(sobrevivienteId: string | null, turno: number): st
       return leerRuta(await respuesta.json(), sobrevivienteId!);
     },
     enabled: sobrevivienteId !== null,
-    staleTime: Infinity, // a turn's route never changes
+    staleTime: Infinity, // la ruta de un turno nunca cambia
     retry: false,
     placeholderData: (previa, consultaPrevia) => (consultaPrevia?.queryKey[1] === sobrevivienteId ? previa : undefined),
   });

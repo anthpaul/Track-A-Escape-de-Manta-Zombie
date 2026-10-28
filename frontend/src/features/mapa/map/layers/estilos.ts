@@ -10,16 +10,16 @@ import {
   COLOR_ZONA_HORDA,
 } from "@/features/mapa/simbologia/colores";
 
-// MapLibre layer styles. Colors are data-driven expressions over the shared symbology,
-// so one layer styles every feature without per-feature loops.
+// Estilos de las capas de MapLibre. Los colores son expresiones basadas en datos sobre la simbología compartida,
+// así una sola capa da estilo a cada feature sin recorrerlas una por una.
 
-// Glyphs available on the CARTO Dark Matter font server.
+// Glifos disponibles en el servidor de fuentes de CARTO Dark Matter.
 const FUENTE_ETIQUETAS = ["Montserrat SemiBold", "Open Sans Bold", "Noto Sans Regular"];
 
 const esPuenteDanado: ExpressionSpecification = ["all", ["get", "bloqueada"], ["==", ["get", "tipo"], "puente"]];
 
-// The walkable graph, colored by street type. Bridges are a double line (line-gap-width). Blocked
-// streets are red, thicker and drawn on top (line-sort-key); damaged bridges have their own layer.
+// El grafo caminable, coloreado por tipo de calle. Los puentes son una línea doble (line-gap-width). Las calles
+// bloqueadas son rojas, más gruesas y se dibujan encima (line-sort-key); los puentes dañados tienen su propia capa.
 export const capaCalles: LayerProps = {
   id: "calles",
   type: "line",
@@ -47,7 +47,7 @@ export const capaCalles: LayerProps = {
       ["match", ["get", "tipo"], "avenida", 3.5, "puente", 1.5, "callejon", 1.2, 2],
     ],
     "line-gap-width": ["match", ["get", "tipo"], "puente", 2.5, 0],
-    // Quiet network: only blocked streets and bridges are fully opaque.
+    // Red discreta: solo las calles bloqueadas y los puentes son totalmente opacos.
     "line-opacity": [
       "case",
       ["get", "bloqueada"],
@@ -57,7 +57,7 @@ export const capaCalles: LayerProps = {
   },
 };
 
-// Damaged bridge (S1): the same double line, dashed in warning orange.
+// Puente dañado (S1): la misma línea doble, punteada en naranja de advertencia.
 export const capaPuentesDanados: LayerProps = {
   id: "puentes-danados",
   type: "line",
@@ -71,7 +71,7 @@ export const capaPuentesDanados: LayerProps = {
   },
 };
 
-// Traffic signs on blocked streets (S1). Stop bars are rotated by the street bearing so they cross it.
+// Señales de tránsito en calles bloqueadas (S1). Las barras de pare se rotan según el rumbo de la calle para que la crucen.
 export const capaSenales: LayerProps = {
   id: "senales",
   type: "symbol",
@@ -81,7 +81,7 @@ export const capaSenales: LayerProps = {
       "interpolate",
       ["linear"],
       ["zoom"],
-      // The triangle has no badge behind it, so it is scaled up to read as large as the disc.
+      // El triángulo no tiene insignia detrás, así que se agranda para que se lea tan grande como el disco.
       12, ["match", ["get", "tipo"], "tope", 0.3, "peligro", 0.6, 0.4],
       16, ["match", ["get", "tipo"], "tope", 0.5, "peligro", 1.05, 0.75],
     ],
@@ -92,7 +92,7 @@ export const capaSenales: LayerProps = {
   },
 };
 
-// Plain disc under the shelter icon: shelters stay visible even if the Lucide image fails to register.
+// Disco simple bajo el ícono del refugio: los refugios siguen visibles aunque la imagen de Lucide no se registre.
 export const capaRefugiosBase: LayerProps = {
   id: "refugios-base",
   type: "circle",
@@ -122,7 +122,7 @@ export const capaRefugiosEtiquetas: LayerProps = {
     "text-field": ["get", "nombre"],
     "text-font": FUENTE_ETIQUETAS,
     "text-size": 12,
-    // Moves the label to whichever side fits, so it is never cut at the screen edge.
+    // Mueve la etiqueta al lado donde quepa, para que nunca se corte en el borde de la pantalla.
     "text-variable-anchor": ["top", "bottom", "left", "right"],
     "text-radial-offset": 1.2,
     "text-justify": "auto",
@@ -130,7 +130,7 @@ export const capaRefugiosEtiquetas: LayerProps = {
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
 
-// Shelter nobody can reach this turn: danger ring around the shelter and a "SIN ACCESO" tag under its name.
+// Refugio que nadie puede alcanzar en este turno: anillo de peligro alrededor y una etiqueta "SIN ACCESO" bajo su nombre.
 export const capaRefugiosSinAcceso: LayerProps = {
   id: "refugios-sin-acceso",
   type: "circle",
@@ -157,14 +157,14 @@ export const capaRefugiosSinAccesoEtiqueta: LayerProps = {
   paint: { "text-color": COLOR_CALLE.bloqueada, "text-halo-color": "#000000", "text-halo-width": 1.5 },
 };
 
-// Horde zone: the horde node and every neighbor (same set the router forbids). Only the horde node
-// gets one soft ring; each blocked neighbor is a small solid dot, so overlapping zones never pile
-// up into a red blob and every forbidden node stays readable.
+// Zona de horda: el nodo de la horda y todos sus vecinos (el mismo conjunto que prohíbe el motor). Solo el nodo de la horda
+// lleva un anillo suave; cada vecino bloqueado es un punto sólido pequeño, así las zonas superpuestas nunca se
+// amontonan en una mancha roja y cada nodo prohibido sigue siendo legible.
 export const capaZonasHorda: LayerProps = {
   id: "zonas-horda",
   type: "circle",
   paint: {
-    // MapLibre only accepts zoom at the top-level interpolate, so the per-origin match goes inside each stop.
+    // MapLibre solo acepta zoom en el interpolate de primer nivel, así que el match por origen va dentro de cada parada.
     "circle-radius": [
       "interpolate",
       ["linear"],
@@ -180,7 +180,7 @@ export const capaZonasHorda: LayerProps = {
   },
 };
 
-// Rescue vans (Pro): cream badge with a truck, and how many people ride it next to it.
+// Camionetas de rescate (Pro): insignia crema con un camión y, al lado, cuántas personas viajan en ella.
 export const capaVehiculos: LayerProps = {
   id: "vehiculos",
   type: "symbol",
@@ -200,8 +200,8 @@ export const capaVehiculos: LayerProps = {
   paint: { "text-color": "#fee8d3", "text-halo-color": "#13030d", "text-halo-width": 1.5 },
 };
 
-// Survivors on the road and bitten ones are separate layers so each can be switched off (Capas tab).
-// Survivors already in a shelter are counted in the panel, not drawn.
+// Los sobrevivientes en camino y los mordidos son capas separadas para poder apagar cada una (pestaña Capas).
+// Los sobrevivientes que ya están en un refugio se cuentan en el panel, no se dibujan.
 const pinturaPersona = (color: string): CircleLayerSpecification["paint"] => ({
   "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 3, 16, 7],
   "circle-color": color,
@@ -234,7 +234,7 @@ export const capaZombies: LayerProps = {
   },
 };
 
-// Next-step arrow per direction; thicker when more survivors take it.
+// Flecha del siguiente paso por dirección; más gruesa cuantos más sobrevivientes la toman.
 export const capaFlechasLineas: LayerProps = {
   id: "flechas-lineas",
   type: "line",
@@ -259,7 +259,7 @@ export const capaFlechasPuntas: LayerProps = {
   },
 };
 
-// Planned route of the followed survivor: dashed tide-blue line (dasharray is in line widths: 10px / 6px at 4px).
+// Ruta planificada del sobreviviente seguido: línea punteada azul marea (dasharray va en anchos de línea: 10px / 6px a 4px).
 export const capaRuta: LayerProps = {
   id: "ruta",
   type: "line",
@@ -267,7 +267,7 @@ export const capaRuta: LayerProps = {
   paint: { "line-color": COLOR_RUTA, "line-width": 4, "line-dasharray": [2.5, 1.5] },
 };
 
-// The followed person's ring and label take their state color: pink once bitten, tide blue otherwise.
+// El anillo y la etiqueta de la persona seguida toman el color de su estado: rosa si fue mordida, azul marea si no.
 const colorSeguido: ExpressionSpecification = [
   "match",
   ["get", "estado"],
@@ -287,8 +287,8 @@ export const capaSeguido: LayerProps = {
   },
 };
 
-// Selection overlay: shelter = square accent ring (its name is already the shelter label);
-// survivor = tide ring with its id above.
+// Capa de selección: refugio = anillo cuadrado de acento (su nombre ya es la etiqueta del refugio);
+// sobreviviente = anillo marea con su id encima.
 const ETIQUETA_SELECCION = {
   "text-font": FUENTE_ETIQUETAS,
   "text-size": 12,

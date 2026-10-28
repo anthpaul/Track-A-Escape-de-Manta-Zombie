@@ -1,16 +1,16 @@
 import type { Feature, FeatureCollection, LineString, Point, Position } from "geojson";
 import type { Grafo, Sobreviviente } from "@/features/mapa/domain/tipos";
 
-// GeoJSON for the "planned route" requirement (AGENTS.md §2, plan A9): the full route of the
-// followed survivor, plus a short arrow per direction toward each survivor's next node.
+// GeoJSON para el requisito de "ruta planificada" (AGENTS.md §2, plan A9): la ruta completa del
+// sobreviviente seguido, más una flecha corta por dirección hacia el siguiente nodo de cada sobreviviente.
 
 export type FlechaProps = { clave: string; cantidad: number };
 export type PuntaProps = FlechaProps & { rumbo: number };
 
-// Arrow covers this fraction of the street so it does not hide the next node.
+// La flecha cubre esta fracción de la calle para no tapar el siguiente nodo.
 const LARGO_FLECHA = 0.6;
 
-// Compass bearing in degrees (0 = north, 90 = east), good enough at city scale.
+// Rumbo de brújula en grados (0 = norte, 90 = este), suficiente a escala de ciudad.
 function rumbo(desde: Position, hasta: Position): number {
   const dx = (hasta[0] - desde[0]) * Math.cos((desde[1] * Math.PI) / 180);
   const dy = hasta[1] - desde[1];
@@ -22,10 +22,10 @@ export function flechasAGeoJSON(
   sobrevivientes: Sobreviviente[],
 ): { lineas: FeatureCollection<LineString, FlechaProps>; puntas: FeatureCollection<Point, PuntaProps> } {
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
-  // 200 survivors share few streets: one arrow per direction, with how many people take it.
+  // 200 sobrevivientes comparten pocas calles: una flecha por dirección, con cuántas personas la toman.
   const conteo = new Map<string, number>();
   for (const s of sobrevivientes) {
-    // A rider goes wherever the van goes: no arrow of their own.
+    // Quien viaja en camioneta va adonde vaya la camioneta: no tiene flecha propia.
     if (s.estado !== "en_ruta" || s.vehiculo || !s.siguienteNodo || s.siguienteNodo === s.nodo) continue;
     if (!nodos.has(s.nodo) || !nodos.has(s.siguienteNodo)) continue;
     const clave = `${s.nodo}>${s.siguienteNodo}`;
@@ -48,7 +48,7 @@ export function flechasAGeoJSON(
   return { lineas: { type: "FeatureCollection", features: lineas }, puntas: { type: "FeatureCollection", features: puntas } };
 }
 
-// Full route as one line, following each street's drawn geometry in walking direction.
+// Ruta completa como una sola línea, siguiendo la geometría dibujada de cada calle en el sentido de la marcha.
 export function rutaAGeoJSON(grafo: Grafo, ruta: string[]): FeatureCollection<LineString, { pasos: number }> {
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const coordenadas: Position[] = [];
@@ -56,7 +56,7 @@ export function rutaAGeoJSON(grafo: Grafo, ruta: string[]): FeatureCollection<Li
   for (let i = 1; i < ruta.length; i++) {
     const a = nodos.get(ruta[i - 1]);
     const b = nodos.get(ruta[i]);
-    // An unknown node breaks the route: stop there instead of drawing a straight jump across it.
+    // Un nodo desconocido corta la ruta: se detiene ahí en lugar de dibujar un salto recto sobre él.
     if (!a || !b) break;
     const calle = grafo.calles.find(
       (c) => (c.desde === a.id && c.hasta === b.id) || (c.desde === b.id && c.hasta === a.id),
@@ -64,7 +64,7 @@ export function rutaAGeoJSON(grafo: Grafo, ruta: string[]): FeatureCollection<Li
     let tramo: Position[] =
       calle && calle.geometria.length >= 2 ? calle.geometria : [[a.lng, a.lat], [b.lng, b.lat]];
     if (calle && calle.geometria.length >= 2 && calle.desde !== a.id) tramo = [...tramo].reverse();
-    // Skip the first point of every segment after the first: it repeats the previous end.
+    // Se omite el primer punto de cada tramo después del primero: repite el final del anterior.
     coordenadas.push(...(coordenadas.length === 0 ? tramo : tramo.slice(1)));
   }
 

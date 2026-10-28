@@ -2,8 +2,8 @@ import { nodosBloqueadosPorHordas, refugiosSinAcceso } from "./grafo";
 import { lugarDeNodo, nombreSobreviviente, refugioMasCercano } from "./lugares";
 import type { Grafo, Snapshot } from "./tipos";
 
-// Alerts are not part of GET /api/estado: they are derived in the front by comparing a turn with
-// the previous one. Ids are built from the event, so the same event never raises two alerts.
+// Las alertas no forman parte de GET /api/estado: se derivan en el front comparando un turno con
+// el anterior. Los ids se construyen a partir del evento, así el mismo evento nunca genera dos alertas.
 
 export type TipoAlerta = "horda" | "calle_bloqueada" | "refugio_lleno" | "mordido" | "llegada";
 
@@ -15,12 +15,12 @@ export type Alerta = {
   descripcion: string;
   refugioId?: string;
   sobrevivienteId?: string;
-  cantidad?: number; // people covered by a bite or arrival alert
+  cantidad?: number; // personas incluidas en una alerta de mordida o de llegada
 };
 
 const mayuscula = (texto: string) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
-// The most repeated value: "most of the bitten were near X".
+// El valor más repetido: "la mayoría de los mordidos estaba cerca de X".
 function masFrecuente(valores: string[]): string {
   const cuenta = new Map<string, number>();
   for (const v of valores) cuenta.set(v, (cuenta.get(v) ?? 0) + 1);
@@ -33,7 +33,7 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const alertas: Alerta[] = [];
 
-  // Shelters that became unreachable this turn, named in the horde alert that caused it.
+  // Refugios que quedaron inalcanzables en este turno, nombrados en la alerta de horda que lo provocó.
   const cortadosAntes = refugiosSinAcceso(grafo, previo);
   const recienCortados = [...refugiosSinAcceso(grafo, actual)].filter((id) => !cortadosAntes.has(id));
   const nombreRefugio = (id: string) => grafo.refugios.find((r) => r.id === id)?.nombre ?? id;
@@ -57,9 +57,9 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
     });
   }
 
-  // Survivors whose route changed this turn: another shelter, or a route that got longer even after
-  // the step they just took (standing still keeps it equal, so it is not counted). Needs the optional
-  // refugio / callesRestantes fields; without them nobody is counted.
+  // Sobrevivientes cuya ruta cambió en este turno: otro refugio, o una ruta que se alargó incluso después
+  // del paso que acaban de dar (quedarse quieto la deja igual, así que no cuenta). Necesita los campos
+  // opcionales refugio / callesRestantes; sin ellos no se cuenta a nadie.
   const antes = new Map(previo.sobrevivientes.map((s) => [s.id, s]));
   const desviados = actual.sobrevivientes.filter((s) => {
     const p = antes.get(s.id);
@@ -121,7 +121,7 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
     });
   }
 
-  // Arrivals, one alert per shelter. Good news: they never pop up the toast (see esUrgente).
+  // Llegadas, una alerta por refugio. Son buenas noticias: nunca abren el toast (ver esUrgente).
   const aSalvoAntes = new Set(previo.sobrevivientes.filter((s) => s.estado === "a_salvo").map((s) => s.id));
   const llegadas = new Map<string, number>();
   for (const s of actual.sobrevivientes) {
@@ -145,13 +145,13 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
   return alertas;
 }
 
-// Bad news interrupts (toast, unread badge); arrivals happen almost every turn and only get listed.
+// Las malas noticias interrumpen (toast, insignia de no leídas); las llegadas ocurren casi cada turno y solo se listan.
 export const esUrgente = (a: Alerta) => a.tipo !== "llegada";
 
 export type TonoResumen = "mordido" | "peligro" | "aviso" | "llegada";
 export type ChipResumen = { texto: string; tono: TonoResumen };
 
-// One line for the turn bar over the map: "7 mordidos · 1 horda nueva · 2 llegaron".
+// Una línea para la barra de turno sobre el mapa: "7 mordidos · 1 horda nueva · 2 llegaron".
 export function resumenTurno(alertas: Alerta[], turno: number): ChipResumen[] {
   const delTurno = alertas.filter((a) => a.turno === turno);
   const contar = (tipo: TipoAlerta) => delTurno.filter((a) => a.tipo === tipo).length;
@@ -170,7 +170,7 @@ export function resumenTurno(alertas: Alerta[], turno: number): ChipResumen[] {
   return chips.filter((c): c is ChipResumen => c !== null);
 }
 
-// The alert list: arrivals only for the current turn (older ones are already in each shelter's
-// count), so past turns show only what went wrong and arrival-only turns drop out.
+// La lista de alertas: llegadas solo del turno actual (las anteriores ya están en el conteo de
+// cada refugio), así los turnos pasados muestran solo lo que salió mal y los turnos con solo llegadas desaparecen.
 export const alertasVisibles = (alertas: Alerta[], turnoActual: number) =>
   alertas.filter((a) => esUrgente(a) || a.turno === turnoActual);

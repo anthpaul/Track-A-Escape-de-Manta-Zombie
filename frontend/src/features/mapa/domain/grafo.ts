@@ -1,8 +1,8 @@
 import type { Grafo, Snapshot, Zombie } from "@/features/mapa/domain/tipos";
 
-// Pure graph rules shared by the map and the mock simulation.
-// nodosBloqueadosPorHordas mirrors the router rule (AGENTS.md §4.4): replace it with the
-// shared/ implementation once T0.2 lands, so map and router always use the same set.
+// Reglas puras del grafo que comparten el mapa y la simulación de prueba.
+// nodosBloqueadosPorHordas replica la regla del motor de rutas (AGENTS.md §4.4): reemplazarla por la
+// implementación de shared/ cuando se integre T0.2, para que mapa y motor usen siempre el mismo conjunto.
 
 export function vecinos(grafo: Grafo): Map<string, string[]> {
   const adyacencia = new Map<string, string[]>(grafo.nodos.map((n) => [n.id, []]));
@@ -28,10 +28,10 @@ type MundoAcceso = Pick<Snapshot, "zombies" | "aristasBloqueadas"> & {
   sobrevivientes: Pick<Snapshot["sobrevivientes"][number], "nodo" | "estado">[];
 };
 
-// Shelters nobody can reach this turn, with the same rules the router uses: horde zones are forbidden
-// and blocked streets do not exist. A shelter inside a horde zone is always cut off; otherwise it is cut
-// off when survivors are on the road and none of them has a free path to it (e.g. a horde on the only
-// way in). With nobody on the road there is no one to cut off, so only the first rule applies.
+// Refugios que nadie puede alcanzar en este turno, con las mismas reglas del motor: las zonas de horda están prohibidas
+// y las calles bloqueadas no existen. Un refugio dentro de una zona de horda siempre queda aislado; si no, queda
+// aislado cuando hay sobrevivientes en camino y ninguno tiene un camino libre hasta él (p. ej., una horda en el único
+// acceso). Sin nadie en camino no hay a quién aislar, así que solo aplica la primera regla.
 export function refugiosSinAcceso(grafo: Grafo, mundo: MundoAcceso): Set<string> {
   const prohibidos = nodosBloqueadosPorHordas(grafo, mundo.zombies);
   const bloqueadas = new Set(mundo.aristasBloqueadas);
@@ -50,8 +50,8 @@ export function refugiosSinAcceso(grafo: Grafo, mundo: MundoAcceso): Set<string>
       continue;
     }
     if (enRuta.size === 0 || enRuta.has(r.nodo)) continue;
-    // Search back from the shelter. A survivor standing inside a horde zone still counts as reached:
-    // the router lets them step out, it only forbids stepping in.
+    // Búsqueda hacia atrás desde el refugio. Un sobreviviente dentro de una zona de horda igual cuenta como alcanzado:
+    // el motor le permite salir; solo prohíbe entrar.
     const vistos = new Set([r.nodo]);
     const cola = [r.nodo];
     let alcanzado = false;

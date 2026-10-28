@@ -1,10 +1,10 @@
 import { Biohazard, Minus, Navigation2, ShieldCheck, Skull, Square, TriangleAlert, Truck, Zap, type LucideIcon } from "lucide-react";
 import { COLOR_CALLE, COLOR_FLECHA, COLOR_REFUGIO, COLOR_SELECCION, COLOR_VEHICULO, COLOR_ZOMBIE } from "./colores";
 
-// Every icon in the app is a Lucide icon. The map uses the same components, serialized to SVG
-// and registered as MapLibre images (map/layers/RegistroIconos.tsx), so legend and map always match.
+// Todos los íconos de la app son de Lucide. El mapa usa los mismos componentes, serializados a SVG
+// y registrados como imágenes de MapLibre (map/layers/RegistroIconos.tsx), así la leyenda y el mapa siempre coinciden.
 export const ICONOS_ZOMBIE = {
-  // Walker and runner colors are close (1.4:1), so they are told apart by their icon shape.
+  // Los colores de caminante y corredor son parecidos (1.4:1), así que se distinguen por la forma del ícono.
   caminante: { Icono: Skull, color: COLOR_ZOMBIE.caminante },
   corredor: { Icono: Zap, color: COLOR_ZOMBIE.corredor },
   horda: { Icono: Biohazard, color: COLOR_ZOMBIE.horda },
@@ -23,31 +23,31 @@ type IconoMapa = {
   relleno?: string;
   forma?: FormaIcono;
   borde?: string;
-  grosor?: number; // Lucide stroke width, 2.25 by default
+  grosor?: number; // grosor de trazo de Lucide, 2.25 por defecto
 };
 
-// Map image name → how to draw it. Names are referenced by the symbol layers in estilos.ts.
+// Nombre de imagen del mapa → cómo dibujarla. Las capas de símbolos de estilos.ts hacen referencia a estos nombres.
 export const ICONOS_MAPA: Record<string, IconoMapa> = {
   "zombie-caminante": { Icono: ICONOS_ZOMBIE.caminante.Icono, fondo: ICONOS_ZOMBIE.caminante.color, trazo: "#ffffff" },
   "zombie-corredor": { Icono: ICONOS_ZOMBIE.corredor.Icono, fondo: ICONOS_ZOMBIE.corredor.color, trazo: "#ffffff" },
   "zombie-horda": { Icono: ICONOS_ZOMBIE.horda.Icono, fondo: ICONOS_ZOMBIE.horda.color, trazo: "#ffffff" },
   refugio: { Icono: ICONO_REFUGIO.Icono, fondo: ICONO_REFUGIO.color, trazo: ICONO_REFUGIO.borde, forma: "cuadrado", borde: ICONO_REFUGIO.borde },
-  // Arrow head for next-step arrows: points north, rotated by the layer.
+  // Punta de las flechas del siguiente paso: apunta al norte y la capa la rota.
   flecha: { Icono: Navigation2, fondo: null, trazo: COLOR_FLECHA, relleno: COLOR_FLECHA },
-  // Ring around the selected shelter.
+  // Anillo alrededor del refugio seleccionado.
   "anillo-refugio": { Icono: Square, fondo: null, trazo: COLOR_SELECCION.refugio },
-  // Traffic signs on blocked streets (S1): no-entry disc, danger triangle and the stop bar at each end
-  // (horizontal at rotation 0, rotated by the street bearing so it crosses the street).
+  // Señales de tránsito en calles bloqueadas (S1): disco de prohibido el paso, triángulo de peligro y la barra de pare en cada extremo
+  // (horizontal con rotación 0, rotada según el rumbo de la calle para que la cruce).
   "senal-prohibido": { Icono: Minus, fondo: COLOR_CALLE.bloqueada, trazo: "#ffffff", borde: "#ffffff", grosor: 4 },
   "senal-peligro": { Icono: TriangleAlert, fondo: null, trazo: "#13030d", relleno: COLOR_CALLE.danado },
   "senal-tope": { Icono: Minus, fondo: null, trazo: COLOR_CALLE.bloqueada, grosor: 5 },
-  // Rescue van (Pro).
+  // Camioneta de rescate (Pro).
   vehiculo: { Icono: ICONO_VEHICULO.Icono, fondo: ICONO_VEHICULO.color, trazo: ICONO_VEHICULO.borde, borde: ICONO_VEHICULO.borde },
 };
 
-export const LADO_ICONO = 64; // px, registered at pixelRatio 2
+export const LADO_ICONO = 64; // px, registrado con pixelRatio 2
 
-// Wraps a serialized Lucide <svg> in a 64×64 badge (disc or square, optional) and returns a data URL.
+// Envuelve un <svg> serializado de Lucide en una insignia de 64×64 (disco o cuadrado, opcional) y devuelve una data URL.
 export function svgIconoMapa(svgLucide: string, fondo: string | null, forma: FormaIcono = "disco", borde = "#0a0a0a"): string {
   const base = !fondo
     ? ""

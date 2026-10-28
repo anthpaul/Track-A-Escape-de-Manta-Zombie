@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
-// Decorative background: the real street graph of Manta, drawn faintly. Static SVG, no map library.
+// Fondo decorativo: el grafo real de calles de Manta, dibujado tenue. SVG estático, sin librería de mapas.
 export default function FondoGrafo({ grafo }: { grafo: Grafo }) {
   const { caminos, caja } = useMemo(() => {
     const lngs = grafo.nodos.map((n) => n.lng);
     const lats = grafo.nodos.map((n) => n.lat);
     const caja = { x: Math.min(...lngs), y: Math.min(...lats), w: Math.max(...lngs) - Math.min(...lngs), h: Math.max(...lats) - Math.min(...lats) };
     const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
-    // Latitude grows north, SVG y grows down: flip it.
+    // La latitud crece hacia el norte y la y del SVG hacia abajo: se invierte.
     const punto = ([lng, lat]: [number, number]) => `${(lng - caja.x).toFixed(5)},${(caja.y + caja.h - lat).toFixed(5)}`;
     const caminos = grafo.calles.flatMap((c) => {
       const desde = nodos.get(c.desde);
