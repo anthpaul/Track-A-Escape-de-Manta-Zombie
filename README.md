@@ -57,7 +57,7 @@ Arriba del panel, siempre visibles: ronda y turno, **EN VIVO** con la edad real 
 CloudFront sirve el frontend desde S3 privado mediante OAC y envía `/api/*`, sin caché, a API Gateway y la Lambda del API.
 El estado compartido vive en DynamoDB; el mapa consulta `/api/estado` cada 2 segundos y recibe el último turno completo.
 EventBridge Scheduler inicia las rondas demo en la Lambda del simulador, que calcula movimientos en proceso y publica los turnos.
-La evaluación HTTP se ejecuta desde el CLI: publica el mundo y consulta `/api/paso` con API key; la demo no mide esa latencia.
+Las rondas de evaluación corren en la misma Lambda del simulador con `"modo": "evaluacion"`: calientan el API y consultan `/api/paso` por HTTP con API key desde `us-east-2`; la demo no mide esa latencia.
 El diagrama representa el código del repositorio, no una inspección de la cuenta AWS.
 
 [Fuente editable en diagrams.net](docs/arquitectura.drawio) · [Flujos y archivos de referencia](docs/arquitectura.md).
@@ -206,13 +206,21 @@ superiores a 500 ms se abortan y el sobreviviente se queda quieto. En modo local
 la latencia HTTP figura como no medida. También informa vivos, rescatados,
 mordidos y turnos reales de llegada frente al mínimo en el mapa sin peligros.
 
-Durante una ronda HTTP, cada turno guarda además el p95 de la ronda hasta ese momento, y el panel del mapa lo muestra en vivo (`metricas.p95ms` de `/estado`). Antes de cada ronda contra AWS, `tools/simulador/calentar.ts` dispara ráfagas de pedidos simultáneos para dejar calientes las instancias de Lambda.
+Durante una ronda HTTP, cada turno guarda además el p95 de la ronda hasta ese momento, y el panel del mapa lo muestra en vivo (`metricas.p95ms` de `/estado`).
+
+**La prueba de fuego se mide desde AWS, no desde una laptop.** Medido desde Ecuador, solo conectarse a `us-east-2` cuesta unos 76 ms y el p95 queda en 214–241 ms aunque la Lambda del API tarde 44–70 ms: se estaría midiendo internet, no el servicio. Por eso `tools/demo/demo.sh evaluar <1|2|3> [semilla]` invoca la Lambda del simulador en modo evaluación, que:
+
+1. calienta el API con tres oleadas simultáneas del tamaño de la ronda (20, 80 o 200 pedidos), con un cliente aparte para que esas latencias no cuenten;
+2. juega los 150 turnos llamando a `POST /paso` por HTTP directo a API Gateway, con el mismo corte de 500 ms;
+3. responde con las oleadas de calentamiento y las métricas de la ronda (p50/p95/p99, errores, eficiencia).
+
+`tools/simulador/calentar.ts` sigue disponible para calentar a mano desde cualquier máquina.
 
 El contraste con CloudWatch de la primera R1 contra AWS (27 de octubre) está en [Resultados](#resultados-de-nuestra-prueba-de-fuego).
 
 ## Resultados de nuestra prueba de fuego
 
-**Primera R1 contra AWS (27 de octubre, 09:33 a 09:39, hora de Ecuador):** 369 pedidos a `/paso`, 32 respondieron HTTP 503 y 10 se cortaron a los 500 ms. CloudWatch explica ambos: la cuenta nueva tiene un límite de **10 ejecuciones simultáneas de Lambda** (lo habitual es 1000). La concurrencia quedó en 10, Lambda rechazó 32 invocaciones, que coinciden minuto a minuto con los 32 errores 5xx de API Gateway, y los 10 cortes coinciden con los 10 arranques en frío del primer minuto (p95 de 956 ms en ese minuto). Sin errores de ejecución, con 141 MB usados de 1024 y un p95 de 25 ms una vez calientes. Pedimos el aumento a 1000 en Service Quotas el mismo día (pendiente de aprobación).
+**Primera R1 contra AWS (27 de octubre, 09:33 a 09:39, hora de Ecuador):** 369 pedidos a `/paso`, 32 respondieron HTTP 503 y 10 se cortaron a los 500 ms. CloudWatch explica ambos: la cuenta nueva tiene un límite de **10 ejecuciones simultáneas de Lambda** (lo habitual es 1000). La concurrencia quedó en 10, Lambda rechazó 32 invocaciones, que coinciden minuto a minuto con los 32 errores 5xx de API Gateway, y los 10 cortes coinciden con los 10 arranques en frío del primer minuto (p95 de 956 ms en ese minuto). Sin errores de ejecución, con 141 MB usados de 1024 y un p95 de 25 ms una vez calientes. Pedimos el aumento a 1000 en Service Quotas el mismo día; AWS lo aplicó esa misma tarde (`aws lambda get-account-settings` informa 1000).
 
 Las tres corridas completas contra AWS quedan **pendientes de ese aumento**: con un límite de 10, la R3 (200 pedidos simultáneos) mediría el límite de la cuenta y no el motor.
 

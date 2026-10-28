@@ -40,7 +40,7 @@ variable "lambda_memory_mb" {
 }
 
 variable "api_key" {
-  description = "Value expected in the x-api-key header of POST /api/paso. Set it with TF_VAR_api_key, never in a committed file."
+  description = "Value expected in the x-api-key header of POST /api/paso (the API Lambda checks it, the simulator Lambda sends it in evaluation rounds). Set it with TF_VAR_api_key, never in a committed file."
   type        = string
   sensitive   = true
 

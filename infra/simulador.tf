@@ -4,7 +4,9 @@
 # never frozen. The round takes the active-game lock conditionally: if an
 # evaluation (or a previous demo) holds it, the invocation exits without writing.
 # Before an evaluation round, disable the demos: `demo_enabled = false` and apply,
-# or `aws scheduler update-schedule ... --state DISABLED`.
+# or `aws scheduler update-schedule ... --state DISABLED` (tools/demo/demo.sh pausar).
+# Evaluation rounds run on this same Lambda: `tools/demo/demo.sh evaluar 3` invokes it with
+# "modo": "evaluacion", and it calls POST /paso over HTTP (PASO_URL, PASO_KEY below).
 #
 # Run `npm run build:simulador` first: archive_file zips tools/simulador/dist/lambda.js.
 data "archive_file" "simulador" {
@@ -66,6 +68,11 @@ resource "aws_lambda_function" "simulador" {
   environment {
     variables = {
       MUNDO_TABLE = aws_dynamodb_table.main.name
+      # Evaluation rounds call POST /paso over HTTP from this region, straight to API Gateway
+      # (no CloudFront hop), so the measured p95 is the service's and not the operator's internet.
+      PASO_URL = "${aws_apigatewayv2_api.api.api_endpoint}/api/paso"
+      # Same sensitive variable the API Lambda already receives (TF_VAR_api_key, never committed).
+      PASO_KEY = var.api_key
     }
   }
 
