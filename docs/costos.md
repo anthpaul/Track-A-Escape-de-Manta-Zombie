@@ -156,17 +156,20 @@ AWS; no se presupone un contrato comercial.
 
 ## 4. Gasto real del evento
 
-**Unos USD 0.02 hasta el 28 de octubre de 2026.** La capa gratuita y los créditos de la cuenta nueva cubren casi todo el uso del evento; no se afirma el saldo de créditos.
+**USD 0.50 en octubre de 2026, hasta la mañana del 28** (mes en curso, según el historial del Budget). La capa gratuita y los créditos de la cuenta nueva cubren casi todo el uso del evento; no se afirma el saldo de créditos.
+
+![Historial de costos mensuales del Budget: octubre de 2026 con USD 0.50 reales sobre USD 20 presupuestados, y USD 0.00 en los doce meses anteriores](costos-reales.png)
 
 | Dato | Valor |
 |---|---|
-| Período | Octubre de 2026 hasta la madrugada del 28 (hora de Ecuador) |
-| Fuente y fecha de consulta | AWS Budgets y Cost Explorer (CLI, solo lectura), 28 de octubre de 2026 |
-| Gasto real del mes según el Budget | **USD 0.019** |
-| Consumo por servicio en Cost Explorer (`Unblended cost`, agrupado por servicio) | USD 0.00 en cada servicio: Lambda, API Gateway, DynamoDB, CloudFront, S3, CloudWatch, EventBridge, SNS |
+| Período | Octubre de 2026 hasta la mañana del 28 (hora de Ecuador) |
+| Fuente y fecha de consulta | Historial de costos mensuales de AWS Budgets (consola), 28 de octubre de 2026 |
+| Gasto real del mes según el Budget | **USD 0.50** de USD 20 presupuestados (varianza de USD 19.50, el 97.49 % del presupuesto sin usar) |
+| Meses anteriores | USD 0.00 de octubre de 2025 a septiembre de 2026: la cuenta no tiene otras cargas |
+| Lectura anterior | USD 0.019 en la madrugada del 28 (CLI, solo lectura); Cost Explorer mostraba USD 0.00 por servicio, por su demora de hasta 24 horas |
 | Budget configurado | `spookython-mensual`: USD 20 por mes, con alertas al 50 % y 80 % del gasto real y al 100 % del pronóstico |
-| Importe neto atribuible al evento | ~USD 0.02 |
-| Captura | `docs/budget.png` muestra el Budget; la captura del gasto queda pendiente |
+| Importe neto atribuible al evento | USD 0.50 |
+| Capturas | `docs/budget.png` muestra el Budget y sus alertas; `docs/costos-reales.png`, el historial de gasto |
 
 Cost Explorer puede tardar hasta 24 horas en mostrar el último gasto, y cada consulta por API cuesta USD 0.01 (este registro hizo dos). La cuenta no tiene otras cargas, así que todo el gasto se atribuye al proyecto.
 
