@@ -154,3 +154,12 @@
     @apply font-sans;
   }
 }
+/* Map cards (features/mapa/map/TarjetaBloqueo.tsx) draw their own surface: drop MapLibre's white popup. */
+.popup-mapa .maplibregl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+.popup-mapa .maplibregl-popup-tip {
+  display: none;
+}

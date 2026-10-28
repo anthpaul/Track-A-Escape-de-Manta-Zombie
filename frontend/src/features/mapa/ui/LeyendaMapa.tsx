@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Map as MapaIcono, UserRound, type LucideIcon } from "lucide-react";
+import { ChevronDown, Map as MapaIcono, TriangleAlert, UserRound, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
 import { ICONO_REFUGIO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
@@ -13,13 +13,37 @@ const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string }[] = [
   { nombre: "Horda (bloquea la zona)", ...ICONOS_ZOMBIE.horda },
 ];
 
-const LINEAS: { nombre: string; color: string; punteada?: boolean }[] = [
+// Bridges are a double line on the map; closed streets and damaged bridges carry the same traffic
+// sign the map draws on them (no-entry disc, danger triangle).
+type Linea = { nombre: string; color: string; punteada?: boolean; doble?: boolean; senal?: "prohibido" | "peligro" };
+const LINEAS: Linea[] = [
   { nombre: "Ruta planificada", color: COLOR_RUTA, punteada: true },
   { nombre: "Avenida", color: COLOR_CALLE.avenida },
   { nombre: "Calle", color: COLOR_CALLE.calle },
-  { nombre: "Puente", color: COLOR_CALLE.puente },
-  { nombre: "Calle bloqueada", color: COLOR_CALLE.bloqueada },
+  { nombre: "Puente", color: COLOR_CALLE.puente, doble: true },
+  { nombre: "Calle bloqueada", color: COLOR_CALLE.bloqueada, senal: "prohibido" },
+  { nombre: "Puente dañado", color: COLOR_CALLE.danado, doble: true, punteada: true, senal: "peligro" },
 ];
+
+function SimboloLinea({ color, punteada, doble, senal }: Linea) {
+  const estilo = punteada ? "dashed" : "solid";
+  return (
+    <span className="relative flex h-3 w-5 shrink-0 items-center" aria-hidden>
+      <span
+        className={cn("w-full", doble ? "h-1.5 border-y-2" : "h-0 border-t-2")}
+        style={{ borderColor: color, borderTopStyle: estilo, borderBottomStyle: estilo }}
+      />
+      {senal === "prohibido" && (
+        <span className="absolute left-1/2 flex size-2.5 -translate-x-1/2 items-center justify-center rounded-full" style={{ background: color }}>
+          <span className="h-0.5 w-1.5 bg-white" />
+        </span>
+      )}
+      {senal === "peligro" && (
+        <TriangleAlert className="absolute left-1/2 size-3 -translate-x-1/2" style={{ fill: color, color: "#13030d" }} />
+      )}
+    </span>
+  );
+}
 
 // Map legend: open on wide screens, a small button on phones so it never hides the map.
 export default function LeyendaMapa() {
@@ -76,14 +100,10 @@ export default function LeyendaMapa() {
             <span className="size-4 rounded-full border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
             Refugio sin acceso
           </li>
-          {LINEAS.map(({ nombre, color, punteada }) => (
-            <li key={nombre} className="flex items-center gap-2">
-              <span
-                className="h-0 w-4 border-t-2"
-                style={{ borderColor: color, borderTopStyle: punteada ? "dashed" : "solid" }}
-                aria-hidden
-              />
-              {nombre}
+          {LINEAS.map((linea) => (
+            <li key={linea.nombre} className="flex items-center gap-2">
+              <SimboloLinea {...linea} />
+              {linea.nombre}
             </li>
           ))}
           <li className="flex items-center gap-2 pt-1 text-crimson-800">

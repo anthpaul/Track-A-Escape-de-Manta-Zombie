@@ -115,3 +115,11 @@ test("metrics distinguish living from rescued, nearest-rank latency and unavaila
   assert.equal(m.tasaError, 1 / 4);
   assert.equal(calcularMetricas({ ...inputs, latencias: [] }).latenciaP95Ms, null);
 });
+
+test("demo rounds stop once nobody is on the road; evaluation rounds always play 150 turns", () => {
+  for (const crear of [crearEscenarioR1, crearEscenarioR2, crearEscenarioR3]) {
+    assert.equal(crear({ semilla: 1 }).config.detenerSinActivos, false);
+    assert.equal(crear({ semilla: 1, modo: "evaluacion" }).config.detenerSinActivos, false);
+    assert.equal(crear({ semilla: 1, modo: "demo" }).config.detenerSinActivos, true);
+  }
+});

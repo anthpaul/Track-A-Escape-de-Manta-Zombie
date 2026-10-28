@@ -7,7 +7,7 @@ import { useSimulacionMock } from "@/features/mapa/data/mock/useSimulacionMock";
 import { USAR_MOCKS, useEstadoEnVivo } from "@/features/mapa/data/real/useEstadoEnVivo";
 import { useRutaEnVivo } from "@/features/mapa/data/real/useRutaEnVivo";
 import { rutaHaciaRefugio, type ConfigSimulacion } from "@/features/mapa/data/mock/simulacion";
-import { derivarAlertas, type Alerta } from "@/features/mapa/domain/alertas";
+import { alertasVisibles, derivarAlertas, esUrgente, resumenTurno, type Alerta } from "@/features/mapa/domain/alertas";
 import { estadoInicialPanel, reducirPanel, type Tab } from "@/features/mapa/domain/panel";
 import { resumenPanel } from "@/features/mapa/domain/resumen";
 import { elegirSeguido } from "@/features/mapa/domain/seleccion";
@@ -17,7 +17,7 @@ import LeyendaMapa from "@/features/mapa/ui/LeyendaMapa";
 import MedidorFps from "@/features/mapa/ui/MedidorFps";
 import PanelLateral from "@/features/mapa/ui/panel/PanelLateral";
 import RielIconos from "@/features/mapa/ui/panel/RielIconos";
-import ToastAlerta from "@/features/mapa/ui/panel/ToastAlerta";
+import BarraTurno from "@/features/mapa/ui/panel/BarraTurno";
 import TabAlertas from "@/features/mapa/ui/panel/tabs/TabAlertas";
 import TabCapas from "@/features/mapa/ui/panel/tabs/TabCapas";
 import TabRefugios from "@/features/mapa/ui/panel/tabs/TabRefugios";
@@ -74,7 +74,9 @@ export default function PantallaMapa() {
     if (nuevaRonda) setAlertas([]);
     if (nuevas.length === 0) return;
     setAlertas((actuales) => [...nuevas, ...actuales].slice(0, MAX_ALERTAS));
-    dispatch({ tipo: "nuevaAlerta", id: nuevas[0].id });
+    // Only bad news opens the turn bar; arrivals alone are just listed.
+    const urgente = nuevas.find(esUrgente);
+    if (urgente) dispatch({ tipo: "nuevaAlerta", id: urgente.id });
   }, [grafo, snapshot, esPrueba]);
 
   const resumen = useMemo(() => resumenPanel(grafo, snapshot), [grafo, snapshot]);
@@ -88,7 +90,7 @@ export default function PantallaMapa() {
     () => conteosFiltro(grafo, snapshot.sobrevivientes, panel.busqueda),
     [grafo, snapshot.sobrevivientes, panel.busqueda],
   );
-  const noLeidas = alertas.filter((a) => !panel.alertasLeidas.has(a.id)).length;
+  const noLeidas = alertas.filter((a) => esUrgente(a) && !panel.alertasLeidas.has(a.id)).length;
   const toastAlerta = alertas.find((a) => a.id === panel.toastAlertaId) ?? null;
 
   // A planned route is always on the map (plan A9): the selected survivor's while on the road,
@@ -152,8 +154,6 @@ export default function PantallaMapa() {
         <PanelLateral titulo={TITULOS[panel.tab]} resumen={resumen} generadoEn={snapshot.generadoEn} conexion={vivo.conexion}>
           {panel.tab === "ref" && (
             <TabRefugios
-              aSalvo={refugios.aSalvo}
-              capacidadLibre={refugios.capacidadLibre}
               refugios={refugios.refugios}
               refugioId={panel.refugioId}
               mostrarRuta={panel.mostrarRuta}
@@ -186,20 +186,23 @@ export default function PantallaMapa() {
           )}
           {panel.tab === "alert" && (
             <TabAlertas
-              alertas={alertas}
+              alertas={alertasVisibles(alertas, snapshot.turno)}
+              turnoActual={snapshot.turno}
               leidas={panel.alertasLeidas}
               onUbicar={(alerta) => dispatch({ tipo: "ubicarAlerta", alerta })}
-              onMarcarLeida={(id) => dispatch({ tipo: "marcarLeida", id })}
             />
           )}
         </PanelLateral>
       )}
 
-      <ToastAlerta
-        alerta={toastAlerta}
-        onVerAlertas={() => enviarYAbrir({ tipo: "abrirAlertas" })}
-        onCerrar={() => dispatch({ tipo: "cerrarToast" })}
-      />
+      {toastAlerta && (
+        <BarraTurno
+          turno={toastAlerta.turno}
+          chips={resumenTurno(alertas, toastAlerta.turno)}
+          onVerAlertas={() => enviarYAbrir({ tipo: "abrirAlertas" })}
+          onCerrar={() => dispatch({ tipo: "cerrarToast" })}
+        />
+      )}
       <MedidorFps />
     </div>
   );

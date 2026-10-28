@@ -177,7 +177,8 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
     nodosRefugio,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    detenerSinActivos: false,
+    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    detenerSinActivos: opts.modo === "demo",
     eventos: [],
   };
 
@@ -242,7 +243,8 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     nodosRefugio,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    detenerSinActivos: false,
+    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    detenerSinActivos: opts.modo === "demo",
     eventos,
   };
 
@@ -313,7 +315,8 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     nodosRefugio,
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    detenerSinActivos: false,
+    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    detenerSinActivos: opts.modo === "demo",
     eventos,
   };
 

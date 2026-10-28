@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { callesAGeoJSON, refugiosAGeoJSON } from "@/features/mapa/map/geojson/grafo";
+import { callesAGeoJSON, refugiosAGeoJSON, senalesAGeoJSON } from "@/features/mapa/map/geojson/grafo";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
 const grafo: Grafo = {
@@ -61,4 +61,32 @@ test("each shelter becomes a Point at its node with name and capacity", () => {
   assert.equal(fc.features.length, 1);
   assert.deepEqual(fc.features[0].geometry, { type: "Point", coordinates: [-80.722, -0.952] });
   assert.deepEqual(fc.features[0].properties, { id: "R-01", nombre: "Estadio Jocay", capacidad: 50 });
+});
+
+test("signs: a blocked street gets a no-entry disc in the middle and a stop bar at each end", () => {
+  const recta: Grafo = {
+    version: "t",
+    nodos: [
+      { id: "N-0001", lat: 0, lng: 0 },
+      { id: "N-0002", lat: 0.002, lng: 0 },
+    ],
+    calles: [
+      { id: "C-0001", desde: "N-0001", hasta: "N-0002", distancia_m: 222, tipo: "calle", geometria: [] },
+      { id: "C-0002", desde: "N-0001", hasta: "N-0002", distancia_m: 222, tipo: "puente", geometria: [] },
+    ],
+    refugios: [],
+  };
+  const calle = senalesAGeoJSON(recta, new Set(["C-0001"])).features;
+  assert.deepEqual(
+    calle.map((f) => [f.properties.tipo, f.geometry.coordinates[1], f.properties.rumbo]),
+    [
+      ["prohibido", 0.001, 0],
+      ["tope", 0, 0],
+      ["tope", 0.002, 0],
+    ],
+  );
+  // A damaged bridge only gets the danger triangle in the middle.
+  const puente = senalesAGeoJSON(recta, new Set(["C-0002"])).features;
+  assert.deepEqual(puente.map((f) => [f.properties.tipo, f.properties.calle]), [["peligro", "C-0002"]]);
+  assert.deepEqual(senalesAGeoJSON(recta, new Set()).features, []);
 });

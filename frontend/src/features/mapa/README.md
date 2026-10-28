@@ -30,7 +30,7 @@ mapa/
 │   └── mock/             Simulación en el navegador: se usa mientras no hay partida o la API no responde (marca SIMULADO)
 └── ui/                   Componentes de presentación (sin lógica de negocio)
     ├── MedidorFps.tsx    Overlay de depuración (?debug)
-    └── panel/            Riel interactivo: RielIconos, PanelLateral, ToastAlerta, IndicadorEnVivo y tabs/ (Refugios, Sobrevivientes, Capas, Alertas)
+    └── panel/            Riel interactivo: RielIconos, PanelLateral, BarraTurno, IndicadorEnVivo y tabs/ (Refugios, Sobrevivientes, Capas, Alertas)
 ```
 
 ## Reglas

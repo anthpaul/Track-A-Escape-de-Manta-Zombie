@@ -1,5 +1,5 @@
-import { Biohazard, Navigation2, ShieldCheck, Skull, Square, Zap, type LucideIcon } from "lucide-react";
-import { COLOR_FLECHA, COLOR_REFUGIO, COLOR_SELECCION, COLOR_ZOMBIE } from "./colores";
+import { Biohazard, Minus, Navigation2, ShieldCheck, Skull, Square, TriangleAlert, Zap, type LucideIcon } from "lucide-react";
+import { COLOR_CALLE, COLOR_FLECHA, COLOR_REFUGIO, COLOR_SELECCION, COLOR_ZOMBIE } from "./colores";
 
 // Every icon in the app is a Lucide icon. The map uses the same components, serialized to SVG
 // and registered as MapLibre images (map/layers/RegistroIconos.tsx), so legend and map always match.
@@ -15,7 +15,15 @@ export type TipoZombieVisible = keyof typeof ICONOS_ZOMBIE;
 export const ICONO_REFUGIO = { Icono: ShieldCheck, color: COLOR_REFUGIO.relleno, borde: COLOR_REFUGIO.borde } as const;
 
 export type FormaIcono = "disco" | "cuadrado";
-type IconoMapa = { Icono: LucideIcon; fondo: string | null; trazo: string; relleno?: string; forma?: FormaIcono; borde?: string };
+type IconoMapa = {
+  Icono: LucideIcon;
+  fondo: string | null;
+  trazo: string;
+  relleno?: string;
+  forma?: FormaIcono;
+  borde?: string;
+  grosor?: number; // Lucide stroke width, 2.25 by default
+};
 
 // Map image name → how to draw it. Names are referenced by the symbol layers in estilos.ts.
 export const ICONOS_MAPA: Record<string, IconoMapa> = {
@@ -27,6 +35,11 @@ export const ICONOS_MAPA: Record<string, IconoMapa> = {
   flecha: { Icono: Navigation2, fondo: null, trazo: COLOR_FLECHA, relleno: COLOR_FLECHA },
   // Ring around the selected shelter.
   "anillo-refugio": { Icono: Square, fondo: null, trazo: COLOR_SELECCION.refugio },
+  // Traffic signs on blocked streets (S1): no-entry disc, danger triangle and the stop bar at each end
+  // (horizontal at rotation 0, rotated by the street bearing so it crosses the street).
+  "senal-prohibido": { Icono: Minus, fondo: COLOR_CALLE.bloqueada, trazo: "#ffffff", borde: "#ffffff", grosor: 4 },
+  "senal-peligro": { Icono: TriangleAlert, fondo: null, trazo: "#13030d", relleno: COLOR_CALLE.danado },
+  "senal-tope": { Icono: Minus, fondo: null, trazo: COLOR_CALLE.bloqueada, grosor: 5 },
 };
 
 export const LADO_ICONO = 64; // px, registered at pixelRatio 2

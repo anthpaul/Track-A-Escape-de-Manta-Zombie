@@ -67,7 +67,10 @@ test("a scheduled demo plays a whole round on DynamoDB and releases the lock", a
   assert.match(r.partidaId!, /^demo-r1-/);
   assert.equal(r.aSalvo! + r.mordidos! + r.enRuta!, 20);
   assert.ok(comandos[0] instanceof PutCommand, "first takes the lock");
-  assert.ok(comandos.filter((c) => c instanceof TransactWriteCommand).length >= 2 * 150, "every turn is published twice");
+  // Demo rounds stop once nobody is on the road (evaluation rounds always play 150 turns).
+  assert.equal(r.enRuta, 0, "the demo ends when nobody is left on the road");
+  const publicaciones = comandos.filter((c) => c instanceof TransactWriteCommand).length;
+  assert.ok(publicaciones >= 2 && publicaciones < 2 * 150, "every turn played is published twice, and it stopped early");
   assert.ok(comandos.at(-1) instanceof DeleteCommand, "the lock is released at the end");
 });
 

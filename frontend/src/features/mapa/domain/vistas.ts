@@ -1,4 +1,4 @@
-import { refugiosSinAcceso } from "./grafo";
+import { refugiosSinAcceso, vecinos } from "./grafo";
 import type { CapaClave, FiltroSobreviviente } from "./panel";
 import type { EstadoSobreviviente, Grafo, Snapshot, Sobreviviente } from "./tipos";
 
@@ -42,11 +42,23 @@ export type RefugioVista = {
   accesosBloqueados: number;
   // Nobody can reach it this turn (horde on the way in, or blocked streets): see refugiosSinAcceso.
   sinAcceso: boolean;
+  // Why: "horda" when the hordes cut it off, "calle" when closed streets alone already do.
+  motivoSinAcceso: "horda" | "calle" | null;
+  // Survivors heading here who stand on or next to a visible zombie.
+  enPeligro: number;
 };
 
 export function resumenRefugios(grafo: Grafo, snapshot: Snapshot) {
   const bloqueadas = new Set(snapshot.aristasBloqueadas);
   const cortados = refugiosSinAcceso(grafo, snapshot);
+  const cortadosPorCalles = refugiosSinAcceso(grafo, { ...snapshot, zombies: [] });
+  const adyacencia = vecinos(grafo);
+  const cercaDeZombie = new Set<string>();
+  for (const z of snapshot.zombies) {
+    if (z.tipo === "dormido") continue;
+    cercaDeZombie.add(z.nodo);
+    for (const v of adyacencia.get(z.nodo) ?? []) cercaDeZombie.add(v);
+  }
   const refugios: RefugioVista[] = grafo.refugios.map((r) => {
     const o = snapshot.refugios.find((x) => x.id === r.id);
     const ocupacion = o?.ocupacion ?? 0;
@@ -59,8 +71,10 @@ export function resumenRefugios(grafo: Grafo, snapshot: Snapshot) {
       pct: capacidad === 0 ? 100 : Math.min(100, Math.floor((ocupacion * 100) / capacidad)),
       lleno: ocupacion >= capacidad,
       enCamino: snapshot.sobrevivientes.filter((s) => s.estado === "en_ruta" && s.refugio === r.id).length,
+      enPeligro: snapshot.sobrevivientes.filter((s) => s.estado === "en_ruta" && s.refugio === r.id && cercaDeZombie.has(s.nodo)).length,
       accesosBloqueados: grafo.calles.filter((c) => bloqueadas.has(c.id) && (c.desde === r.nodo || c.hasta === r.nodo)).length,
       sinAcceso: cortados.has(r.id),
+      motivoSinAcceso: !cortados.has(r.id) ? null : cortadosPorCalles.has(r.id) ? "calle" : "horda",
     };
   });
   return {

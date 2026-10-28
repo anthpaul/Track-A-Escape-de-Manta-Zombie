@@ -17,9 +17,13 @@ export default function RegistroIconos() {
 
     const registrar = async () => {
       for (const svg of Array.from(nodos.querySelectorAll<SVGElement>("svg[data-icono]"))) {
+        // No style yet (or the map was removed): the "load" listener below runs this again.
+        if (cancelado || !mapa.getMap().style) return;
         const nombre = svg.dataset.icono!;
-        if (mapa.hasImage(nombre)) continue;
+        // hasImage throws while the style is not ready (or after the map was removed). It lives inside
+        // the try so one failure skips only this icon; styleimagemissing retries it once a layer needs it.
         try {
+          if (mapa.hasImage(nombre)) continue;
           const imagen = new Image(LADO_ICONO, LADO_ICONO);
           const { fondo, forma, borde } = ICONOS_MAPA[nombre];
           imagen.src = svgIconoMapa(svg.outerHTML, fondo, forma, borde);
@@ -34,19 +38,22 @@ export default function RegistroIconos() {
     };
 
     void registrar();
-    // A style reload drops custom images; register them again when MapLibre asks for one.
+    // A style reload drops custom images; register them again when MapLibre asks for one, and once
+    // the map has loaded in case the first pass ran before the style was ready.
     const alFaltar = () => void registrar();
     mapa.on("styleimagemissing", alFaltar);
+    mapa.on("load", alFaltar);
     return () => {
       cancelado = true;
       mapa.off("styleimagemissing", alFaltar);
+      mapa.off("load", alFaltar);
     };
   }, [mapa]);
 
   return (
     <div ref={contenedor} hidden aria-hidden>
-      {Object.entries(ICONOS_MAPA).map(([nombre, { Icono, trazo, relleno }]) => (
-        <Icono key={nombre} data-icono={nombre} size={32} color={trazo} fill={relleno ?? "none"} strokeWidth={2.25} />
+      {Object.entries(ICONOS_MAPA).map(([nombre, { Icono, trazo, relleno, grosor }]) => (
+        <Icono key={nombre} data-icono={nombre} size={32} color={trazo} fill={relleno ?? "none"} strokeWidth={grosor ?? 2.25} />
       ))}
     </div>
   );

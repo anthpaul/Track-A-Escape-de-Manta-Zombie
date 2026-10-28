@@ -8,6 +8,8 @@ export const COLOR_CALLE = {
   callejon: "#f4bade", // crimson-900, thinner and fainter than a street
   puente: "#74d1e8", // marea-800
   bloqueada: "#fb3055", // sangre-700: danger, same family as the horde zone
+  // Damaged bridge: the warning-sign orange; the dashed double line and the triangle tell it from a zombie.
+  danado: "#fb8b24", // calabaza-500
 } as const;
 
 export const COLOR_ZOMBIE = { caminante: "#fb8b24", corredor: "#e36414", horda: "#e0052d" } as const;

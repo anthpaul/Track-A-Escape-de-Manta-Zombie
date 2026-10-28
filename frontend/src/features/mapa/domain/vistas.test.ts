@@ -74,3 +74,28 @@ test("layer counts reflect what each layer would draw", () => {
   } as unknown as Snapshot;
   assert.deepEqual(conteosCapas(grafo, snap), { caminante: 1, corredor: 0, horda: 1, sobreviviente: 2, mordido: 1, refugio: 2 });
 });
+
+test("shelter rows count who is in danger on the way and say why a shelter has no access", () => {
+  // N-0001 — N-0002 — N-0003 (ULEAM). Both survivors on the road stand on N-0001, next to a walker on N-0002.
+  const snap = {
+    zombies: [{ id: "Z-1", tipo: "caminante", nodo: "N-0002" }],
+    aristasBloqueadas: [],
+    refugios: [],
+    sobrevivientes: [
+      { id: "S-0001", nodo: "N-0001", estado: "en_ruta", refugio: "R-02" },
+      { id: "S-0002", nodo: "N-0001", estado: "en_ruta", refugio: "R-01" },
+      { id: "S-0003", nodo: "N-0001", estado: "mordido", refugio: "R-02" },
+    ],
+  } as unknown as Snapshot;
+  const r = resumenRefugios(grafo, snap).refugios;
+  assert.deepEqual(r.map((x) => [x.id, x.enCamino, x.enPeligro, x.motivoSinAcceso]), [
+    ["R-01", 1, 1, null],
+    ["R-02", 1, 1, null],
+  ]);
+
+  // A horde on N-0002 cuts both shelters off from N-0001; ULEAM is also cut by its closed street.
+  const horda = { ...snap, zombies: [{ id: "Z-2", tipo: "horda", nodo: "N-0002" }] } as unknown as Snapshot;
+  assert.deepEqual(resumenRefugios(grafo, horda).refugios.map((x) => x.motivoSinAcceso), ["horda", "horda"]);
+  const cortada = { ...snap, zombies: [], aristasBloqueadas: ["C-0002"] } as unknown as Snapshot;
+  assert.deepEqual(resumenRefugios(grafo, cortada).refugios.map((x) => x.motivoSinAcceso), [null, "calle"]);
+});

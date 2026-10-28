@@ -69,4 +69,4 @@ Sobre el p95 del panel: en las rondas demo aparece **"—"**, porque el motor co
 | ¿Recalculan la ruta o la guardan? | Kevin | Se recalcula en cada pedido con los zombies del turno; ninguna ruta se guarda |
 | ¿Arranques en frío en la R3? | Alex | Calentamiento antes de cada ronda (`calentar.ts`), Lambda de 1 GB y bundle chico. El límite de concurrencia de la cuenta está pedido a AWS |
 | ¿Cuánto cuesta? | Anthony | `docs/costos.md`; Budget de US$ 20 con alertas por SNS |
-| ¿Por qué el mapa no se congela? | Anthony | EventBridge Scheduler intenta arrancar una ronda demo cada minuto en una Lambda aparte: las rondas quedan casi seguidas |
+| ¿Por qué el mapa no se congela? | Anthony | EventBridge Scheduler intenta arrancar una ronda demo cada minuto en una Lambda aparte: las rondas quedan casi seguidas. Una ronda demo termina cuando ya no queda nadie en camino, y entre ronda y ronda el mapa muestra el último turno real con "Esperando la próxima ronda" |
