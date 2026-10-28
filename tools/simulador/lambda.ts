@@ -1,30 +1,32 @@
 /**
- * Simulator Lambda — one round per invocation: scheduled demos (S6, AGENTS.md §2) and the
- * fire-test evaluation rounds.
+ * Lambda del simulador — una ronda por invocación: demos programadas (S6, AGENTS.md §2) y las
+ * rondas de evaluación de la prueba de fuego.
  *
- * EventBridge Scheduler invokes it every few minutes so the public map is never
- * frozen (jury trap). Each invocation plays a whole 5-minute round, writing every
- * turn to DynamoDB with the same lock and fencing as `correr.ts --modo=http`:
- * if another round holds the lock (an evaluation, or a previous demo still
- * running) it exits without writing anything else.
+ * EventBridge Scheduler la invoca cada pocos minutos para que el mapa público nunca quede
+ * congelado (trampa del jurado). Cada invocación juega una ronda completa de 5 minutos y escribe
+ * cada turno en DynamoDB con el mismo lock y la misma protección que `correr.ts --modo=http`:
+ * si otra ronda tiene el lock (una evaluación, o una demo anterior que sigue corriendo),
+ * sale sin escribir nada más.
  *
- * Event (all optional): { "ronda": 1 | 2 | 3, "semilla": number, "modo": "demo" | "evaluacion", "flota": boolean }.
- * The rescue fleet (Pro) rides in demo rounds by default and never in evaluation unless asked.
+ * Evento (todo opcional): { "ronda": 1 | 2 | 3, "semilla": number, "modo": "demo" | "evaluacion", "flota": boolean }.
+ * La flota de rescate (Pro) va por defecto en las rondas de demo y nunca en evaluación salvo que se pida.
  *
- * Demo rounds chain: when one ends (often early, once nobody is on the road) the same invocation starts
- * the next one right away while it still has time for a full round, so the public map waits ~2 s
- * between rounds instead of up to a minute for the next schedule. Evaluation rounds never chain.
- * Default R2 demo, the round that shows every zombie type but sleepers plus a bridge collapse.
+ * Las rondas de demo se encadenan: cuando una termina (a menudo antes de tiempo, cuando ya no queda
+ * nadie en ruta), la misma invocación arranca la siguiente de inmediato mientras le quede tiempo para
+ * una ronda completa; así el mapa público espera ~2 s entre rondas en lugar de hasta un minuto por la
+ * siguiente programación. Las rondas de evaluación nunca se encadenan.
+ * La demo por defecto es la R2, la ronda que muestra todos los tipos de zombie salvo los dormidos,
+ * además del colapso de un puente.
  *
- * Evaluation mode (`aws lambda invoke` with "modo": "evaluacion") calls the real POST /paso over
- * HTTP from the same region, so the measured latency is the service's and not the operator's
- * internet. It warms the API Lambda first (simultaneous waves as large as the round, on a motor of
- * their own so those latencies never mix with the round's), plays all 150 turns and returns the
- * warm-up waves and the round metrics. Warm-up requests wait up to 3 s: a new API instance needs
- * more than 500 ms to boot and open its DynamoDB connection, and cutting it earlier only makes the
- * next wave ask for yet another cold instance.
+ * El modo evaluación (`aws lambda invoke` con "modo": "evaluacion") llama al POST /paso real por
+ * HTTP desde la misma región, así la latencia medida es la del servicio y no la de la conexión a
+ * internet del operador. Primero calienta la Lambda de la API (oleadas simultáneas tan grandes como
+ * la ronda, con un motor propio para que esas latencias nunca se mezclen con las de la ronda), juega
+ * los 150 turnos y devuelve las oleadas de warm-up y las métricas de la ronda. Los pedidos de warm-up
+ * esperan hasta 3 s: una instancia nueva de la API necesita más de 500 ms para arrancar y abrir su
+ * conexión a DynamoDB, y cortarla antes solo hace que la siguiente oleada pida otra instancia en frío.
  *
- * Environment: MUNDO_TABLE; PASO_URL and PASO_KEY for evaluation rounds.
+ * Entorno: MUNDO_TABLE; PASO_URL y PASO_KEY para las rondas de evaluación.
  */
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
@@ -50,16 +52,16 @@ export type ResultadoDemo =
       aSalvo: number;
       mordidos: number;
       enRuta: number;
-      // Rounds this invocation played (demo rounds chain; the result describes the last one).
+      // Rondas que jugó esta invocación (las de demo se encadenan; el resultado describe la última).
       rondasJugadas?: number;
-      // Rounds with the rescue fleet only.
+      // Solo en rondas con flota de rescate.
       rescatadosFlota?: number;
-      // Evaluation rounds only.
+      // Solo en rondas de evaluación.
       calentamiento?: ResultadoOleada[];
       metricas?: MetricasRonda;
     };
 
-/** The HTTP motor of an evaluation round: answers /paso and records one latency per call. */
+/** El motor HTTP de una ronda de evaluación: responde /paso y registra una latencia por llamada. */
 export type MotorMedido = ClienteMotor & { readonly latencias: number[] };
 
 export function parseEvento(evento: EventoDemo | null | undefined): { ronda: 1 | 2 | 3; semilla: number; modo: Modo; flota: boolean } {
@@ -80,18 +82,18 @@ export function crearHandler(deps: {
   cliente: ClienteEscritura;
   tabla: string;
   reloj?: Reloj;
-  // Evaluation rounds: one call per motor (the round, then the warm-up). Defaults to POST /paso from PASO_URL / PASO_KEY.
+  // Rondas de evaluación: una llamada por motor (la ronda y después el warm-up). Por defecto, POST /paso con PASO_URL / PASO_KEY.
   crearMotorHttp?: (opciones?: Pick<OpcionesMotorHttp, "timeoutMs">) => MotorMedido;
   pausaCalentamientoMs?: number;
-  // Milliseconds this invocation has left (Lambda context). Without it, demo rounds do not chain.
+  // Milisegundos que le quedan a esta invocación (contexto de Lambda). Sin este dato, las rondas de demo no se encadenan.
   tiempoRestanteMs?: () => number;
 }) {
   const jugar = async (ronda: 1 | 2 | 3, semilla: number, modo: Modo, flota: boolean): Promise<ResultadoDemo> => {
     const crear = ronda === 1 ? crearEscenarioR1 : ronda === 2 ? crearEscenarioR2 : crearEscenarioR3;
     const crearMotorHttp = deps.crearMotorHttp ?? ((opciones) => new MotorHttp(opciones));
-    // Built before anything is written, so a missing PASO_URL / PASO_KEY fails without touching the lock.
+    // Se construye antes de escribir nada, así una PASO_URL / PASO_KEY faltante falla sin tocar el lock.
     const motorHttp = modo === "evaluacion" ? crearMotorHttp() : undefined;
-    // The demo motor reads the live round config, which only exists once the scenario is built.
+    // El motor de demo lee la configuración viva de la ronda, que solo existe una vez construido el escenario.
     let vivo: ConfigRonda | undefined;
     const motor =
       motorHttp ??
@@ -99,7 +101,7 @@ export function crearHandler(deps: {
     const escenario = crear({ semilla, motor, reloj: deps.reloj ?? relojReal, modo, flota });
     const { config } = escenario;
     vivo = config;
-    // Publish each survivor's next step so the map draws its arrow; free here because the motor runs in process.
+    // Publica el siguiente paso de cada sobreviviente para que el mapa dibuje su flecha; acá no cuesta nada porque el motor corre en proceso.
     config.planificarSiguiente = (s) =>
       siguientePasoEnProceso(
         { sobrevivienteId: s.id, nodoActual: s.nodo, turno: 0 },
@@ -109,12 +111,12 @@ export function crearHandler(deps: {
       );
 
     const persistencia = new DynamoPersistencia(deps.cliente, deps.tabla, config.partidaId, ronda);
-    // The map panel shows the live /paso p95 of evaluation rounds (AGENTS.md §5 metricas.p95ms).
+    // El panel del mapa muestra el p95 en vivo de /paso en las rondas de evaluación (AGENTS.md §5 metricas.p95ms).
     if (motorHttp) persistencia.medirP95 = () => p95DeLatencias(motorHttp.latencias);
     if (!(await persistencia.iniciar(semilla))) return { iniciada: false };
     config.persistencia = persistencia;
 
-    // Arrival turn of each survivor and every turn result, for the efficiency and error metrics.
+    // Turno de llegada de cada sobreviviente y el resultado de cada turno, para las métricas de eficiencia y errores.
     const llegadas = new Map<string, number>();
     const turnos: ResultadoTurno[] = [];
     let rescatadosFlota = 0;
@@ -127,7 +129,7 @@ export function crearHandler(deps: {
     let calentamiento: ResultadoOleada[] | undefined;
     try {
       if (motorHttp) {
-        // Wake as many API instances as the round will hit at once, before turn 1 counts.
+        // Despierta tantas instancias de la API como la ronda va a usar a la vez, antes de que cuente el turno 1.
         calentamiento = await calentar({
           motor: crearMotorHttp({ timeoutMs: 3000 }),
           concurrencia: config.sobrevivientes.length,
@@ -176,10 +178,10 @@ export function crearHandler(deps: {
     let ultimo = await jugar(ronda, semilla, modo, flota);
     if (!ultimo.iniciada) return ultimo;
     let rondasJugadas = 1;
-    // A demo round lasts at most 150 turns of 2 s: chain only while a whole one still fits.
+    // Una ronda de demo dura como máximo 150 turnos de 2 s: solo se encadena mientras quepa una completa.
     while (modo === "demo" && deps.tiempoRestanteMs && deps.tiempoRestanteMs() >= MARGEN_RONDA_MS) {
       const siguiente = await jugar(ronda, (semilla + rondasJugadas) % 0x100000000, modo, flota);
-      if (!siguiente.iniciada) break; // another round took the lock in between: it shows on the map instead
+      if (!siguiente.iniciada) break; // otra ronda tomó el lock entretanto: es la que se ve en el mapa
       ultimo = siguiente;
       rondasJugadas++;
     }
@@ -187,10 +189,10 @@ export function crearHandler(deps: {
   };
 }
 
-// 150 turns × 2 s plus writes and a safety margin, against the 15-minute Lambda timeout.
+// 150 turnos × 2 s más las escrituras y un margen de seguridad, frente al timeout de 15 minutos de Lambda.
 const MARGEN_RONDA_MS = 330_000;
 
-// Created once per warm instance, like the API Lambda's clients.
+// Se crea una vez por instancia caliente, igual que los clientes de la Lambda de la API.
 const cliente = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 export const handler = (evento: EventoDemo, contexto?: { getRemainingTimeInMillis(): number }) =>
   crearHandler({

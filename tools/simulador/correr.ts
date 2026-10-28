@@ -1,21 +1,21 @@
 /**
- * CLI entry point for S4 round execution.
+ * Punto de entrada CLI para ejecutar las rondas de S4.
  *
- * Usage:
+ * Uso:
  *   node --import tsx tools/simulador/correr.ts --ronda=1 --semilla=42
  *   node --import tsx tools/simulador/correr.ts --ronda=2 --semilla=42 --modo=http
  *   node --import tsx tools/simulador/correr.ts --ronda=3 --semilla=42 --modo=http
  *
- * Environment variables (required for --modo=http):
- *   PASO_URL   — e.g. https://xxx.cloudfront.net/api/paso
- *   PASO_KEY   — value for x-api-key header
+ * Variables de entorno (obligatorias con --modo=http):
+ *   PASO_URL   — por ejemplo https://xxx.cloudfront.net/api/paso
+ *   PASO_KEY   — valor de la cabecera x-api-key
  *
- * Default mode (no --modo flag): uses the local fake motor (no AWS needed).
+ * Modo por defecto (sin --modo): usa el motor falso local (no necesita AWS).
  *
- * Output: prints per-turn progress and final metrics table to stdout.
+ * Salida: imprime en stdout el progreso de cada turno y la tabla final de métricas.
  *
- * Survivor arrival tracking: onTurno callback updates datosIniciales so the
- * efficiency metric knows which turn each survivor arrived.
+ * Seguimiento de llegadas: el callback onTurno actualiza datosIniciales para que
+ * la métrica de eficiencia sepa en qué turno llegó cada sobreviviente.
  */
 import { correrRonda } from "./turno";
 import { crearEscenarioR1, crearEscenarioR2, crearEscenarioR3 } from "./escenarios";
@@ -33,7 +33,7 @@ Obtain team authorization and disable the demo Scheduler before evaluation; this
 --help prints this help without starting a round.`;
 
 // -------------------------------------------------------------------------
-// Argument parsing
+// Lectura de argumentos
 // -------------------------------------------------------------------------
 
 export function parseArgs(args = process.argv.slice(2)): { ronda: 1 | 2 | 3; semilla: number; modo: "local" | "http" } {
@@ -67,7 +67,7 @@ export function parseArgs(args = process.argv.slice(2)): { ronda: 1 | 2 | 3; sem
 }
 
 // -------------------------------------------------------------------------
-// Main
+// Principal
 // -------------------------------------------------------------------------
 
 export async function main() {
@@ -80,10 +80,10 @@ export async function main() {
   console.log(`\nRonda R${ronda} | semilla ${semilla} | motor ${modo}`);
   console.log("─".repeat(40));
 
-  // Build motor.
+  // Construye el motor.
   const motorHttp = modo === "http" ? new MotorHttp() : null;
 
-  // Build scenario.
+  // Construye el escenario.
   const persistencia = crearPersistenciaMemoria();
   const crearEscenario = ronda === 1 ? crearEscenarioR1 : ronda === 2 ? crearEscenarioR2 : crearEscenarioR3;
   const escenario = crearEscenario({
@@ -106,7 +106,7 @@ export async function main() {
     const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region, credentials: fromIni({ profile }), maxAttempts: 1 }));
     destruirCliente = () => client.destroy();
     dynamo = new DynamoPersistencia(client, table, config.partidaId, ronda);
-    // Publishes the live /paso p95 the map panel shows (AGENTS.md §5 metricas.p95ms).
+    // Publica el p95 en vivo de /paso que muestra el panel del mapa (AGENTS.md §5 metricas.p95ms).
     const latencias = motorHttp!.latencias;
     dynamo.medirP95 = () => p95DeLatencias(latencias);
     if (!await dynamo.iniciar(semilla)) {
@@ -117,26 +117,26 @@ export async function main() {
     config.persistencia = dynamo;
   }
 
-  // Track arrival turns for efficiency calculation.
+  // Registra los turnos de llegada para calcular la eficiencia.
   const llegadas = new Map<string, number>(); // sobrevivienteId → turno
 
-  // onTurno callback — log progress and record arrivals.
+  // Callback onTurno: muestra el progreso y registra las llegadas.
   const resultadosTurnos: ResultadoTurno[] = [];
   config.onTurno = (resultado) => {
     resultadosTurnos.push(resultado);
-    // Record first-time arrivals.
+    // Registra las llegadas nuevas.
     for (const s of config.sobrevivientes) {
       if (s.estado === "a_salvo" && !llegadas.has(s.id)) {
         llegadas.set(s.id, resultado.turno);
       }
     }
-    // Print compact progress line.
+    // Imprime una línea compacta de progreso.
     process.stdout.write(
       `\r  turno ${String(resultado.turno).padStart(3)}  en ruta ${String(resultado.enRuta).padStart(3)}  a salvo ${String(resultado.aSalvo).padStart(3)}  mordidos ${String(resultado.mordidos).padStart(3)}`,
     );
   };
 
-  // Run.
+  // Ejecuta.
   try {
     await correrRonda(config);
   } finally {
@@ -145,14 +145,14 @@ export async function main() {
   }
   process.stdout.write("\n");
 
-  // Apply arrival turns to datosIniciales.
+  // Aplica los turnos de llegada a datosIniciales.
   for (const dato of datosIniciales) {
     dato.turnoLlegada = llegadas.get(dato.id) ?? 0;
     const s = config.sobrevivientes.find((s) => s.id === dato.id);
     if (s) dato.estado = s.estado;
   }
 
-  // Calculate and print metrics.
+  // Calcula e imprime las métricas.
   const metricas = calcularMetricas({
     ronda,
     resultadosTurnos,
@@ -168,7 +168,7 @@ export async function main() {
 
 if (require.main === module) {
   main().catch(() => {
-    // Do not print SDK/fetch diagnostics that could contain request URLs or credentials.
+    // No imprime diagnósticos del SDK o de fetch que podrían contener URLs de pedidos o credenciales.
     console.error("Round failed. Check configuration, active-game ownership and service availability. Use --help for usage.");
     process.exitCode = 1;
   });

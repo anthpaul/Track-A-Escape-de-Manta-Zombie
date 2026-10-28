@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { calentar, parseArgsCalentar, veredicto } from "./calentar";
 import type { ClienteMotor, PedidoPaso } from "./motor-falso";
 
-// Fake motor that records every request and how many were in flight at once.
+// Motor falso que registra cada pedido y cuántos estaban en vuelo al mismo tiempo.
 function motorFalso(opciones: { demoraMs?: number; fallarCada?: number } = {}) {
   const pedidos: PedidoPaso[] = [];
   let enVuelo = 0;
@@ -56,7 +56,7 @@ test("the instances are ready only when the last wave has no errors and p95 with
   assert.equal(veredicto([base]).listo, true);
   assert.equal(veredicto([{ ...base, errores: 1 }]).listo, false);
   assert.equal(veredicto([{ ...base, p95Ms: 151 }]).listo, false);
-  // Only the last wave matters: the first one is expected to hit cold starts.
+  // Solo importa la última oleada: se espera que la primera sufra arranques en frío.
   assert.equal(veredicto([{ ...base, oleada: 1, p95Ms: 900, errores: 30 }, base]).listo, true);
 });
 

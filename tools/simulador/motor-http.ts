@@ -1,23 +1,23 @@
 /**
- * HTTP motor client — calls the real POST /api/paso on AWS.
+ * Cliente HTTP del motor: llama al POST /api/paso real en AWS.
  *
- * Drop-in replacement for motor-falso.ts once the backend is deployed.
+ * Reemplazo directo de motor-falso.ts una vez desplegado el backend.
  *
- * Configuration (via environment variables or constructor options):
- *   PASO_URL   — full URL, e.g. https://xxx.cloudfront.net/api/paso
- *   PASO_KEY   — value for the x-api-key header
+ * Configuración (por variables de entorno u opciones del constructor):
+ *   PASO_URL   — URL completa, por ejemplo https://xxx.cloudfront.net/api/paso
+ *   PASO_KEY   — valor de la cabecera x-api-key
  *
- * Latency recording:
- *   Every call appends its wall-clock duration (ms) to `latencias`.
- *   The round runner reads this array to compute p50/p95/p99.
- *   Includes response-body parsing and failures, with exactly one sample per call.
+ * Registro de latencias:
+ *   Cada llamada agrega su duración de reloj (ms) a `latencias`.
+ *   El runner de la ronda lee este arreglo para calcular p50/p95/p99.
+ *   Incluye el parseo del cuerpo de la respuesta y los fallos, con exactamente una muestra por llamada.
  */
 import type { ClienteMotor, PedidoPaso, RespuestaPaso } from "./motor-falso";
 
 export interface OpcionesMotorHttp {
   url?: string;
   apiKey?: string;
-  /** Request cut in ms. Defaults to the official 500 ms; only a warm-up should wait longer. */
+  /** Corte del pedido en ms. Por defecto, los 500 ms oficiales; solo un warm-up debería esperar más. */
   timeoutMs?: number;
 }
 
@@ -25,7 +25,7 @@ export class MotorHttp implements ClienteMotor {
   private readonly url: string;
   private readonly apiKey: string;
   private readonly timeoutMs: number;
-  /** Recorded response times in ms, one per /paso call. */
+  /** Tiempos de respuesta registrados en ms, uno por cada llamada a /paso. */
   readonly latencias: number[] = [];
 
   constructor(opts: OpcionesMotorHttp = {}) {
@@ -51,7 +51,7 @@ export class MotorHttp implements ClienteMotor {
           "x-api-key": this.apiKey,
         },
         body: JSON.stringify(pedido),
-        // Both standalone calls and the coordinator enforce the official 500 ms ceiling.
+        // Tanto las llamadas sueltas como el coordinador aplican el tope oficial de 500 ms.
         signal: controller.signal,
       });
 
@@ -71,7 +71,7 @@ export class MotorHttp implements ClienteMotor {
     }
   }
 
-  /** Reset latency records (call between rounds if reusing the same instance). */
+  /** Reinicia el registro de latencias (llamar entre rondas si se reutiliza la misma instancia). */
   resetLatencias(): void {
     this.latencias.length = 0;
   }

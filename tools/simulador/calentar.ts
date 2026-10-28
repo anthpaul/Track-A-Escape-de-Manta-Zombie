@@ -1,22 +1,23 @@
 /**
- * Warm-up before a round: wakes enough Lambda instances for the R3 burst.
+ * Warm-up antes de una ronda: despierta suficientes instancias de Lambda para la ráfaga de la R3.
  *
- * In R3 the simulator sends ~200 POST /paso in the same 500 ms window. Every
- * instance Lambda has to create for that burst pays a cold start, which hurts
- * the p95 (15 %) and can push calls past 500 ms (availability, 15 %). Firing
- * the same burst a few times right before the round leaves those instances warm.
+ * En la R3 el simulador manda ~200 POST /paso en la misma ventana de 500 ms. Cada
+ * instancia que Lambda tiene que crear para esa ráfaga paga un arranque en frío, lo que
+ * empeora el p95 (15 %) y puede llevar llamadas por encima de 500 ms (disponibilidad, 15 %).
+ * Disparar la misma ráfaga unas cuantas veces justo antes de la ronda deja esas instancias
+ * calientes.
  *
- * Usage (same PASO_URL / PASO_KEY as `correr.ts --modo=http`):
+ * Uso (mismas PASO_URL / PASO_KEY que `correr.ts --modo=http`):
  *   node --import tsx tools/simulador/calentar.ts [--concurrencia=200] [--oleadas=3] [--pausa=1000]
  *
- * It only calls /paso, which never writes to DynamoDB; with no active game the
- * motor answers its safe fallback, which still runs the full cold start.
+ * Solo llama a /paso, que nunca escribe en DynamoDB; sin una partida activa el motor
+ * responde su paso seguro de respaldo, que igual recorre el arranque en frío completo.
  */
 import { MotorHttp } from "./motor-http";
 import { percentil } from "./metricas";
 import type { ClienteMotor } from "./motor-falso";
 
-// Official latency tier for the best score (p95 ≤ 150 ms).
+// Tramo oficial de latencia para el mejor puntaje (p95 ≤ 150 ms).
 const P95_OBJETIVO_MS = 150;
 
 export interface ResultadoOleada {
@@ -39,7 +40,7 @@ export async function calentar(opts: {
   for (let oleada = 1; oleada <= opts.oleadas; oleada++) {
     const latencias: number[] = [];
     let errores = 0;
-    // All requests of a wave start together: that concurrency is what makes Lambda create instances.
+    // Todos los pedidos de una oleada arrancan juntos: esa concurrencia es la que hace que Lambda cree instancias.
     await Promise.all(
       Array.from({ length: opts.concurrencia }, async (_, i) => {
         const inicio = performance.now();
@@ -66,7 +67,7 @@ export async function calentar(opts: {
   return resultados;
 }
 
-/** Ready when the last wave, already warm, meets the best latency tier with no errors. */
+/** Listo cuando la última oleada, ya caliente, cumple el mejor tramo de latencia sin errores. */
 export function veredicto(oleadas: readonly ResultadoOleada[]): { listo: boolean; motivo: string } {
   const ultima = oleadas.at(-1);
   if (!ultima) return { listo: false, motivo: "no wave ran" };
@@ -107,8 +108,8 @@ async function main() {
 
 if (require.main === module) {
   main().catch((error: unknown) => {
-    // Request failures are counted per wave and never reach here, so what does is a usage or
-    // configuration error whose message carries no URL or key.
+    // Los pedidos fallidos se cuentan por oleada y nunca llegan acá; lo que sí llega es un error
+    // de uso o de configuración, cuyo mensaje no incluye la URL ni la key.
     console.error(error instanceof Error ? error.message : "Warm-up failed. Use --help for usage.");
     process.exitCode = 1;
   });

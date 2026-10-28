@@ -1,51 +1,51 @@
 /**
- * Game rules — shared between the simulator and the route motor.
+ * Reglas del juego, compartidas entre el simulador y el motor de rutas.
  *
- * ALL rules that govern what is legal or dangerous in the game world live here.
- * Neither tools/simulador/ nor backend/ may re-implement these; they import them.
+ * TODAS las reglas que definen qué es legal o peligroso en el mundo del juego viven acá.
+ * Ni tools/simulador/ ni backend/ pueden reimplementarlas: las importan.
  *
- * All functions are pure: no IO, no global state, no side effects.
- * The `aleatorio` parameter is always injected by the caller so tests can
- * use a fixed sequence and the simulator uses its seeded generator.
+ * Todas las funciones son puras: sin IO, sin estado global y sin efectos secundarios.
+ * El parámetro `aleatorio` siempre lo inyecta quien llama, para que los tests usen
+ * una secuencia fija y el simulador use su generador con semilla.
  *
- * References: AGENTS.md §§ 0 (enunciado), 4.4 (costos de peligro), 4.5 (turno)
+ * Referencias: AGENTS.md §§ 0 (enunciado), 4.4 (costos de peligro), 4.5 (turno)
  */
 import type { GrafoIndexado } from "./grafo";
 import type { Zombie, Sobreviviente, TipoZombie } from "./schemas";
 
 // -------------------------------------------------------------------------
-// Re-export the canonical zombie type so callers only need one import.
+// Reexporta el tipo canónico de zombie para que quien llama necesite un solo import.
 // -------------------------------------------------------------------------
 export type { Zombie, Sobreviviente, TipoZombie };
 
 // -------------------------------------------------------------------------
-// Internal zombie state (simulator-only fields not visible in public snapshots)
+// Estado interno del zombie (campos solo del simulador, no visibles en los snapshots públicos)
 // -------------------------------------------------------------------------
 
 /**
- * Extended zombie record used internally by the simulator.
- * `dormido` zombies are NEVER included in public `/estado` snapshots
- * (EstadoTurnoSchema uses ZombieVisibleSchema which excludes "dormido").
- * The simulator keeps them here and awakens them when a survivor gets close.
+ * Registro extendido de zombie que el simulador usa internamente.
+ * Los zombies `dormido` NUNCA se incluyen en los snapshots públicos de `/estado`
+ * (EstadoTurnoSchema usa ZombieVisibleSchema, que excluye "dormido").
+ * El simulador los guarda acá y los despierta cuando un sobreviviente se acerca.
  */
 export interface ZombieInterno extends Zombie {
   tipo: TipoZombie;
-  /** Caminante moves once every 2 turns — tracks whether it moved last turn. */
+  /** El caminante se mueve una vez cada 2 turnos: registra si se movió en el turno anterior. */
   movioPasadoTurno?: boolean;
 }
 
 // -------------------------------------------------------------------------
-// 1. Distance (BFS hop count) — used for proximity checks
+// 1. Distancia (cantidad de saltos por BFS), usada en los chequeos de proximidad
 // -------------------------------------------------------------------------
 
 /**
- * Return the shortest-path hop count from `origen` to `destino` in the graph,
- * ignoring blocked streets (proximity checks use the full topology).
- * Returns Infinity if unreachable.
+ * Devuelve la cantidad de saltos del camino más corto de `origen` a `destino` en el grafo,
+ * ignorando las calles bloqueadas (los chequeos de proximidad usan la topología completa).
+ * Devuelve Infinity si no es alcanzable.
  *
- * Used for:
- *   - Corredor pursuit: attack if survivor is within 3 hops.
- *   - Dormido awakening: wake up if survivor is within 2 hops.
+ * Se usa para:
+ *   - Persecución del corredor: ataca si un sobreviviente está a 3 saltos o menos.
+ *   - Despertar del dormido: despierta si un sobreviviente está a 2 saltos o menos.
  */
 export function distanciaHops(
   grafo: GrafoIndexado,
@@ -69,26 +69,26 @@ export function distanciaHops(
 }
 
 // -------------------------------------------------------------------------
-// 2. Zombie movement — S2
+// 2. Movimiento de zombies (S2)
 // -------------------------------------------------------------------------
 
 /**
- * Move a single zombie according to its type rules.
- * Returns the new node ID (same node if the zombie does not move this turn).
+ * Mueve un zombie según las reglas de su tipo.
+ * Devuelve el id del nuevo nodo (el mismo nodo si el zombie no se mueve este turno).
  *
- * Rules (AGENTS.md §0 — Requisitos):
- *   Caminante : moves 1 street every 2 turns, random direction.
- *   Corredor  : moves 2 streets per turn; pursues if a survivor is ≤3 hops.
- *   Horda     : almost immobile — never moves (blocks its node + neighbors).
- *   Dormido   : invisible until a survivor is ≤2 hops; awakens as Caminante.
- *               Movement after awakening is handled by the Caminante rule.
+ * Reglas (AGENTS.md §0 — Requisitos):
+ *   Caminante : 1 calle cada 2 turnos, en dirección aleatoria.
+ *   Corredor  : 2 calles por turno; persigue si hay un sobreviviente a ≤3 saltos.
+ *   Horda     : casi inmóvil; nunca se mueve (bloquea su nodo y sus vecinos).
+ *   Dormido   : invisible hasta que un sobreviviente está a ≤2 saltos; despierta como Caminante.
+ *               Después de despertar, su movimiento lo maneja la regla del Caminante.
  *
- * @param zombie      The zombie to move (ZombieInterno with simulator state).
- * @param grafo       Indexed graph.
- * @param aristasBloqueadas  Currently blocked street IDs.
- * @param sobrevivientes     Active survivors (Corredor uses these for pursuit).
- * @param aleatorio   Seeded random number generator () => [0, 1).
- * @param turno       Current turn number (Caminante uses parity).
+ * @param zombie      El zombie a mover (ZombieInterno con estado del simulador).
+ * @param grafo       Grafo indexado.
+ * @param aristasBloqueadas  Ids de las calles bloqueadas en este momento.
+ * @param sobrevivientes     Sobrevivientes activos (el Corredor los usa para perseguir).
+ * @param aleatorio   Generador de números aleatorios con semilla () => [0, 1).
+ * @param turno       Número de turno actual (el Caminante usa su paridad).
  */
 export function moverZombie(
   zombie: ZombieInterno,
@@ -103,12 +103,12 @@ export function moverZombie(
   switch (zombie.tipo) {
     case "horda":
     case "dormido":
-      // Horda never moves. Dormido is immobile until it awakens (handled in
-      // despertarDormidos); after awakening its type becomes "caminante".
+      // La horda nunca se mueve. El dormido queda inmóvil hasta despertar (lo maneja
+      // despertarDormidos); al despertar, su tipo pasa a ser "caminante".
       return { nuevoNodo: zombie.nodo, movioPasadoTurno: false };
 
     case "caminante": {
-      // Moves 1 street every 2 turns (alternating).
+      // Se mueve 1 calle cada 2 turnos (alternando).
       if (zombie.movioPasadoTurno) {
         return { nuevoNodo: zombie.nodo, movioPasadoTurno: false };
       }
@@ -117,8 +117,8 @@ export function moverZombie(
     }
 
     case "corredor": {
-      // Moves up to 2 streets per turn.
-      // If a survivor is within 3 hops, pursue the closest one.
+      // Se mueve hasta 2 calles por turno.
+      // Si hay un sobreviviente a 3 saltos o menos, persigue al más cercano.
       const objetivo = encontrarObjetivoCorredor(zombie.nodo, activos, grafo);
       let nodoActual = zombie.nodo;
       for (let paso = 0; paso < 2; paso++) {
@@ -133,7 +133,7 @@ export function moverZombie(
   }
 }
 
-/** Pick a random unblocked neighbor, or null if all are blocked. */
+/** Elige un vecino no bloqueado al azar, o null si todos están bloqueados. */
 function elegirVecinoAleatorio(
   nodo: string,
   grafo: GrafoIndexado,
@@ -148,8 +148,8 @@ function elegirVecinoAleatorio(
 }
 
 /**
- * Find the closest active survivor within 3 hops, or null if none.
- * Used by Corredor to decide whether to pursue.
+ * Busca el sobreviviente activo más cercano a 3 saltos o menos, o null si no hay ninguno.
+ * El Corredor lo usa para decidir si persigue.
  */
 function encontrarObjetivoCorredor(
   nodoZombie: string,
@@ -169,8 +169,8 @@ function encontrarObjetivoCorredor(
 }
 
 /**
- * Move one step toward a target node via BFS shortest path.
- * Returns the next node on the path, or null if no valid unblocked path exists.
+ * Avanza un paso hacia un nodo objetivo por el camino más corto (BFS).
+ * Devuelve el siguiente nodo del camino, o null si no existe un camino válido sin bloqueos.
  */
 function perseguir(
   desde: string,
@@ -179,7 +179,7 @@ function perseguir(
   aristasBloqueadas: readonly string[],
 ): string | null {
   if (desde === hacia) return null;
-  // BFS to find the next hop on the shortest path.
+  // BFS para encontrar el siguiente salto del camino más corto.
   const padre = new Map<string, string>([[desde, desde]]);
   const cola = [desde];
   let encontrado = false;
@@ -193,7 +193,7 @@ function perseguir(
     }
   }
   if (!encontrado) return null;
-  // Walk back from target to find the first step after `desde`.
+  // Recorre hacia atrás desde el objetivo para encontrar el primer paso después de `desde`.
   let nodo = hacia;
   while (padre.get(nodo) !== desde) {
     const p = padre.get(nodo);
@@ -204,15 +204,15 @@ function perseguir(
 }
 
 // -------------------------------------------------------------------------
-// 3. Dormido awakening — S2
+// 3. Despertar de los dormidos (S2)
 // -------------------------------------------------------------------------
 
 /**
- * Wake up sleeping zombies that are within 2 hops of any active survivor.
- * Mutates the zombie array in place: changes tipo from "dormido" to "caminante".
- * Call this BEFORE moverZombie so newly awakened zombies move in the same turn.
+ * Despierta a los zombies dormidos que están a 2 saltos o menos de algún sobreviviente activo.
+ * Modifica el arreglo de zombies en el lugar: cambia `tipo` de "dormido" a "caminante".
+ * Llamarla ANTES de moverZombie, para que los recién despertados se muevan en el mismo turno.
  *
- * Dormidos are never in public snapshots; the simulator tracks them internally.
+ * Los dormidos nunca están en los snapshots públicos; el simulador los sigue internamente.
  */
 export function despertarDormidos(
   zombies: ZombieInterno[],
@@ -233,13 +233,13 @@ export function despertarDormidos(
 }
 
 // -------------------------------------------------------------------------
-// 4. City events — S2
+// 4. Eventos de ciudad (S2)
 // -------------------------------------------------------------------------
 
 /**
- * Apply a city event (bridge collapse, avenue blockage) by adding the
- * street ID to the blocked list if it is not already there.
- * Returns a new array — does not mutate the original.
+ * Aplica un evento de ciudad (colapso de un puente, bloqueo de una avenida) agregando
+ * el id de la calle a la lista de bloqueadas si todavía no está.
+ * Devuelve un arreglo nuevo: no modifica el original.
  */
 export function aplicarBloqueo(
   aristasBloqueadas: readonly string[],
@@ -250,26 +250,26 @@ export function aplicarBloqueo(
 }
 
 // -------------------------------------------------------------------------
-// 5. Bite resolution — S3
+// 5. Resolución de mordidas (S3)
 // -------------------------------------------------------------------------
 
 /**
- * Resolve node-sharing bites: a survivor is bitten if, at the END of a turn,
- * they share a node with any zombie (AGENTS.md §0 — Mordida).
+ * Resuelve las mordidas por nodo compartido: un sobreviviente es mordido si, al FINAL
+ * de un turno, comparte nodo con algún zombie (AGENTS.md §0 — Mordida).
  *
- * Marks bitten survivors as "mordido" in place.
- * Sleeping zombies (dormido) are invisible — they cannot bite.
+ * Marca en el lugar a los mordidos como "mordido".
+ * Los zombies dormidos son invisibles: no pueden morder.
  */
 export function resolverMordidasPorNodo(
   sobrevivientes: Sobreviviente[],
   zombies: readonly ZombieInterno[],
 ): void {
-  // Only visible (non-dormido) zombies can bite.
+  // Solo los zombies visibles (no dormidos) pueden morder.
   const nodosZombieVisibles = new Set(
     zombies.filter((z) => z.tipo !== "dormido").map((z) => z.nodo),
   );
   for (const s of sobrevivientes) {
-    if (s.estado !== "en_ruta" || s.vehiculo) continue; // riding a rescue van: protected
+    if (s.estado !== "en_ruta" || s.vehiculo) continue; // viaja en una camioneta de rescate: protegido
     if (nodosZombieVisibles.has(s.nodo)) {
       s.estado = "mordido";
     }
@@ -277,18 +277,18 @@ export function resolverMordidasPorNodo(
 }
 
 /**
- * Resolve crossing bites: a survivor is bitten if they cross a street in the
- * opposite direction to a zombie in the same turn (AGENTS.md §0 — Mordida).
+ * Resuelve las mordidas por cruce: un sobreviviente es mordido si cruza una calle en
+ * dirección opuesta a un zombie en el mismo turno (AGENTS.md §0 — Mordida).
  *
- * A crossing bite occurs when:
- *   survivor:  nodo A → nodo B  (via calle C-xxxx)
- *   zombie:    nodo B → nodo A  (via the same calle C-xxxx)
+ * Hay mordida por cruce cuando:
+ *   sobreviviente:  nodo A → nodo B  (por la calle C-xxxx)
+ *   zombie:         nodo B → nodo A  (por la misma calle C-xxxx)
  *
- * @param sobrevivientes  Survivors AFTER their move (current nodo = B).
- * @param previoSobrevivientes  Survivors BEFORE their move (nodo = A).
- * @param zombies  Zombies AFTER their move (current nodo = A, moved from B).
- * @param previoZombies  Zombies BEFORE their move (nodo = B).
- * @param grafo  Indexed graph (to look up street IDs).
+ * @param sobrevivientes  Sobrevivientes DESPUÉS de moverse (nodo actual = B).
+ * @param previoSobrevivientes  Sobrevivientes ANTES de moverse (nodo = A).
+ * @param zombies  Zombies DESPUÉS de moverse (nodo actual = A, vienen de B).
+ * @param previoZombies  Zombies ANTES de moverse (nodo = B).
+ * @param grafo  Grafo indexado (para buscar los ids de las calles).
  */
 export function resolverMordidasPorCruce(
   sobrevivientes: Sobreviviente[],
@@ -297,14 +297,14 @@ export function resolverMordidasPorCruce(
   previoZombies: readonly Pick<ZombieInterno, "id" | "nodo" | "tipo">[],
   grafo: GrafoIndexado,
 ): void {
-  // Build a map of zombie movement: calleId → Set of (previoNodo) for each zombie that crossed.
-  // Only visible zombies can cause crossing bites.
-  // We store the node the zombie CAME FROM so we can detect opposite directions.
+  // Arma un mapa del movimiento de zombies: calleId → Set de (previoNodo) por cada zombie que cruzó.
+  // Solo los zombies visibles pueden causar mordidas por cruce.
+  // Se guarda el nodo DE DONDE VINO el zombie para detectar direcciones opuestas.
   const callesCruzadasPorZombies = new Map<string, Set<string>>(); // calleId → Set<nodoOrigen>
   for (const zombie of zombies) {
     if (zombie.tipo === "dormido") continue;
     const previo = previoZombies.find((z) => z.id === zombie.id);
-    if (!previo || previo.nodo === zombie.nodo) continue;  // did not move
+    if (!previo || previo.nodo === zombie.nodo) continue;  // no se movió
     const calle = grafo.calleEntre(previo.nodo, zombie.nodo);
     if (!calle) continue;
     if (!callesCruzadasPorZombies.has(calle.id)) {
@@ -315,19 +315,19 @@ export function resolverMordidasPorCruce(
 
   if (callesCruzadasPorZombies.size === 0) return;
 
-  // Check each survivor: did they cross the same street in the OPPOSITE direction?
+  // Revisa cada sobreviviente: ¿cruzó la misma calle en dirección OPUESTA?
   for (const s of sobrevivientes) {
-    if (s.estado !== "en_ruta" || s.vehiculo) continue; // riding a rescue van: protected
+    if (s.estado !== "en_ruta" || s.vehiculo) continue; // viaja en una camioneta de rescate: protegido
     const previo = previoSobrevivientes.find((p) => p.id === s.id);
-    if (!previo || previo.nodo === s.nodo) continue;  // did not move
+    if (!previo || previo.nodo === s.nodo) continue;  // no se movió
     const calle = grafo.calleEntre(previo.nodo, s.nodo);
     if (!calle) continue;
     const origenesZombie = callesCruzadasPorZombies.get(calle.id);
     if (!origenesZombie) continue;
-    // Opposite direction: survivor came FROM a node that a zombie moved TO,
-    // i.e. the zombie's origin (previo.nodo) equals survivor's destination (s.nodo)
-    // AND the zombie's destination equals survivor's origin (previo.nodo).
-    // In other words: a zombie's origin is the survivor's destination (s.nodo).
+    // Dirección opuesta: el sobreviviente vino DESDE un nodo al que un zombie se movió,
+    // es decir, el origen del zombie (previo.nodo) es el destino del sobreviviente (s.nodo)
+    // Y el destino del zombie es el origen del sobreviviente (previo.nodo).
+    // En otras palabras: el origen de algún zombie es el destino del sobreviviente (s.nodo).
     if (origenesZombie.has(s.nodo)) {
       s.estado = "mordido";
     }
@@ -335,16 +335,17 @@ export function resolverMordidasPorCruce(
 }
 
 // -------------------------------------------------------------------------
-// 6. Shelter arrivals — S3
+// 6. Llegadas a refugios (S3)
 // -------------------------------------------------------------------------
 
 /**
- * Mark survivors that have reached a refuge node as "a_salvo".
- * Call this AFTER resolving bites so a bitten survivor at a refuge is "mordido",
- * not "a_salvo".
+ * Marca como "a_salvo" a los sobrevivientes que llegaron a un nodo de refugio.
+ * Llamarla DESPUÉS de resolver las mordidas, para que un mordido en un refugio quede
+ * "mordido" y no "a_salvo".
  *
- * With `capacidades` (refuge node → capacity, Pro), a full refuge admits nobody else: whoever
- * arrives stays "en_ruta" at the door. Simultaneous arrivals get in by id until it is full.
+ * Con `capacidades` (nodo de refugio → capacidad, Pro), un refugio lleno no admite a nadie más:
+ * quien llega queda "en_ruta" en la puerta. Las llegadas simultáneas entran por orden de id
+ * hasta llenarlo.
  */
 export function resolverLlegadas(
   sobrevivientes: Sobreviviente[],
@@ -356,7 +357,7 @@ export function resolverLlegadas(
     if (s.estado === "a_salvo") ocupacion.set(s.nodo, (ocupacion.get(s.nodo) ?? 0) + 1);
   }
   const llegando = sobrevivientes
-    // People riding a rescue van get out when the van drops them off (flota.ts), not when it drives by.
+    // Quienes viajan en una camioneta de rescate bajan cuando la camioneta los deja (flota.ts), no al pasar.
     .filter((s) => s.estado === "en_ruta" && !s.vehiculo && nodosRefugio.has(s.nodo))
     .sort((a, b) => a.id.localeCompare(b.id));
   for (const s of llegando) {
@@ -369,12 +370,12 @@ export function resolverLlegadas(
 }
 
 // -------------------------------------------------------------------------
-// 7. Visible zombie filter — for public snapshots
+// 7. Filtro de zombies visibles, para los snapshots públicos
 // -------------------------------------------------------------------------
 
 /**
- * Return only the zombies that should appear in public snapshots (GET /estado).
- * Sleeping zombies are invisible until they awaken.
+ * Devuelve solo los zombies que deben aparecer en los snapshots públicos (GET /estado).
+ * Los dormidos son invisibles hasta que despiertan.
  */
 export function zombiesVisibles(
   zombies: readonly ZombieInterno[],

@@ -67,7 +67,7 @@ test("a scheduled demo plays a whole round on DynamoDB and releases the lock", a
   assert.match(r.partidaId!, /^demo-r1-/);
   assert.equal(r.aSalvo! + r.mordidos! + r.enRuta!, 20);
   assert.ok(comandos[0] instanceof PutCommand, "first takes the lock");
-  // Demo rounds stop once nobody is on the road (evaluation rounds always play 150 turns).
+  // Las rondas de demo se detienen cuando ya no queda nadie en ruta (las de evaluación siempre juegan 150 turnos).
   assert.equal(r.enRuta, 0, "the demo ends when nobody is left on the road");
   const publicaciones = comandos.filter((c) => c instanceof TransactWriteCommand).length;
   assert.ok(publicaciones >= 2 && publicaciones < 2 * 150, "every turn played is published twice, and it stopped early");
@@ -127,7 +127,7 @@ test("the event picks evaluation mode explicitly; anything else is rejected", ()
   assert.throws(() => parseEvento({ modo: "prueba" }), /modo/);
 });
 
-// HTTP motor stand-in: every survivor stays where it is, each call records 1 ms.
+// Sustituto del motor HTTP: cada sobreviviente se queda donde está y cada llamada registra 1 ms.
 function motorHttpFalso() {
   const motor = {
     latencias: [] as number[],
@@ -163,16 +163,17 @@ test("an evaluation round warms up first, then plays all 150 turns over HTTP and
   assert.match(r.partidaId, /^evaluacion-r1-/);
   assert.equal(r.modo, "evaluacion");
 
-  // Warm-up: its own motor, 4 simultaneous waves as large as the round (20 survivors in R1). It waits up to
-  // 3 s per request so starting instances finish booting; the round keeps the official 500 ms cut.
-  // The round motor is built first (before the lock), the warm-up motor right before turn 1.
+  // Warm-up: motor propio, 4 oleadas simultáneas tan grandes como la ronda (20 sobrevivientes en la R1).
+  // Espera hasta 3 s por pedido para que las instancias nuevas terminen de arrancar; la ronda mantiene
+  // el corte oficial de 500 ms. El motor de la ronda se construye primero (antes del lock) y el del
+  // warm-up justo antes del turno 1.
   const [ronda, calentamiento] = motores;
   assert.equal(motores.length, 2, "warm-up and round use separate motors, so their latencies never mix");
   assert.deepEqual(r.calentamiento!.map((o) => [o.oleada, o.pedidos, o.errores]), [[1, 20, 0], [2, 20, 0], [3, 20, 0], [4, 20, 0]]);
   assert.equal(calentamiento.llamadas, 80);
   assert.deepEqual(opciones, [undefined, { timeoutMs: 3000 }]);
 
-  // Evaluation rounds never stop early, and the metrics count only the round's own calls.
+  // Las rondas de evaluación nunca terminan antes, y las métricas solo cuentan las llamadas de la propia ronda.
   assert.equal(r.metricas!.turnosEjecutados, 150);
   assert.equal(r.metricas!.totalLlamadas, ronda.llamadas);
   assert.equal(r.metricas!.latenciaP95Ms, 1);
@@ -216,7 +217,7 @@ test("the rescue fleet rides in demo rounds by default and never in evaluation u
 
 test("demo rounds chain back to back while the invocation has time for another full round", async () => {
   const { cliente, comandos } = clienteFalso();
-  const restante = [12 * 60_000, 4 * 60_000]; // after round 1: room for another; after round 2: not
+  const restante = [12 * 60_000, 4 * 60_000]; // después de la ronda 1: hay tiempo para otra; después de la ronda 2: no
   const handler = crearHandler({ cliente, tabla: "t", reloj: crearRelojFake(), tiempoRestanteMs: () => restante.shift() ?? 0 });
   const r = await handler({ ronda: 1, semilla: 3 });
   assert.equal(r.iniciada, true);

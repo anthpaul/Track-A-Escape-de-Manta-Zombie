@@ -1,18 +1,18 @@
 /**
- * Round scenario builders — S4 (AGENTS.md §0, prueba de fuego).
+ * Constructores de escenarios de ronda — S4 (AGENTS.md §0, prueba de fuego).
  *
- * Each function returns a ConfigRonda ready to pass to correrRonda(), plus
- * the initial survivor data needed for efficiency metrics.
+ * Cada función devuelve una ConfigRonda lista para pasar a correrRonda(), junto con
+ * los datos iniciales de los sobrevivientes que necesitan las métricas de eficiencia.
  *
- * Compositions (fixed by the challenge organizer):
- *   R1 — 20 survivors, walkers only, no events.
- *   R2 — 80 survivors, walkers + runners + hordes, bridge C-0199 collapses at turn 30.
- *   R3 — 200 survivors, all types including sleepers, two streets blocked at turns 20 and 60.
+ * Composiciones (fijadas por la organización del reto):
+ *   R1 — 20 sobrevivientes, solo caminantes, sin eventos.
+ *   R2 — 80 sobrevivientes, caminantes + corredores + hordas; el puente C-0199 colapsa en el turno 30.
+ *   R3 — 200 sobrevivientes, todos los tipos incluidos dormidos; dos calles se bloquean en los turnos 20 y 60.
  *
- * Survivor distribution: evenly spread across the four barrios using the seeded
- * random generator from preparar.ts.  Each survivor starts on a barrio node.
+ * Distribución de sobrevivientes: repartidos en partes iguales entre los cuatro barrios con el
+ * generador aleatorio con semilla de preparar.ts. Cada sobreviviente arranca en un nodo de barrio.
  *
- * Zombie placement: seeded random positions on non-refuge, non-barrio-start nodes.
+ * Ubicación de zombies: posiciones aleatorias con semilla en nodos que no son refugio ni inicio de barrio.
  */
 import { crearAleatorio } from "./preparar";
 import { generarPartidaId } from "../../backend/src/db/keys";
@@ -27,12 +27,12 @@ import type { PersistenciaPartida } from "./persistencia";
 import type { Reloj } from "./reloj";
 import type { ConfigRonda, EventoRonda } from "./turno";
 import type { DatosSobreviviente } from "./metricas";
-// Static import so esbuild bundles the graph into the simulator Lambda (S6); no file read at runtime.
+// Import estático para que esbuild empaquete el grafo en la Lambda del simulador (S6); no se lee ningún archivo en ejecución.
 import grafoManta from "@abcstack/shared/data/manta.json";
 import { crearFlota } from "@abcstack/shared";
 
 // -------------------------------------------------------------------------
-// Graph loading (once per process)
+// Carga del grafo (una vez por proceso)
 // -------------------------------------------------------------------------
 
 function cargarGrafo() {
@@ -40,18 +40,18 @@ function cargarGrafo() {
 }
 
 // -------------------------------------------------------------------------
-// Seeded random (Mulberry32 — same as preparar.ts)
+// Aleatorio con semilla (Mulberry32, el mismo de preparar.ts)
 // -------------------------------------------------------------------------
 
 let ultimaIdentidadMs = 0;
 function nuevaIdentidad(ronda: 1 | 2 | 3, modo: "evaluacion" | "demo" = "evaluacion"): string {
-  // Retain the canonical epoch-ms format while avoiding same-process collisions.
+  // Conserva el formato canónico en epoch ms y evita colisiones dentro del mismo proceso.
   ultimaIdentidadMs = Math.max(Date.now(), ultimaIdentidadMs + 1);
   return generarPartidaId(modo, ronda).replace(/\d+$/, String(ultimaIdentidadMs));
 }
 
 // -------------------------------------------------------------------------
-// Actor placement helpers
+// Helpers para ubicar a los actores
 // -------------------------------------------------------------------------
 
 const BARRIOS = ["tarqui", "los_esteros", "barbasquillo", "jocay"] as const;
@@ -62,8 +62,8 @@ function nodosDelBarrio(nodos: readonly Nodo[], barrio: Barrio): string[] {
 }
 
 /**
- * Distribute `total` survivors evenly across the four barrios.
- * Returns an array of { id, nodoInicial } pairs.
+ * Reparte `total` sobrevivientes en partes iguales entre los cuatro barrios.
+ * Devuelve un arreglo de pares { id, nodoInicial }.
  */
 function colocarSobrevivientes(
   total: number,
@@ -90,8 +90,8 @@ function colocarSobrevivientes(
 }
 
 /**
- * Place `total` zombies on random non-refuge nodes.
- * Returns ZombieInterno[] with the given type distribution.
+ * Ubica `total` zombies en nodos aleatorios que no son refugio.
+ * Devuelve ZombieInterno[] con la distribución de tipos indicada.
  */
 function colocarZombies(
   specs: Array<{ tipo: ZombieInterno["tipo"]; cantidad: number }>,
@@ -118,7 +118,7 @@ function colocarZombies(
 }
 
 // -------------------------------------------------------------------------
-// Shared scenario builder output
+// Salida común de los constructores de escenarios
 // -------------------------------------------------------------------------
 
 export interface Escenario {
@@ -132,20 +132,20 @@ interface OpcionesEscenario {
   motor?: ClienteMotor;
   persistencia?: PersistenciaPartida;
   reloj?: Reloj;
-  /** Scheduled demo rounds (S6) are tagged "demo"; everything else stays "evaluacion". */
+  /** Las rondas de demo programadas (S6) se marcan como "demo"; todo lo demás queda como "evaluacion". */
   modo?: "evaluacion" | "demo";
-  /** Rescue fleet (Pro): five vans. Off unless asked, so evaluation rounds stay as they are. */
+  /** Flota de rescate (Pro): cinco camionetas. Apagada salvo que se pida, así las rondas de evaluación no cambian. */
   flota?: boolean;
 }
 
-// Refuge node → capacity (Pro): a full refuge admits nobody else (shared/reglas.ts resolverLlegadas).
+// Nodo de refugio → capacidad (Pro): un refugio lleno no admite a nadie más (shared/reglas.ts resolverLlegadas).
 const CAPACIDAD_REFUGIO: ReadonlyMap<string, number> = new Map(cargarGrafo().refugios.map((r) => [r.nodo, r.capacidad]));
 
-// 150 turns × 2 s = 5 minutes (official round duration)
+// 150 turnos × 2 s = 5 minutos (duración oficial de una ronda)
 const TOTAL_TURNOS = 150;
 
 // -------------------------------------------------------------------------
-// R1 — Nightfall: 20 survivors, walkers only, no events
+// R1 — Anochecer: 20 sobrevivientes, solo caminantes, sin eventos
 // -------------------------------------------------------------------------
 
 export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
@@ -185,7 +185,7 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
     ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    // Las rondas de demo terminan cuando ya no queda nadie en ruta, para que el mapa público no muestre solo zombies durante minutos.
     detenerSinActivos: opts.modo === "demo",
     eventos: [],
   };
@@ -201,7 +201,7 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
 }
 
 // -------------------------------------------------------------------------
-// R2 — Midnight: 80 survivors, walkers + runners + hordes, bridge collapse turn 30
+// R2 — Medianoche: 80 sobrevivientes, caminantes + corredores + hordas, colapso de puente en el turno 30
 // -------------------------------------------------------------------------
 
 export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
@@ -226,7 +226,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     rnd,
   );
 
-  // C-0199 is the real bridge in the graph (verified in shared/data/README.md).
+  // C-0199 es el puente real del grafo (verificado en shared/data/README.md).
   const eventos: EventoRonda[] = [
     { turno: 30, calleId: "C-0199", descripcion: "bridge collapse (R2)" },
   ];
@@ -253,7 +253,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    // Las rondas de demo terminan cuando ya no queda nadie en ruta, para que el mapa público no muestre solo zombies durante minutos.
     detenerSinActivos: opts.modo === "demo",
     eventos,
   };
@@ -269,7 +269,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
 }
 
 // -------------------------------------------------------------------------
-// R3 — Apocalypse: 200 survivors, all types including sleepers, two blockages
+// R3 — Apocalipsis: 200 sobrevivientes, todos los tipos incluidos dormidos, dos bloqueos
 // -------------------------------------------------------------------------
 
 export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
@@ -295,10 +295,10 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     rnd,
   );
 
-  // Two streets blocked at different turns.
-  // C-0050 and C-0100 are arbitrary streets in the middle of the graph.
-  // In the real fire test the organizer chooses which streets; we pick two
-  // real streets from manta.json that have detours available.
+  // Dos calles bloqueadas en turnos distintos.
+  // C-0050 y C-0100 son calles arbitrarias en el medio del grafo.
+  // En la prueba de fuego real la organización elige las calles; acá se eligen
+  // dos calles reales de manta.json que tienen desvíos disponibles.
   const calles = grafoData.calles;
   const calle1 = calles[50]?.id;
   const calle2 = calles[100]?.id;
@@ -327,7 +327,7 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
-    // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
+    // Las rondas de demo terminan cuando ya no queda nadie en ruta, para que el mapa público no muestre solo zombies durante minutos.
     detenerSinActivos: opts.modo === "demo",
     eventos,
   };

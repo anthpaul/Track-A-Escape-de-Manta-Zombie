@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { MotorHttp } from "./motor-http";
 
-// A /paso that answers after `demoraMs`, like a Lambda still starting up.
+// Un /paso que responde después de `demoraMs`, como una Lambda que todavía está arrancando.
 async function servidorLento(demoraMs: number) {
   const servidor = createServer((_, res) => {
     setTimeout(() => res.writeHead(200, { "content-type": "application/json" }).end('{"siguienteNodo":"N-0002"}'), demoraMs);
