@@ -1,25 +1,115 @@
-<mxfile host="app.diagrams.net"><diagram name="Arquitectura"><mxGraphModel dx="1800" dy="1100" grid="1" page="1" pageWidth="1800" pageHeight="1100"><root><mxCell id="0"/><mxCell id="1" parent="0"/>
-<mxCell id="title" value="Escape de Manta Zombie | Arquitectura" style="text;html=0;align=left;verticalAlign=middle;fontSize=18;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="45" y="25" width="1650" height="55" as="geometry"/></mxCell>
-<mxCell id="subtitle" value="us-east-2 (regional) | CloudFront global | Fuente: Terraform y codigo del repositorio" style="text;html=0;align=left;verticalAlign=middle;fontSize=18;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="45" y="80" width="1650" height="40" as="geometry"/></mxCell>
-<mxCell id="browser" value="Navegador&#10;Mapa en vivo" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#e2e8f0;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="50" y="170" width="270" height="100" as="geometry"/></mxCell>
-<mxCell id="cf" value="CloudFront&#10;Dominio unico" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#dbeafe;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="430" y="170" width="280" height="100" as="geometry"/></mxCell>
-<mxCell id="s3" value="S3 privado (OAC)&#10;Next.js: export estatico" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#dcfce7;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="1220" y="170" width="430" height="100" as="geometry"/></mxCell>
-<mxCell id="api" value="API Gateway&#10;HTTP API" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#dbeafe;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="430" y="420" width="280" height="110" as="geometry"/></mxCell>
-<mxCell id="lambda" value="Lambda API&#10;Hono / Node.js 24 / arm64&#10;Motor de rutas" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#ffedd5;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="820" y="420" width="290" height="110" as="geometry"/></mxCell>
-<mxCell id="db" value="DynamoDB on-demand&#10;Candado + partidas + turnos&#10;Estado compartido" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#ede9fe;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="1220" y="420" width="430" height="110" as="geometry"/></mxCell>
-<mxCell id="local" value="CLI local (evaluacion)&#10;POST /api/paso con API key&#10;Publica turnos en DynamoDB" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#e2e8f0;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="50" y="690" width="310" height="140" as="geometry"/></mxCell>
-<mxCell id="scheduler" value="EventBridge Scheduler&#10;Demo R2 cada 6 minutos*" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#fce7f3;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="430" y="690" width="280" height="140" as="geometry"/></mxCell>
-<mxCell id="sim" value="Lambda simulador&#10;Ronda completa / motor interno&#10;512 MB / timeout 15 min" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#ffedd5;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="820" y="690" width="290" height="140" as="geometry"/></mxCell>
-<mxCell id="logs" value="CloudWatch Logs&#10;Logs de ambas Lambdas" style="rounded=0;whiteSpace=wrap;html=0;fillColor=#e2e8f0;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="1220" y="690" width="430" height="140" as="geometry"/></mxCell>
-<mxCell id="e1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="browser" target="cf"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e2" value="Sitio estatico / OAC" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="cf" target="s3"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e3" value="/api/* sin cache; GET /estado cada 2 s" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="cf" target="api"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e4" value="Invoca" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="api" target="lambda"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e5" value="Lee mundo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="lambda" target="db"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e6" value="HTTP via CloudFront" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="local" target="cf"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="190" y="335"/><mxPoint x="390" y="335"/><mxPoint x="390" y="245"/></Array></mxGeometry></mxCell>
-<mxCell id="e7" value="Invoca ronda" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="scheduler" target="sim"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="e8" value="Escribe turnos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="sim" target="db"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1025" y="595"/><mxPoint x="1435" y="595"/></Array></mxGeometry></mxCell>
-<mxCell id="e9" value="Logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="lambda" target="logs"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1145" y="530"/><mxPoint x="1145" y="665"/><mxPoint x="1350" y="665"/></Array></mxGeometry></mxCell>
-<mxCell id="e10" value="Logs" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=block;fontSize=17;strokeColor=#476580;" edge="1" parent="1" source="sim" target="logs"><mxGeometry relative="1" as="geometry"><Array as="points"></Array></mxGeometry></mxCell>
-<mxCell id="note" value="Evaluacion: el CLI tambien escribe directamente en DynamoDB (conexion omitida para legibilidad).&#10;Demo: calcula rutas en proceso; NO mide latencia HTTP de /paso. El candado evita partidas simultaneas.&#10;shared/: grafo estatico y reglas empaquetados con API, simulador y frontend; no es un servicio AWS.&#10;* Valores por defecto del repositorio. Despliegue informado por Alex; no inspeccionado en AWS." style="rounded=0;whiteSpace=wrap;html=0;fillColor=#ffffff;strokeColor=#b8c7d9;fontSize=19;fontColor=#172554;" vertex="1" parent="1"><mxGeometry x="50" y="900" width="1600" height="155" as="geometry"/></mxCell>
-</root></mxGraphModel></diagram></mxfile>
+<mxfile host="app.diagrams.net" agent="abcstack" version="24.7.17">
+  <diagram id="arquitectura" name="Arquitectura en AWS">
+    <mxGraphModel dx="1800" dy="1150" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1150" background="#F5F7FB" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="titulo" value="Spondylus Z | Arquitectura en AWS" style="text;html=1;fontSize=34;fontStyle=1;fontColor=#1B1F5E;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sub" value="us-east-2 (regional) · CloudFront global · toda la infraestructura en Terraform (infra/) · estado actual del 28 de octubre de 2026" style="text;html=1;fontSize=15;fontColor=#1B1F5E;align=left;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="68" width="1100" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Fila 1: entrega del sitio -->
+        <mxCell id="nav" value="&lt;b&gt;Navegador&lt;/b&gt;&lt;br&gt;Portada y mapa en vivo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E2E8F0;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="150" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="cf" value="&lt;b&gt;CloudFront&lt;/b&gt;&lt;br&gt;Dominio único · función de reescritura" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="420" y="150" width="290" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;S3 privado (OAC)&lt;/b&gt;&lt;br&gt;Next.js: export estático" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="150" width="430" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Fila 2: API y estado -->
+        <mxCell id="apigw" value="&lt;b&gt;API Gateway&lt;/b&gt;&lt;br&gt;HTTP API · límite 300 rps (ráfaga 600)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DBEAFE;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="420" y="400" width="290" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="lapi" value="&lt;b&gt;Lambda API&lt;/b&gt;&lt;br&gt;Hono · Node.js 24 · arm64 · 1 GB&lt;br&gt;POST /paso (A*, cupos), GET /estado, GET /ruta" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#FB8B24;strokeWidth=2;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="810" y="400" width="320" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="ddb" value="&lt;b&gt;DynamoDB on-demand&lt;/b&gt;&lt;br&gt;Candado + partidas + turnos (con TTL)&lt;br&gt;Estado compartido" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="400" width="430" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Fila 3: simulador -->
+        <mxCell id="oper" value="&lt;b&gt;Operador&lt;/b&gt;&lt;br&gt;tools/demo/demo.sh&lt;br&gt;evaluar 1·2·3 · modo-prueba · modo-demo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E2E8F0;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="690" width="290" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="sched" value="&lt;b&gt;EventBridge Scheduler&lt;/b&gt;&lt;br&gt;Cada minuto intenta arrancar una ronda demo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FCE7F3;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="420" y="690" width="290" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="lsim" value="&lt;b&gt;Lambda simulador&lt;/b&gt;&lt;br&gt;1 GB (2 GB en la prueba de fuego) · hasta 15 min&lt;br&gt;Demo: motor en proceso, flota, rondas encadenadas&lt;br&gt;Evaluación: calienta y llama a POST /paso por HTTP" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#FB8B24;strokeWidth=2;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="810" y="680" width="320" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="cw" value="&lt;b&gt;CloudWatch&lt;/b&gt;&lt;br&gt;Logs y métricas de ambas Lambdas y de la API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E2E8F0;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="690" width="430" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Costos -->
+        <mxCell id="budget" value="&lt;b&gt;AWS Budget&lt;/b&gt;&lt;br&gt;US$ 20/mes · alertas al 50 % y 80 % del gasto y 100 % del pronóstico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF9C3;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="880" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="sns" value="&lt;b&gt;SNS&lt;/b&gt;&lt;br&gt;Aviso por correo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF9C3;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1530" y="880" width="120" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- Conexiones -->
+        <mxCell id="c1" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="nav" target="cf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" value="Sitio estático (OAC)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="cf" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="/api/* sin caché&lt;br&gt;GET /estado cada 2 s" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="cf" target="apigw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="Invoca" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="apigw" target="lapi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="Lee el turno (no escribe)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="lapi" target="ddb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="Ronda demo" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="sched" target="lsim">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="Ronda de evaluación&lt;br&gt;(aws lambda invoke)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="oper" target="lsim">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="185" y="870" />
+              <mxPoint x="970" y="870" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c8" value="POST /paso con API key&lt;br&gt;(evaluación, misma región)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#FB8B24;strokeWidth=2;dashed=1;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0;exitY=0.25;entryX=0.5;entryY=1;" edge="1" parent="1" source="lsim" target="apigw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="Escribe turnos y candado" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.25;entryX=0.25;entryY=1;" edge="1" parent="1" source="lsim" target="ddb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.75;" edge="1" parent="1" source="lsim" target="cw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0;entryY=0.25;" edge="1" parent="1" source="lapi" target="cw">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="600" />
+              <mxPoint x="1180" y="600" />
+              <mxPoint x="1180" y="720" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c12" value="Alerta" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="budget" target="sns">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Notas -->
+        <mxCell id="notas" value="&lt;b&gt;Seguridad:&lt;/b&gt; la API key vive solo en TF_VAR_api_key y llega como variable de entorno a ambas Lambdas; cada rol IAM llega solo a su tabla de DynamoDB y a su propio log group (el simulador solo puede escribir: ni lee ni escanea).&lt;br&gt;&lt;b&gt;Demo:&lt;/b&gt; calcula los pasos dentro de la Lambda del simulador (no mide /paso); el candado de DynamoDB impide dos rondas a la vez.&lt;br&gt;&lt;b&gt;Prueba de fuego:&lt;/b&gt; el operador apaga las demos (modo-prueba) e invoca la evaluación; la latencia se mide desde la misma región." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=14;align=left;spacingLeft=16;spacingRight=16;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1010" width="1610" height="110" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
