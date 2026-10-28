@@ -12,7 +12,7 @@ Todos los comandos se corren **desde la raíz del repo, en Git Bash**, con el pe
 | `tools/demo/demo.sh reanudar` | Vuelve a prender las rondas demo automáticas |
 | `tools/demo/demo.sh modo-prueba` | Antes de evaluar: apaga las demos y sube el simulador a 2048 MB (con 200 pedidos a la vez, su CPU entra en la latencia medida) |
 | `tools/demo/demo.sh modo-demo` | Después de evaluar: simulador a 1024 MB y demos prendidas |
-| `tools/demo/demo.sh evaluar 3 42` | Ronda de **evaluación** R3 con semilla 42: calienta el API, juega 150 turnos llamando a `/paso` por HTTP desde AWS y muestra supervivencia, p95 y errores (espera unos 5 minutos) |
+| `tools/demo/demo.sh evaluar 3 42` | Ronda de **evaluación** R3 con semilla 42: calienta el API, juega 150 turnos llamando a `/paso` por HTTP desde AWS y muestra supervivencia, p95 y errores (unos 5 minutos). Si hay una ronda en curso, espera sola a que termine; si las demos están prendidas, pide correr `modo-prueba` |
 
 ## Antes del viernes
 

@@ -1,4 +1,4 @@
-import type { Grafo, Nodo } from "./tipos";
+import type { EstadoSobreviviente, Grafo, Nodo } from "./tipos";
 
 // Turns contract codes (S-0005, N-0165) into words a visitor understands. The ids stay in the
 // data and in accessible labels; only what is read on screen changes.
@@ -13,6 +13,12 @@ const BARRIOS: Record<NonNullable<Nodo["barrio"]>, string> = {
 export function nombreSobreviviente(id: string): string {
   const numero = /^S-(\d+)$/.exec(id)?.[1];
   return numero ? `Sobreviviente ${Number(numero)}` : id;
+}
+
+// Label of the followed person on the map: a bitten or safe person must never read as one still on the way.
+export function etiquetaPersona(id: string, estado: EstadoSobreviviente): string {
+  const nombre = nombreSobreviviente(id);
+  return estado === "mordido" ? `${nombre} · mordido` : estado === "a_salvo" ? `${nombre} · a salvo` : nombre;
 }
 
 export function refugioMasCercano(grafo: Grafo, nodo: Nodo | undefined) {
