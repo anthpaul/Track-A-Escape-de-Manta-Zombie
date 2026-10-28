@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, Map as MapaIcono, TriangleAlert, UserRound, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
-import { ICONO_REFUGIO, ICONO_VEHICULO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
+import { COLOR_CALLE, COLOR_RUTA } from "@/features/mapa/simbologia/colores";
+import { clipPathForma, ICONO_REFUGIO, ICONO_VEHICULO, ICONOS_PERSONA, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
 
 // Los mismos íconos y colores que dibuja el mapa (simbologia/), así la leyenda nunca se desfasa de las capas.
-const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string }[] = [
+const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string; forma: "rombo" | "hexagono" | "octagono" }[] = [
   { nombre: "Caminante", ...ICONOS_ZOMBIE.caminante },
   { nombre: "Corredor (persigue)", ...ICONOS_ZOMBIE.corredor },
   { nombre: "Horda (bloquea la zona)", ...ICONOS_ZOMBIE.horda },
@@ -71,16 +71,17 @@ export default function LeyendaMapa() {
       {abierta && (
         <ul className="space-y-1.5 px-3 pb-3">
           <li className="flex items-center gap-2">
-            <span className="size-3 rounded-full" style={{ background: COLOR_SOBREVIVIENTE.en_ruta }} aria-hidden />
+            <ICONOS_PERSONA.en_ruta.Icono className="size-4 shrink-0" style={{ color: ICONOS_PERSONA.en_ruta.color }} strokeWidth={2.75} aria-hidden />
             Sobreviviente en camino
           </li>
           <li className="flex items-center gap-2">
-            <span className="size-3 rounded-full" style={{ background: COLOR_SOBREVIVIENTE.mordido }} aria-hidden />
+            <ICONOS_PERSONA.mordido.Icono className="size-4 shrink-0" style={{ color: ICONOS_PERSONA.mordido.color }} strokeWidth={2.75} aria-hidden />
             Sobreviviente mordido
           </li>
-          {ZOMBIES.map(({ nombre, Icono, color }) => (
+          {ZOMBIES.map(({ nombre, Icono, color, forma }) => (
             <li key={nombre} className="flex items-center gap-2">
-              <span className="flex size-4 items-center justify-center rounded-full" style={{ background: color }} aria-hidden>
+              {/* La misma forma que dibuja el mapa: rombo, hexágono u octágono. */}
+              <span className="flex size-[18px] shrink-0 items-center justify-center" style={{ background: color, clipPath: clipPathForma(forma) }} aria-hidden>
                 <Icono className="size-2.5 text-white" />
               </span>
               {nombre}
@@ -97,11 +98,11 @@ export default function LeyendaMapa() {
             Refugio
           </li>
           <li className="flex items-center gap-2">
-            <span className="size-4 rounded-full border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
+            <span className="size-4 shrink-0 rounded-sm border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
             Refugio sin acceso
           </li>
           <li className="flex items-center gap-2">
-            <span className="flex size-4 items-center justify-center rounded-full" style={{ background: ICONO_VEHICULO.color }} aria-hidden>
+            <span className="flex size-[18px] shrink-0 items-center justify-center pt-0.5" style={{ background: ICONO_VEHICULO.color, clipPath: clipPathForma(ICONO_VEHICULO.forma) }} aria-hidden>
               <ICONO_VEHICULO.Icono className="size-2.5" style={{ color: ICONO_VEHICULO.borde }} />
             </span>
             Camioneta de rescate (hasta 4)
