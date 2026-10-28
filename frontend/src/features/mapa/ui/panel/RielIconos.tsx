@@ -26,13 +26,14 @@ export default function RielIconos({ tab, abierto, noLeidas, onElegir, onAlterna
       // Los tamaños replican map/padding.ts (DISENO). Teléfono en vertical: barra inferior encima del indicador de inicio de iOS.
       className="absolute inset-x-0 bottom-0 z-30 flex h-[calc(4rem+env(safe-area-inset-bottom))] items-center justify-around border-t border-crimson-300 bg-crimson-100 pb-[env(safe-area-inset-bottom)] max-md:landscape:inset-x-auto max-md:landscape:inset-y-0 max-md:landscape:left-0 max-md:landscape:h-auto max-md:landscape:w-14 max-md:landscape:flex-col max-md:landscape:justify-center max-md:landscape:gap-1 max-md:landscape:border-r max-md:landscape:border-t-0 max-md:landscape:pb-0 max-md:landscape:pl-[env(safe-area-inset-left)] md:inset-x-auto md:inset-y-0 md:left-0 md:h-auto md:w-16 md:flex-col md:justify-start md:gap-2 md:border-r md:border-t-0 md:py-3 md:pb-3"
     >
-      <span
+      <a
+        href="/"
         className="hidden font-pixel text-xl text-calabaza-500 [text-shadow:2px_2px_0_#9a031e] md:mb-2 md:block"
         title="Spondylus Z"
-        aria-hidden
+        aria-label="Spondylus Z"
       >
         SZ
-      </span>
+      </a>
       {/* Muestra u oculta el panel lateral (hoja inferior en teléfonos); el mapa se queda. */}
       <button
         type="button"
