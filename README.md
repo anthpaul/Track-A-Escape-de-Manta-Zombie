@@ -56,9 +56,9 @@ Arriba del panel, siempre visibles: ronda y turno, **EN VIVO** con la edad real 
 
 CloudFront sirve el frontend desde S3 privado mediante OAC y envía `/api/*`, sin caché, a API Gateway y la Lambda del API.
 El estado compartido vive en DynamoDB; el mapa consulta `/api/estado` cada 2 segundos y recibe el último turno completo.
-EventBridge Scheduler inicia las rondas demo en la Lambda del simulador, que calcula movimientos en proceso y publica los turnos.
+EventBridge Scheduler intenta cada minuto iniciar una ronda demo en la Lambda del simulador, que calcula movimientos en proceso (con la flota de rescate), publica los turnos y encadena la siguiente ronda mientras le alcance el tiempo.
 Las rondas de evaluación corren en la misma Lambda del simulador con `"modo": "evaluacion"`: calientan el API y consultan `/api/paso` por HTTP con API key desde `us-east-2`; la demo no mide esa latencia.
-El diagrama representa el código del repositorio, no una inspección de la cuenta AWS.
+El diagrama refleja el despliegue del 28 de octubre de 2026, verificado con consultas de solo lectura a la cuenta (Lambdas, Scheduler y Budget). Los permisos IAM de cada Lambda se limitan a su tabla y a su propio log group.
 
 [Fuente editable en diagrams.net](docs/arquitectura.drawio) · [Flujos y archivos de referencia](docs/arquitectura.md).
 
@@ -66,10 +66,10 @@ El diagrama representa el código del repositorio, no una inspección de la cuen
 |---|---|
 | Sitio y dominio único | CloudFront + S3 |
 | API | API Gateway HTTP API (throttling 300 rps / 600 burst) |
-| Cómputo | Lambda `nodejs24.x` arm64, 1024 MB |
+| Cómputo | Lambda API `nodejs24.x` arm64, 1024 MB · Lambda simulador 1024 MB (2048 MB en la prueba de fuego) |
 | Estado del mundo | DynamoDB on-demand, single-table |
 | Demo automática | Lambda del simulador + EventBridge Scheduler |
-| Monitoreo | CloudWatch |
+| Monitoreo y costos | CloudWatch · AWS Budget (US$ 20/mes) con aviso por SNS |
 | Infraestructura como código | Terraform (`infra/`) |
 
 Detalle: `INFRA.md`.
@@ -283,8 +283,9 @@ AWS Budget con alerta desde el primer día (alertas por SNS al 50 %, 80 % y 100 
 30 días** de demo continua y uso ligero del mapa, antes de créditos y franquicias
 gratuitas. Incluye supuestos no medidos y tarifas de referencia pendientes de
 confirmación regional; no es una factura ni un máximo. **Gasto real del evento:
-unos USD 0.02** hasta el 28 de octubre (AWS Budgets y Cost Explorer), bajo un Budget
-de USD 20 con alertas. Lo que cuesta es la demo encendida (~USD 2.85 por día sin capa
+USD 0.50** en octubre hasta la mañana del 28 (historial del AWS Budget, captura en
+`docs/costos-reales.png`), bajo un Budget de USD 20 con alertas. Crece unos USD 0.11 por día
+mientras la demo está encendida (USD 0.39 el 27, USD 0.50 el 28). Lo que cuesta es la demo encendida (~USD 2.85 por día sin capa
 gratuita); apagada, el costo vuelve a casi cero.
 
 ## Limitaciones

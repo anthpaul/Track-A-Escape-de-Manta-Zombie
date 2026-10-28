@@ -48,6 +48,19 @@ Campos del ítem:
                          IMPORTANTE: "siguienteNodo" llega vacío cuando el simulador
                          escribe la fase 1 del turno (todavía no llamó a /paso).
                          El simulador lo rellena después en la fase 2.
+                         Campos opcionales que también escribe el simulador:
+                           refugio          id del refugio de destino, o null si
+                                            no hay ruta segura este turno
+                           callesRestantes  calles que le faltan hasta el refugio
+                           vehiculo         id de la camioneta que lo lleva
+                                            (flota de rescate, nivel Pro)
+
+  vehiculos          →  List (lista de objetos), opcional
+                         Cada objeto: { id: "V-1", nodo: "N-0117",
+                                        pasajeros: ["S-0089", "S-0090"] }
+                         QUÉ VA: las 5 camionetas de la flota de rescate (solo en
+                         las rondas demo, hasta 4 pasajeros cada una). Se escribe
+                         en la fase 2, junto con completo=true.
 
   completo           →  Boolean
                          QUÉ VA: false cuando el simulador acaba de mover los zombies

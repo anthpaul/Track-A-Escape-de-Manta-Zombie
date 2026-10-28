@@ -28,10 +28,10 @@
           <mxGeometry x="420" y="400" width="290" height="110" as="geometry" />
         </mxCell>
         <mxCell id="lapi" value="&lt;b&gt;Lambda API&lt;/b&gt;&lt;br&gt;Hono · Node.js 24 · arm64 · 1 GB&lt;br&gt;POST /paso (A*, cupos), GET /estado, GET /ruta" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#FB8B24;strokeWidth=2;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="810" y="400" width="320" height="110" as="geometry" />
+          <mxGeometry x="810" y="390" width="340" height="140" as="geometry" />
         </mxCell>
         <mxCell id="ddb" value="&lt;b&gt;DynamoDB on-demand&lt;/b&gt;&lt;br&gt;Candado + partidas + turnos (con TTL)&lt;br&gt;Estado compartido" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EDE9FE;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="400" width="430" height="110" as="geometry" />
+          <mxGeometry x="1260" y="525" width="390" height="110" as="geometry" />
         </mxCell>
 
         <!-- Fila 3: simulador -->
@@ -42,18 +42,18 @@
           <mxGeometry x="420" y="690" width="290" height="120" as="geometry" />
         </mxCell>
         <mxCell id="lsim" value="&lt;b&gt;Lambda simulador&lt;/b&gt;&lt;br&gt;1 GB (2 GB en la prueba de fuego) · hasta 15 min&lt;br&gt;Demo: motor en proceso, flota, rondas encadenadas&lt;br&gt;Evaluación: calienta y llama a POST /paso por HTTP" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFEDD5;strokeColor=#FB8B24;strokeWidth=2;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="810" y="680" width="320" height="140" as="geometry" />
+          <mxGeometry x="810" y="660" width="340" height="170" as="geometry" />
         </mxCell>
         <mxCell id="cw" value="&lt;b&gt;CloudWatch&lt;/b&gt;&lt;br&gt;Logs y métricas de ambas Lambdas y de la API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E2E8F0;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="690" width="430" height="120" as="geometry" />
+          <mxGeometry x="1260" y="760" width="390" height="90" as="geometry" />
         </mxCell>
 
         <!-- Costos -->
         <mxCell id="budget" value="&lt;b&gt;AWS Budget&lt;/b&gt;&lt;br&gt;US$ 20/mes · alertas al 50 % y 80 % del gasto y 100 % del pronóstico" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF9C3;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="880" width="270" height="100" as="geometry" />
+          <mxGeometry x="1260" y="880" width="250" height="100" as="geometry" />
         </mxCell>
         <mxCell id="sns" value="&lt;b&gt;SNS&lt;/b&gt;&lt;br&gt;Aviso por correo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FEF9C3;strokeColor=#B8C2D0;fontColor=#1B1F5E;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="1530" y="880" width="120" height="100" as="geometry" />
+          <mxGeometry x="1590" y="880" width="120" height="100" as="geometry" />
         </mxCell>
 
         <!-- Conexiones -->
@@ -69,7 +69,7 @@
         <mxCell id="c4" value="Invoca" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="apigw" target="lapi">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c5" value="Lee el turno (no escribe)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="lapi" target="ddb">
+        <mxCell id="c5" value="Lee el turno (no escribe)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="lapi" target="ddb">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="c6" value="Ronda demo" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;" edge="1" parent="1" source="sched" target="lsim">
@@ -79,25 +79,25 @@
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="185" y="870" />
-              <mxPoint x="970" y="870" />
+              <mxPoint x="980" y="870" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="c8" value="POST /paso con API key&lt;br&gt;(evaluación, misma región)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#FB8B24;strokeWidth=2;dashed=1;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0;exitY=0.25;entryX=0.5;entryY=1;" edge="1" parent="1" source="lsim" target="apigw">
+        <mxCell id="c8" value="POST /paso con API key&lt;br&gt;(evaluación, misma región)" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#FB8B24;strokeWidth=2;dashed=1;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0.2;exitY=0;entryX=0.75;entryY=1;" edge="1" parent="1" source="lsim" target="apigw">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c9" value="Escribe turnos y candado" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.25;entryX=0.25;entryY=1;" edge="1" parent="1" source="lsim" target="ddb">
+        <mxCell id="c9" value="Escribe turnos y candado" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.25;entryX=0.5;entryY=1;" edge="1" parent="1" source="lsim" target="ddb">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c10" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.75;" edge="1" parent="1" source="lsim" target="cw">
+        <mxCell id="c10" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" edge="1" parent="1" source="lsim" target="cw">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="c11" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0;entryY=0.25;" edge="1" parent="1" source="lapi" target="cw">
+        <mxCell id="c11" value="Logs" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#475569;strokeWidth=2;fontColor=#1B1F5E;fontSize=14;labelBackgroundColor=#F5F7FB;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0;entryY=0.2;jumpStyle=arc;jumpSize=10;" edge="1" parent="1" source="lapi" target="cw">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="970" y="600" />
-              <mxPoint x="1180" y="600" />
-              <mxPoint x="1180" y="720" />
+              <mxPoint x="980" y="595" />
+              <mxPoint x="1205" y="595" />
+              <mxPoint x="1205" y="778" />
             </Array>
           </mxGeometry>
         </mxCell>
