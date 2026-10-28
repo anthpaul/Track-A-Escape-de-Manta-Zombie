@@ -70,6 +70,8 @@ evaluar() {
     const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
     if (r.errorMessage) { console.log(`La ronda falló: ${r.errorMessage}`); process.exit(1); }
     if (!r.iniciada) { console.log("No arrancó: otra ronda tiene el candado. Pausá las demos y esperá a que termine la que corre."); process.exit(1); }
+    // An older simulator ignores "modo" and plays a demo: no warm-up, no HTTP, no metrics.
+    if (r.modo !== "evaluacion" || !r.metricas) { console.log("La Lambda jugó una ronda demo, no de evaluación: falta desplegar el simulador nuevo (npm run build:simulador y terraform apply)."); process.exit(1); }
     for (const o of r.calentamiento) console.log(`  calentamiento ${o.oleada}: ${o.pedidos} pedidos · errores ${o.errores} · p95 ${Math.round(o.p95Ms)} ms`);
     const m = r.metricas, pct = (x) => (x * 100).toFixed(2) + " %";
     console.log(`R${r.ronda} · a salvo ${m.aSalvo} · mordidos ${m.mordidos} · en ruta ${m.enRuta} de ${m.totalSobrevivientes}`);
