@@ -1,26 +1,28 @@
 /**
- * Shelter capacity (Pro): "que ninguno llegue a un refugio lleno".
+ * Capacidad de refugios (Pro): "que ninguno llegue a un refugio lleno".
  *
- * One deterministic slot allocation per turn, computed from the turn alone, so every /paso call of
- * the same turn agrees without coordinating and nothing is written (AGENTS.md §4.2):
- *   1. Free places per shelter = capacity − survivors already safe on its node.
- *   2. Every (survivor on the road, shelter) pair, sorted by street distance (closed streets skipped),
- *      then by survivor id: each survivor takes the closest shelter that still has a free place.
- *   3. A survivor may head to their own shelter and to any shelter whose places nobody claimed.
- *      With more people than places, those left without one are not restricted (they still move
- *      toward safety; the simulator keeps them at the door until a place frees up).
+ * Un reparto determinista de cupos por turno, calculado solo a partir del turno, para que todas las
+ * llamadas a /paso del mismo turno coincidan sin coordinarse y sin escribir nada (AGENTS.md §4.2):
+ *   1. Lugares libres por refugio = capacidad − sobrevivientes que ya están a salvo en su nodo.
+ *   2. Todos los pares (sobreviviente en camino, refugio), ordenados por distancia en calles (sin
+ *      contar las cerradas) y luego por id del sobreviviente: cada uno toma el refugio más cercano
+ *      que todavía tenga un lugar libre.
+ *   3. Un sobreviviente puede dirigirse a su propio refugio y a cualquier refugio cuyos lugares nadie
+ *      reclamó. Si hay más personas que lugares, quienes se quedan sin uno no tienen restricción
+ *      (siguen avanzando hacia un lugar seguro; el simulador los deja en la puerta hasta que se
+ *      libere un lugar).
  */
 import type { ContextoGrafo } from "./astar";
 import type { MundoTurno } from "./fuente-mundo";
 
 export interface Cupos {
-  /** Shelters this survivor may head to; undefined = no restriction. */
+  /** Refugios a los que puede dirigirse este sobreviviente; undefined = sin restricción. */
   refugiosPara(sobrevivienteId: string): ReadonlySet<string> | undefined;
-  /** Shelters with at least one free place this turn (second chance when the allowed ones are unreachable). */
+  /** Refugios con al menos un lugar libre en este turno (segunda opción cuando los permitidos son inalcanzables). */
   conLugar: ReadonlySet<string>;
 }
 
-// Street distance from one node to every node, skipping closed streets (BFS: one street = one turn).
+// Distancia en calles desde un nodo hasta todos los demás, sin pasar por calles cerradas (BFS: una calle = un turno).
 function distancias(contexto: ContextoGrafo, origen: string, bloqueadas: ReadonlySet<string>): Map<string, number> {
   const dist = new Map([[origen, 0]]);
   const cola = [origen];
@@ -37,7 +39,7 @@ function distancias(contexto: ContextoGrafo, origen: string, bloqueadas: Readonl
   return dist;
 }
 
-// The same turn object is shared by every request of that turn (FuenteMundo caches it): allocate once.
+// Todas las solicitudes de un turno comparten el mismo objeto de turno (FuenteMundo lo cachea): se reparte una sola vez.
 type MundoCupos = Pick<MundoTurno, "aristasBloqueadas" | "sobrevivientes">;
 const cache = new WeakMap<MundoCupos, Cupos | null>();
 

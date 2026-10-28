@@ -1,19 +1,19 @@
 /**
- * Motor singleton — loaded once per Lambda warm start (AGENTS.md §4.3).
+ * Singleton del motor: se carga una sola vez por instancia caliente de Lambda (AGENTS.md §4.3).
  *
- * Responsibilities:
- *   1. Parse and index the static graph from shared/data/manta.json.
- *   2. Build the A* routing context (coordinates + shelters).
- *   3. Expose calcularSiguienteNodo — the single function that /paso calls.
+ * Responsabilidades:
+ *   1. Parsear e indexar el grafo estático de shared/data/manta.json.
+ *   2. Construir el contexto de ruteo del A* (coordenadas + refugios).
+ *   3. Exponer calcularSiguienteNodo, la única función que llama /paso.
  *
- * What this module does NOT do:
- *   - Read DynamoDB (that is FuenteMundo's job).
- *   - Choose which partition is active (that is the /paso route's job).
- *   - Write anything (AGENTS.md §4.2: /paso never writes to DynamoDB).
+ * Lo que este módulo NO hace:
+ *   - Leer DynamoDB (eso le corresponde a FuenteMundo).
+ *   - Elegir qué partición está activa (eso le corresponde a la ruta /paso).
+ *   - Escribir nada (AGENTS.md §4.2: /paso nunca escribe en DynamoDB).
  */
 
 import { crearGrafo, type Grafo } from "@abcstack/shared";
-// manta.json is bundled by esbuild alongside handler.js; it is never fetched at runtime.
+// esbuild empaqueta manta.json junto con handler.js; nunca se descarga en tiempo de ejecución.
 import grafoData from "@abcstack/shared/data/manta.json";
 import { buscarRuta, crearContextoGrafo, type ContextoGrafo, type ResultadoBusqueda } from "./astar";
 import { asignarCupos } from "./cupos";
@@ -22,14 +22,14 @@ import { elegirEscape } from "./evasion";
 import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
-// One-time initialisation (outside the handler — survives warm starts)
+// Inicialización única (fuera del handler: sobrevive entre invocaciones en caliente)
 // ---------------------------------------------------------------------------
 
 const grafoIndexado = crearGrafo(grafoData);
 const contexto: ContextoGrafo = crearContextoGrafo(grafoData as Grafo, grafoIndexado);
 
 // ---------------------------------------------------------------------------
-// Public API
+// API pública
 // ---------------------------------------------------------------------------
 
 export interface EntradaMotor {
@@ -44,22 +44,22 @@ export interface SalidaMotor {
 }
 
 /**
- * Calculate the next node for one survivor given the current world state.
+ * Calcula el siguiente nodo de un sobreviviente según el estado actual del mundo.
  *
- * Accepts an optional pre-computed `peligrosDelTurno` so the route handler
- * can call calcularPeligros once per turn and pass it to every survivor,
- * avoiding redundant re-computation for the same world snapshot.
+ * Acepta un `peligrosDelTurno` precalculado (opcional) para que el handler de la
+ * ruta pueda llamar a calcularPeligros una vez por turno y pasarlo a cada
+ * sobreviviente, sin recalcular lo mismo para el mismo snapshot del mundo.
  *
- * Never throws. With no reachable shelter it escapes to the legal option
- * farthest from moving zombies, which may be staying put (AGENTS.md §4.3 rule 2).
+ * Nunca lanza errores. Si no hay refugio alcanzable, escapa a la opción legal más
+ * lejana de los zombies que se mueven, que puede ser quedarse quieto (AGENTS.md §4.3, regla 2).
  */
 export function calcularSiguienteNodo(
   entrada: EntradaMotor,
   peligrosDelTurno?: ReturnType<typeof calcularPeligros>,
 ): SalidaMotor {
   const peligros = peligrosDelTurno ?? calcularPeligros(entrada.mundo, contexto.indexado);
-  // Shelter capacity (Pro): head only where this survivor has a place; if none of those is reachable
-  // this turn, any shelter with room; only then escape.
+  // Capacidad de refugios (Pro): ir solo adonde este sobreviviente tiene lugar; si ninguno de esos es
+  // alcanzable en este turno, a cualquier refugio con espacio; recién entonces, escapar.
   const cupos = asignarCupos(contexto, entrada.mundo);
   let resultado = buscarRuta(entrada.nodoActual, contexto, entrada.mundo, peligros, cupos?.refugiosPara(entrada.sobrevivienteId));
   if (resultado.tipo === "sin_ruta" && cupos && cupos.conLugar.size > 0) {
@@ -75,7 +75,7 @@ export function calcularSiguienteNodo(
       siguienteNodo = entrada.nodoActual;
       break;
     case "sin_ruta":
-      // Waiting next to a zombie gets the survivor bitten: move away instead.
+      // Esperar al lado de un zombie hace que muerdan al sobreviviente: mejor alejarse.
       siguienteNodo = elegirEscape(entrada.nodoActual, contexto, entrada.mundo, peligros);
       break;
   }
@@ -84,10 +84,10 @@ export function calcularSiguienteNodo(
 }
 
 /**
- * Exposed for /paso route: pre-compute danger sets once per turn snapshot
- * before iterating over survivors.
+ * Expuesto para la ruta /paso: precalcula los conjuntos de peligro una vez por
+ * snapshot de turno, antes de recorrer los sobrevivientes.
  */
 export { calcularPeligros as calcularPeligrosDelTurno };
 
-/** Exposed for tests: the pre-built routing context. */
+/** Expuesto para los tests: el contexto de ruteo ya construido. */
 export { contexto as contextoGrafo };

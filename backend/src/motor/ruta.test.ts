@@ -49,7 +49,7 @@ test("a survivor already at a shelter has a one-node route", () => {
 });
 
 test("with every exit blocked the route is just the current node and says why", () => {
-  // N-0003 only connects through C-0002 and C-0003 in the fixture.
+  // En el fixture, N-0003 solo se conecta por C-0002 y C-0003.
   assert.deepEqual(calcularRutaCompleta("N-0003", contexto, { zombies: [], aristasBloqueadas: ["C-0002", "C-0003"] }), {
     refugio: null,
     ruta: ["N-0003"],
@@ -58,7 +58,7 @@ test("with every exit blocked the route is just the current node and says why", 
 });
 
 test("Pro capacity: the drawn route goes to the shelter the survivor has a place in", () => {
-  // From N-0002 the closest shelter is R-01 (N-0001); with only R-02 allowed the route ends at N-0012.
+  // Desde N-0002 el refugio más cercano es R-01 (N-0001); si solo se permite R-02, la ruta termina en N-0012.
   const r = calcularRutaCompleta("N-0002", contexto, MUNDO_LIBRE, new Set(["R-02"]));
   assert.equal(r.refugio, "R-02");
   assert.equal(r.ruta.at(-1), "N-0012");

@@ -1,11 +1,11 @@
 /**
- * Minimal binary min-heap for A* priority queue.
+ * Min-heap binario mínimo para la cola de prioridad del A*.
  *
- * TypeScript has no built-in PriorityQueue. This keeps the Lambda bundle
- * small (no third-party dep) and the implementation reviewable.
+ * TypeScript no trae una PriorityQueue integrada. Esto mantiene chico el bundle
+ * de la Lambda (sin dependencias de terceros) y la implementación revisable.
  *
- * The heap stores entries of shape { priority: number; value: T }.
- * Ties in priority are broken by insertion order (stable within the same turn).
+ * El heap guarda entradas con la forma { priority: number; value: T }.
+ * Los empates de prioridad se resuelven por orden de inserción (estable dentro del mismo turno).
  */
 
 export interface EntradaHeap<T> {
@@ -29,7 +29,7 @@ export class MinHeap<T> {
     this.bubbleUp(this.data.length - 1);
   }
 
-  /** Remove and return the entry with the lowest priority. */
+  /** Quita y devuelve la entrada con la menor prioridad. */
   pop(): EntradaHeap<T> {
     const top = this.data[0]!;
     const last = this.data.pop()!;

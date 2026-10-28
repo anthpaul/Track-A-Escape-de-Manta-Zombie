@@ -1,17 +1,17 @@
 import type { EstadoTurno } from "@abcstack/shared";
 
-/** Immutable routing input, not the mutable full snapshot used by /estado. */
+/** Entrada inmutable para el ruteo; no es el snapshot completo y mutable que usa /estado. */
 export type MundoTurno = Readonly<{
   partidaId: string;
   turno: number;
   zombies: readonly Readonly<EstadoTurno["zombies"][number]>[];
   aristasBloqueadas: readonly string[];
-  // Survivors of the turn (Pro: shelter capacity). Optional: without them the motor ignores capacity.
+  // Sobrevivientes del turno (Pro: capacidad de refugios). Opcional: sin ellos, el motor ignora la capacidad.
   sobrevivientes?: readonly Readonly<Pick<EstadoTurno["sobrevivientes"][number], "id" | "nodo" | "estado">>[];
 }>;
 
 export interface FuenteMundo {
-  /** Return the requested turn, or the latest existing turn <= n in this game. */
+  /** Devuelve el turno pedido o, si no existe, el último turno existente <= n de esta partida. */
   obtenerTurno(partidaId: string, n: number): Promise<MundoTurno>;
 }
 

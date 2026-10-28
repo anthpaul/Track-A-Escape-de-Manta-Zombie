@@ -1,94 +1,94 @@
 /**
- * Danger model — K2 implementation (AGENTS.md §4.4).
+ * Modelo de peligro: implementación de K2 (AGENTS.md §4.4).
  *
- * Produces three danger sets consumed by the A* router on every request.
- * All inputs are pure data; no I/O, no side effects.
+ * Produce tres conjuntos de peligro que el ruteador A* usa en cada pedido.
+ * Todas las entradas son datos puros: sin I/O ni efectos secundarios.
  *
- * AGENTS.md §4.4 — full table:
- *   Node with visible zombie                    → Prohibited   (K2 ✓)
- *   Horde: its node AND all static neighbours   → Prohibited   (K1 ✓)
- *   Blocked edge (city event)                   → Non-existent (K1 ✓)
- *   Nodes a RUNNER can reach next turn          → Very high    (Pro K5 ✓)
- *   Neighbours of a WALKER                      → High penalty (K2 ✓)
- *   Edge a zombie can cross in opposite dir.    → Prohibited   (K2 ✓)
- *   Near possible SLEEPER locations             → No cost      (K2 ✓)
+ * AGENTS.md §4.4, tabla completa:
+ *   Nodo con zombie visible                          → Prohibido          (K2 ✓)
+ *   Horda: su nodo Y todos sus vecinos estáticos     → Prohibido          (K1 ✓)
+ *   Arista bloqueada (evento de ciudad)              → No existe          (K1 ✓)
+ *   Nodos que un CORREDOR alcanza el próximo turno   → Muy alto           (Pro K5 ✓)
+ *   Vecinos de un CAMINANTE                          → Penalización alta  (K2 ✓)
+ *   Arista que un zombie puede cruzar en sentido opuesto → Prohibido      (K2 ✓)
+ *   Cerca de posibles DORMIDOS                       → Sin costo          (K2 ✓)
  *
- * Cross-traffic rule (cruce de frente):
- *   A survivor biting happens when both entities traverse the SAME edge in
- *   OPPOSITE directions in the same turn (AGENTS.md §0 — reglas de mordida).
- *   The motor forbids edge A→B when a zombie at B could move to A through
- *   that same street. "Could move":
- *     - Walker  (caminante): assumed able to move (safe over-approximation).
- *     - Runner  (corredor):  2 streets/turn — definitely can cross 1 edge.
- *     - Horde:  almost immobile — cannot cross; zone already prohibited.
- *     - Sleeper (dormido):   invisible — motor has no data, no cost applied.
+ * Regla del cruce de frente:
+ *   Hay mordida cuando ambas entidades recorren la MISMA arista en sentidos
+ *   OPUESTOS en el mismo turno (AGENTS.md §0, reglas de mordida).
+ *   El motor prohíbe la arista A→B cuando un zombie en B podría moverse a A por
+ *   esa misma calle. "Podría moverse":
+ *     - Caminante: se asume que puede moverse (sobreaproximación segura).
+ *     - Corredor: 2 calles por turno; seguro puede cruzar 1 arista.
+ *     - Horda: casi inmóvil; no puede cruzar y su zona ya está prohibida.
+ *     - Dormido: invisible; el motor no tiene datos y no aplica costo.
  */
 
 import type { GrafoIndexado, Zombie } from "@abcstack/shared";
 import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
-// Penalty constants
+// Constantes de penalización
 // ---------------------------------------------------------------------------
 
 /**
- * Added to the A* edge cost when the destination is a walker-adjacent node.
- * Must be < 1 so it never makes a 1-hop safe route look worse than a 0-hop stay,
- * but large enough to prefer paths that avoid walker-adjacent nodes.
+ * Se suma al costo de arista del A* cuando el destino es un nodo vecino de un caminante.
+ * Debe ser < 1 para que una ruta segura de 1 salto nunca parezca peor que quedarse
+ * (0 saltos), pero lo bastante grande para preferir caminos que eviten esos nodos.
  *
- * Budget: ε_time_max = 0.0001 × (2000 m / 1.0 m·s⁻¹) = 0.2
- * WALKER_ADJACENT_PENALTY = 0.5 → clearly > ε_time_max, safely < 1 turn.
+ * Presupuesto: ε_tiempo_max = 0.0001 × (2000 m / 1.0 m·s⁻¹) = 0.2
+ * WALKER_ADJACENT_PENALTY = 0.5 → claramente > ε_tiempo_max y con margen < 1 turno.
  */
 export const WALKER_ADJACENT_PENALTY = 0.5;
 
 /**
- * Added for every node a runner can reach next turn (Pro K5 — prediction).
- * A runner moves up to 2 unblocked streets per turn (shared/reglas.ts moverZombie),
- * so it can end on any node within 2 streets. Higher than the walker penalty but
- * still < 1 turn: it detours around runners without ever refusing a shelter.
- * Additive across runners.
+ * Se suma por cada nodo que un corredor puede alcanzar el próximo turno (Pro K5: predicción).
+ * Un corredor avanza hasta 2 calles no bloqueadas por turno (moverZombie en shared/reglas.ts),
+ * así que puede terminar en cualquier nodo a 2 calles o menos. Es mayor que la penalización
+ * del caminante pero sigue siendo < 1 turno: rodea a los corredores sin rechazar nunca un
+ * refugio. Se acumula entre corredores.
  */
 export const RUNNER_PREDICTION_PENALTY = 0.9;
 
 // ---------------------------------------------------------------------------
-// Output type
+// Tipo de salida
 // ---------------------------------------------------------------------------
 
 export interface Peligros {
   /**
-   * Nodes the survivor must NOT enter.
-   * Includes: any node occupied by a visible zombie + horde-blocked zone
-   * (horde node and all its static neighbours, computed by shared/).
+   * Nodos a los que el sobreviviente NO debe entrar.
+   * Incluye: cualquier nodo ocupado por un zombie visible + la zona bloqueada por
+   * hordas (el nodo de la horda y todos sus vecinos estáticos, calculados en shared/).
    */
   nodosProhibidos: ReadonlySet<string>;
 
   /**
-   * Extra cost added when the A* expands an edge whose destination node
-   * is adjacent to a walker. The node itself is NOT prohibited.
-   * Map<nodoId, extraCost> — additive for multiple walkers.
+   * Costo extra que se suma cuando el A* expande una arista cuyo nodo destino
+   * es vecino de un caminante. El nodo en sí NO está prohibido.
+   * Map<nodoId, costoExtra>: se acumula si hay varios caminantes.
    */
   costosExtra: ReadonlyMap<string, number>;
 
   /**
-   * Directed edges forbidden by the cross-traffic rule.
-   * Format: "DESDE|HASTA" (the survivor's intended direction).
-   * Example: zombie at N-0002, survivor wants N-0001→N-0002 →
-   *   stored as "N-0001|N-0002".
+   * Aristas dirigidas prohibidas por la regla del cruce de frente.
+   * Formato: "DESDE|HASTA" (la dirección que pretende tomar el sobreviviente).
+   * Ejemplo: zombie en N-0002 y el sobreviviente quiere ir N-0001→N-0002 →
+   *   se guarda como "N-0001|N-0002".
    */
   aristasCrucePeligroso: ReadonlySet<string>;
 }
 
 // ---------------------------------------------------------------------------
-// Main function
+// Función principal
 // ---------------------------------------------------------------------------
 
 /**
- * Compute all danger sets for one turn.
- * Called once per /paso request (or shared across survivors for the same turn).
+ * Calcula todos los conjuntos de peligro de un turno.
+ * Se llama una vez por pedido a /paso (o se comparte entre los sobrevivientes del mismo turno).
  */
 /**
- * Sleepers are accepted on purpose: our simulator never publishes them, but a
- * world read from another source (Q3) might, and they must carry no cost.
+ * Los dormidos se aceptan a propósito: nuestro simulador nunca los publica, pero un
+ * mundo leído de otra fuente (Q3) podría incluirlos, y no deben tener costo.
  */
 export type MundoPeligros = {
   readonly zombies: readonly Zombie[];
@@ -103,7 +103,7 @@ export function calcularPeligros(
   const costosExtraRaw = new Map<string, number>();
   const aristasCrucePeligroso = new Set<string>();
 
-  // Horde-blocked zone: node + all static neighbours (K1, via shared/).
+  // Zona bloqueada por hordas: nodo + todos sus vecinos estáticos (K1, vía shared/).
   const bloqueadosPorHordas = indexado.nodosBloqueadosPorHordas(mundo.zombies);
   for (const nodo of bloqueadosPorHordas) {
     nodosProhibidos.add(nodo);
@@ -111,39 +111,39 @@ export function calcularPeligros(
 
   for (const zombie of mundo.zombies) {
     switch (zombie.tipo) {
-      // Any visible zombie on a node makes it prohibited (§4.4 row 1).
-      // Horde already added above; adding again is idempotent.
+      // Cualquier zombie visible en un nodo lo vuelve prohibido (§4.4, fila 1).
+      // La horda ya se agregó arriba; agregarla de nuevo es idempotente.
       case "caminante":
       case "corredor":
       case "horda": {
         nodosProhibidos.add(zombie.nodo);
         break;
       }
-      // Sleeper: invisible, no data, no cost (§4.4 last row).
+      // Dormido: invisible, sin datos, sin costo (§4.4, última fila).
       case "dormido": {
         break;
       }
     }
 
-    // Walker neighbours → high-cost penalty (§4.4 row 5).
+    // Vecinos de un caminante → penalización alta (§4.4, fila 5).
     if (zombie.tipo === "caminante") {
       for (const vecino of indexado.vecinos(zombie.nodo)) {
-        // Only penalize nodes not already prohibited.
+        // Solo se penalizan los nodos que no estén ya prohibidos.
         if (!nodosProhibidos.has(vecino)) {
           costosExtraRaw.set(vecino, (costosExtraRaw.get(vecino) ?? 0) + WALKER_ADJACENT_PENALTY);
         }
       }
     }
 
-    // Runner prediction (§4.4 row 4, Pro K5): nodes it can reach next turn.
+    // Predicción de corredores (§4.4, fila 4, Pro K5): nodos que puede alcanzar el próximo turno.
     if (zombie.tipo === "corredor") {
       for (const nodo of alcanceCorredor(zombie.nodo, indexado, mundo.aristasBloqueadas)) {
         costosExtraRaw.set(nodo, (costosExtraRaw.get(nodo) ?? 0) + RUNNER_PREDICTION_PENALTY);
       }
     }
 
-    // Cross-traffic rule (§4.4 row 6): walkers and runners can cross edges.
-    // Forbidden survivor direction: vecino → zombie.nodo.
+    // Regla del cruce (§4.4, fila 6): caminantes y corredores pueden cruzar aristas.
+    // Dirección prohibida para el sobreviviente: vecino → zombie.nodo.
     if (zombie.tipo === "caminante" || zombie.tipo === "corredor") {
       for (const vecino of indexado.vecinos(zombie.nodo)) {
         aristasCrucePeligroso.add(`${vecino}|${zombie.nodo}`);
@@ -155,8 +155,8 @@ export function calcularPeligros(
 }
 
 /**
- * Nodes within 2 unblocked streets of a runner, excluding its own node
- * (already prohibited). Same movement limits as shared/reglas.ts moverZombie.
+ * Nodos a 2 calles no bloqueadas o menos de un corredor, sin contar su propio nodo
+ * (ya prohibido). Mismos límites de movimiento que moverZombie en shared/reglas.ts.
  */
 function alcanceCorredor(
   origen: string,
@@ -181,12 +181,12 @@ function alcanceCorredor(
 }
 
 // ---------------------------------------------------------------------------
-// Edge cost helper — used by A* to apply danger penalties
+// Costo de arista: lo usa el A* para aplicar las penalizaciones por peligro
 // ---------------------------------------------------------------------------
 
 /**
- * Returns the extra danger cost for moving from `desde` to `hasta`.
- * Returns Infinity when the move is forbidden by any K2 danger rule.
+ * Devuelve el costo extra de peligro de moverse de `desde` a `hasta`.
+ * Devuelve Infinity cuando alguna regla de peligro de K2 prohíbe el movimiento.
  */
 export function costoPeligroArista(
   peligros: Peligros,

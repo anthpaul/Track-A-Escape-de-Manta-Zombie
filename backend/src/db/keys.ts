@@ -1,17 +1,17 @@
 /**
- * DynamoDB key builders for the spookython_mundo single-table design.
+ * Constructores de claves de DynamoDB para el diseño single-table de spookython_mundo.
  *
- * Every PK/SK in the codebase MUST go through these functions.
- * Never build key strings by hand — a typo here would be caught by tests;
- * a typo scattered across ten files would not.
+ * Toda PK/SK del código DEBE pasar por estas funciones.
+ * Nunca se arman las claves a mano: un error de tipeo acá lo detectan los tests;
+ * uno repartido en diez archivos, no.
  *
- * Key format reference: AGENTS.md §4.2 and docs/DYNAMODB_SCHEMA.txt
+ * Referencia del formato de claves: AGENTS.md §4.2 y docs/DYNAMODB_SCHEMA.txt
  *
- * CRITICAL — Turn SK padding:
- * DynamoDB sorts String keys lexicographically, not numerically.
- * Without padding: "TURNO#9" > "TURNO#20" > "TURNO#142"  ← WRONG
- * With padding:    "TURNO#000009" < "TURNO#000020" < "TURNO#000142"  ← correct
- * 6 digits supports up to 999 999 turns (~23 days at one turn per 2 s).
+ * CRÍTICO: relleno con ceros de la SK del turno.
+ * DynamoDB ordena las claves String de forma lexicográfica, no numérica.
+ * Sin relleno: "TURNO#9" > "TURNO#20" > "TURNO#142"  ← INCORRECTO
+ * Con relleno: "TURNO#000009" < "TURNO#000020" < "TURNO#000142"  ← correcto
+ * 6 dígitos alcanzan para 999 999 turnos (~23 días a un turno cada 2 s).
  */
 
 const TURN_PAD = 6;
@@ -19,13 +19,13 @@ const padTurn = (n: number): string => String(n).padStart(TURN_PAD, "0");
 
 export const KEYS = {
   /**
-   * Game-turn item.
+   * Ítem de turno de una partida.
    *   PK: "PARTIDA#<partidaId>"
    *   SK: "TURNO#000142"
    *
-   * Written twice per turn:
-   *   Phase 1 — completo: false  (zombies moved, /paso not yet called)
-   *   Phase 2 — completo: true   (siguienteNodo filled in, mordidas resolved)
+   * Se escribe dos veces por turno:
+   *   Fase 1: completo: false  (zombies movidos, todavía sin llamar a /paso)
+   *   Fase 2: completo: true   (siguienteNodo cargado, mordidas resueltas)
    */
   turno: (partidaId: string, n: number) => ({
     PK: `PARTIDA#${partidaId}`,
@@ -33,7 +33,7 @@ export const KEYS = {
   }),
 
   /**
-   * Partition metadata item.
+   * Ítem de metadatos de la partición.
    *   PK: "PARTIDA#<partidaId>"
    *   SK: "METADATA"
    */
@@ -43,12 +43,12 @@ export const KEYS = {
   }),
 
   /**
-   * Distributed lock — singleton item.
+   * Candado distribuido: ítem único.
    *   PK: "CONTROL"
    *   SK: "PARTIDA_ACTIVA"
    *
-   * POST /paso does not receive a partidaId (fixed contract), so the motor
-   * reads this item to discover which partition is currently active.
+   * POST /paso no recibe un partidaId (el contrato es fijo), así que el motor
+   * lee este ítem para descubrir qué partición está activa.
    */
   control: () => ({
     PK: "CONTROL",
@@ -56,12 +56,12 @@ export const KEYS = {
   }),
 
   /**
-   * Refuge occupancy counter — one per refuge, Pro-tier only.
+   * Contador de ocupación de refugio: uno por refugio, solo en el nivel Pro.
    *   PK: "PARTIDA#<partidaId>"
    *   SK: "REFUGIO#R-01"
    *
-   * Written with UpdateItem ADD asignados 1 (atomic).
-   * Condition: asignados < capacidad.
+   * Se escribe con UpdateItem ADD asignados 1 (atómico).
+   * Condición: asignados < capacidad.
    */
   refugio: (partidaId: string, refugioId: string) => ({
     PK: `PARTIDA#${partidaId}`,
@@ -69,8 +69,8 @@ export const KEYS = {
   }),
 
   /**
-   * SK prefix helpers for Query operations.
-   * Use with KeyConditionExpression begins_with(SK, :prefix).
+   * Prefijos de SK para operaciones Query.
+   * Se usan con KeyConditionExpression begins_with(SK, :prefix).
    */
   prefixes: {
     turnos: "TURNO#",
@@ -78,18 +78,18 @@ export const KEYS = {
   },
 } as const;
 
-/** Returns an epoch-seconds TTL set to 24 hours from now. */
+/** Devuelve un TTL en segundos epoch, fijado a 24 horas desde ahora. */
 export const ttlManana = (): number => Math.floor(Date.now() / 1000) + 86_400;
 
 /**
- * Generates a unique, sortable partition ID.
- * Format: "<modo>-r<ronda>-<epoch ms>"
- * Example: "evaluacion-r3-1793030400000"
+ * Genera un ID de partición único y ordenable.
+ * Formato: "<modo>-r<ronda>-<epoch ms>"
+ * Ejemplo: "evaluacion-r3-1793030400000"
  */
 export const generarPartidaId = (
   modo: "evaluacion" | "demo",
   ronda: 1 | 2 | 3,
 ): string => `${modo}-r${ronda}-${Date.now()}`;
 
-/** @internal — use KEYS.turno() in production code. */
+/** @internal En código de producción, usar KEYS.turno(). */
 export const _padTurn = padTurn;
