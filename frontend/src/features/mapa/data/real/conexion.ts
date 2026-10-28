@@ -26,6 +26,11 @@ export function resolverConexion({ resultado, ultimoReal, ahora }: Entrada): Sal
   if (ultimoReal && ahora - ultimoReal.recibidoEn < GRACIA_MS) {
     return { snapshot: ultimoReal.snapshot, conexion: "reconectando", ultimoReal };
   }
-  const conexion = resultado !== "error" && resultado.tipo === "sinPartida" ? "sin_partida" : "sin_conexion";
-  return { snapshot: null, conexion, ultimoReal };
+  // Between rounds the last real turn stays on screen (labelled "Esperando la próxima ronda"):
+  // jumping to the 200-survivor simulation would make the numbers leap. The simulation is only for a
+  // visitor who has not seen a real game yet, or a broken connection.
+  if (resultado !== "error" && resultado.tipo === "sinPartida") {
+    return { snapshot: ultimoReal?.snapshot ?? null, conexion: "sin_partida", ultimoReal };
+  }
+  return { snapshot: null, conexion: "sin_conexion", ultimoReal };
 }

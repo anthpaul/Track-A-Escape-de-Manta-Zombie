@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, FlaskConical, RefreshCw, WifiOff, type LucideIcon } from "lucide-react";
+import { Activity, FlaskConical, Hourglass, RefreshCw, WifiOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NivelLatencia, ResumenPanel } from "@/features/mapa/domain/resumen";
 import type { Conexion } from "@/features/mapa/domain/tipos";
@@ -35,7 +35,7 @@ const AVISO: Record<Exclude<Conexion, "en_vivo">, { texto: string; detalle: stri
   simulado: { texto: "Simulación local", detalle: "Datos de prueba generados en este navegador, sin el servidor", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
   conectando: { texto: "Conectando…", detalle: "Esperando el primer turno del servidor; mientras tanto, una simulación local", Icono: RefreshCw, clase: "bg-crimson-500 text-calabaza-900" },
   reconectando: { texto: "Reconectando", detalle: "No llegó el último turno: se muestra el anterior real", Icono: RefreshCw, clase: "bg-otono-500 text-crimson-100" },
-  sin_partida: { texto: "Esperando la próxima ronda", detalle: "No hay una ronda en curso ahora: se muestra una simulación local", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
+  sin_partida: { texto: "Esperando la próxima ronda", detalle: "No hay una ronda en curso ahora: se muestra el último turno de la ronda anterior (o una simulación local si todavía no viste ninguna)", Icono: Hourglass, clase: "bg-crimson-500 text-calabaza-900" },
   sin_conexion: { texto: "Sin conexión · simulación local", detalle: "El servidor no responde: se muestra una simulación local", Icono: WifiOff, clase: "bg-sangre-700 text-crimson-100" },
 };
 

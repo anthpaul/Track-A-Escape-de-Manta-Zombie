@@ -47,15 +47,20 @@ test("a failed poll right after a live game keeps the last real world instead of
   }
 });
 
-test("after the grace period the map falls back and says why", () => {
+test("between rounds the last real turn stays on screen instead of the simulation", () => {
   const ultimoReal = { snapshot: snapshot(5), recibidoEn: 1000 };
   const ahora = 1000 + GRACIA_MS;
   assert.deepEqual(resolverConexion({ resultado: { tipo: "sinPartida", codigo: "SIN_PARTIDA_ACTIVA" }, ultimoReal, ahora }), {
-    snapshot: null,
+    snapshot: ultimoReal.snapshot,
     conexion: "sin_partida",
     ultimoReal,
   });
-  assert.equal(resolverConexion({ resultado: "error", ultimoReal, ahora }).conexion, "sin_conexion");
+});
+
+test("after the grace period a broken connection falls back to the simulation and says why", () => {
+  const ultimoReal = { snapshot: snapshot(5), recibidoEn: 1000 };
+  const ahora = 1000 + GRACIA_MS;
+  assert.deepEqual(resolverConexion({ resultado: "error", ultimoReal, ahora }), { snapshot: null, conexion: "sin_conexion", ultimoReal });
   assert.equal(resolverConexion({ resultado: { tipo: "invalido" }, ultimoReal, ahora }).conexion, "sin_conexion");
 });
 
