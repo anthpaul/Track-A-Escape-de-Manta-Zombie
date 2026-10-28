@@ -252,7 +252,7 @@ export const capaFlechasPuntas: LayerProps = {
   type: "symbol",
   layout: {
     "icon-image": "flecha",
-    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.42, 16, 0.75],
+    "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.3, 16, 0.6],
     "icon-rotate": ["get", "rumbo"],
     "icon-rotation-alignment": "map",
     "icon-allow-overlap": true,
