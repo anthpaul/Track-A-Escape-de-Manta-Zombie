@@ -74,6 +74,8 @@ export interface ConfigTurno {
   ronda: 1 | 2 | 3;
   /** Set of refuge node IDs — survivors arriving here become "a_salvo". */
   nodosRefugio: ReadonlySet<string>;
+  /** Refuge node → capacity (Pro). A full refuge admits nobody else; without it every arrival gets in. */
+  capacidadRefugio?: ReadonlyMap<string, number>;
   /** Seeded random number generator — injected for reproducibility. */
   aleatorio: () => number;
   /** Scheduled city events — applied at their designated turn (Step 2). */
@@ -254,7 +256,7 @@ export async function ejecutarTurno(
   );
 
   // Check shelter arrivals (after bites — a bitten survivor at a refuge is mordido).
-  resolverLlegadas(config.sobrevivientes, config.nodosRefugio);
+  resolverLlegadas(config.sobrevivientes, config.nodosRefugio, config.capacidadRefugio);
 
   // Only survivors still on the road get a next step; moves, bites and arrivals above are unchanged.
   let publicadas = decisiones;
