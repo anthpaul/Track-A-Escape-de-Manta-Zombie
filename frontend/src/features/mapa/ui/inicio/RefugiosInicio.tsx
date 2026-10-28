@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 
 export type FilaRefugio = { id: string; nombre: string; ocupacion: number | null; capacidad: number };
 
-// Ocupación en vivo de los cuatro refugios reales; sin una ronda en curso, solo su capacidad.
+// Ocupación en vivo de los cuatro refugios reales ("21/50 a salvo", igual que la etiqueta del mapa); sin una ronda en
+// curso, solo su capacidad.
 export default function RefugiosInicio({ filas }: { filas: FilaRefugio[] }) {
   return (
     <ul className="divide-y divide-crimson-300 border-y border-crimson-300">
@@ -20,7 +21,7 @@ export default function RefugiosInicio({ filas }: { filas: FilaRefugio[] }) {
               <span className={cn("block h-full rounded-full", lleno ? "bg-sangre-700" : "bg-marea-700")} style={{ width: `${pct}%` }} />
             </span>
             <span className={cn("text-right font-pixel text-xs", lleno ? "text-sangre-700" : "text-calabaza-500")}>
-              {r.ocupacion === null ? `${r.capacidad} cupos` : lleno ? "LLENO" : `${r.ocupacion} a salvo`}
+              {r.ocupacion === null ? `${r.capacidad} cupos` : `${r.ocupacion}/${r.capacidad} ${lleno ? "LLENO" : "a salvo"}`}
             </span>
           </li>
         );

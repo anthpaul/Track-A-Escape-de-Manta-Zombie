@@ -50,10 +50,11 @@ const calleBloqueada = (grafo: Grafo, a: string, b: string, bloqueadas: Set<stri
   bloqueadas.has(indices(grafo).calles.get(claveCalle(a, b)) ?? "");
 
 // BFS multiorigen desde cada refugio por las calles abiertas: distancia al refugio más cercano para cada nodo.
-function distanciaARefugio(grafo: Grafo, bloqueadas: Set<string>, evitar: Set<string>): Map<string, number> {
+// Los refugios llenos no son destino: igual que el simulador real, nadie es enviado a un refugio sin lugar.
+function distanciaARefugio(grafo: Grafo, bloqueadas: Set<string>, evitar: Set<string>, llenos: Set<string>): Map<string, number> {
   const { adyacencia } = indices(grafo);
   const dist = new Map<string, number>();
-  const cola = grafo.refugios.map((r) => r.nodo);
+  const cola = grafo.refugios.map((r) => r.nodo).filter((n) => !llenos.has(n));
   for (const n of cola) dist.set(n, 0);
   while (cola.length > 0) {
     const actual = cola.shift()!;
@@ -89,6 +90,17 @@ function camino(grafo: Grafo, desde: string, dist: Map<string, number>, bloquead
     ruta.push(siguiente);
   }
   return ruta;
+}
+
+// Personas a salvo por nodo de refugio, y los nodos de los refugios que ya no tienen lugar.
+function ocupacionPorNodo(sobrevivientes: Sobreviviente[]) {
+  const ocupacion = new Map<string, number>();
+  for (const s of sobrevivientes) if (s.estado === "a_salvo") ocupacion.set(s.nodo, (ocupacion.get(s.nodo) ?? 0) + 1);
+  return ocupacion;
+}
+
+function refugiosLlenos(grafo: Grafo, ocupacion: Map<string, number>) {
+  return new Set(grafo.refugios.filter((r) => (ocupacion.get(r.nodo) ?? 0) >= r.capacidad).map((r) => r.nodo));
 }
 
 function peligroDe(grafo: Grafo, zombies: Zombie[]) {
@@ -164,25 +176,32 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
   // 2) Los sobrevivientes avanzan hacia el refugio más cercano, evitando zombies y zonas de horda.
   const peligro = peligroDe(grafo, zombies);
   const refugioDeNodo = new Map(grafo.refugios.map((r) => [r.nodo, r.id]));
-  const dist = distanciaARefugio(grafo, bloqueadas, peligro);
+  const capacidadDeNodo = new Map(grafo.refugios.map((r) => [r.nodo, r.capacidad]));
+  const ocupacion = ocupacionPorNodo(snap.sobrevivientes);
+  const dist = distanciaARefugio(grafo, bloqueadas, peligro, refugiosLlenos(grafo, ocupacion));
   const zombiesEn = new Set(zombies.map((z) => z.nodo));
 
-  const sobrevivientes = snap.sobrevivientes.map((s): Sobreviviente => {
+  const movidos = snap.sobrevivientes.map((s): Sobreviviente => {
     if (s.estado !== "en_ruta") return s;
     const nodo = proximoPaso(grafo, s.nodo, dist, bloqueadas, peligro);
-    if (refugioDeNodo.has(nodo)) return { id: s.id, nodo, estado: "a_salvo", refugio: refugioDeNodo.get(nodo)! };
+    // Solo entra si queda lugar; el conteo se actualiza con cada llegada del mismo turno.
+    const enRefugio = ocupacion.get(nodo) ?? 0;
+    if (refugioDeNodo.has(nodo) && enRefugio < capacidadDeNodo.get(nodo)!) {
+      ocupacion.set(nodo, enRefugio + 1);
+      return { id: s.id, nodo, estado: "a_salvo", refugio: refugioDeNodo.get(nodo)! };
+    }
     if (zombiesEn.has(nodo)) return { id: s.id, nodo, estado: "mordido" };
-    // Destino y calles restantes: campos opcionales de /estado que el simulador real también llena (AGENTS.md §5).
-    const ruta = camino(grafo, nodo, dist, bloqueadas, peligro);
+    return { id: s.id, nodo, estado: "en_ruta" };
+  });
+
+  // Destino y calles restantes: campos opcionales de /estado que el simulador real también llena (AGENTS.md §5). Se
+  // calculan después de todas las llegadas, con los refugios que se llenaron en este turno, igual que rutaHaciaRefugio.
+  const distFinal = distanciaARefugio(grafo, bloqueadas, peligro, refugiosLlenos(grafo, ocupacion));
+  const sobrevivientes = movidos.map((s): Sobreviviente => {
+    if (s.estado !== "en_ruta") return s;
+    const ruta = camino(grafo, s.nodo, distFinal, bloqueadas, peligro);
     const destino = refugioDeNodo.get(ruta[ruta.length - 1]) ?? null;
-    return {
-      id: s.id,
-      nodo,
-      estado: "en_ruta",
-      siguienteNodo: ruta[1] ?? nodo,
-      refugio: destino,
-      callesRestantes: destino ? ruta.length - 1 : undefined,
-    };
+    return { ...s, siguienteNodo: ruta[1] ?? s.nodo, refugio: destino, callesRestantes: destino ? ruta.length - 1 : undefined };
   });
 
   return completar(grafo, { turno, ronda: snap.ronda, zombies, aristasBloqueadas, sobrevivientes, generadoEn: ahora });
@@ -196,5 +215,6 @@ export function rutaHaciaRefugio(grafo: Grafo, snap: Snapshot, sobrevivienteId: 
 
   const bloqueadas = new Set(snap.aristasBloqueadas);
   const peligro = peligroDe(grafo, snap.zombies);
-  return camino(grafo, s.nodo, distanciaARefugio(grafo, bloqueadas, peligro), bloqueadas, peligro);
+  const llenos = refugiosLlenos(grafo, ocupacionPorNodo(snap.sobrevivientes));
+  return camino(grafo, s.nodo, distanciaARefugio(grafo, bloqueadas, peligro, llenos), bloqueadas, peligro);
 }
