@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, Map as MapaIcono, TriangleAlert, UserRound, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
-import { ICONO_REFUGIO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
+import { ICONO_REFUGIO, ICONO_VEHICULO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
 
 // Same icons and colors the map draws (simbologia/), so the legend can never drift from the layers.
 const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string }[] = [
@@ -99,6 +99,12 @@ export default function LeyendaMapa() {
           <li className="flex items-center gap-2">
             <span className="size-4 rounded-full border-2" style={{ borderColor: COLOR_CALLE.bloqueada }} aria-hidden />
             Refugio sin acceso
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="flex size-4 items-center justify-center rounded-full" style={{ background: ICONO_VEHICULO.color }} aria-hidden>
+              <ICONO_VEHICULO.Icono className="size-2.5" style={{ color: ICONO_VEHICULO.borde }} />
+            </span>
+            Camioneta de rescate (hasta 4)
           </li>
           {LINEAS.map((linea) => (
             <li key={linea.nombre} className="flex items-center gap-2">

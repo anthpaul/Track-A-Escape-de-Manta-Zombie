@@ -19,7 +19,7 @@ Rama: `feat/flota-rescate` · Entrega: un PR con commits por unidad · Tests: `n
 | T1 | S3, S4 (shared) | inline | hecho (shared 60) | ver log |
 | T2 | S2, S3 (simulador) | inline | hecho (simulador 56) | ver log |
 | T3 | S5 (backend /estado) | inline | hecho (backend 160) | ver log |
-| T4 | S5 (mapa) | inline | pendiente | |
+| T4 | S5 (mapa) | inline | hecho (front 131, captura del ícono) | ver log |
 | T5 | S6 | inline | pendiente | |
 
 Corte: 05:00 (si no está, queda en su rama y el pitch cuenta dos Pro).
@@ -27,3 +27,4 @@ Corte: 05:00 (si no está, queda en su rama y el pitch cuenta dos Pro).
 ## Log
 
 - **L1** (28 oct, 00:05, Anthony): "primero la flota y despues el pitch con los documentos" — sobre la propuesta de hacerla como modo aparte, solo en demos.
+- **L2** T4: la simulación local no puede usar `shared/flota.ts`: Turbopack rechaza importar código de `shared` (su `package.json` dice CommonJS y el código es ESM; `transpilePackages` no alcanza). Cambiar el tipo de `shared` a medianoche arriesga backend y simulador, así que el mock queda sin flota; la flota real llega por `/estado`. El ícono se verificó con camionetas fijas inyectadas un momento en el mock.

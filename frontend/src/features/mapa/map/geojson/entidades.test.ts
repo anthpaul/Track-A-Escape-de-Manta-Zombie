@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { refugiosSinAccesoAGeoJSON, sobrevivientesAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
+import { refugiosSinAccesoAGeoJSON, sobrevivientesAGeoJSON, vehiculosAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
 // N-0001 — N-0002 — N-0003 — N-0004 (a line)
@@ -64,4 +64,21 @@ test("cut-off shelters become points with their name; reachable ones are not dra
     [{ id: "R-01", nombre: "Faro" }, { id: "R-02", nombre: "ULEAM" }],
   );
   assert.deepEqual(refugiosSinAccesoAGeoJSON(conRefugios, { ...mundo, zombies: [] }).features, []);
+});
+
+test("people riding a rescue van are not drawn on foot: the van carries them", () => {
+  const fc = sobrevivientesAGeoJSON(grafo, [
+    { id: "S-0001", nodo: "N-0001", estado: "en_ruta" },
+    { id: "S-0002", nodo: "N-0002", estado: "en_ruta", vehiculo: "V-1" },
+  ]);
+  assert.deepEqual(fc.features.map((f) => f.properties.id), ["S-0001"]);
+});
+
+test("rescue vans become points with how many people they carry and a short name", () => {
+  const fc = vehiculosAGeoJSON(grafo, [
+    { id: "V-1", nodo: "N-0001", pasajeros: ["S-0001", "S-0002"], destino: "N-0004" },
+    { id: "V-2", nodo: "N-9999", pasajeros: [], destino: null }, // unknown node: never drawn
+  ]);
+  assert.deepEqual(fc.features.map((f) => f.properties), [{ id: "V-1", nombre: "Camioneta 1", pasajeros: 2 }]);
+  assert.deepEqual(vehiculosAGeoJSON(grafo, undefined).features, []);
 });

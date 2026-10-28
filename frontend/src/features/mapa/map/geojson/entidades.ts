@@ -1,5 +1,5 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
-import type { EstadoSobreviviente, Grafo, Nodo, Sobreviviente, TipoZombie, Zombie } from "@/features/mapa/domain/tipos";
+import type { EstadoSobreviviente, Grafo, Nodo, Sobreviviente, TipoZombie, Vehiculo, Zombie } from "@/features/mapa/domain/tipos";
 import { nodosBloqueadosPorHordas, refugiosSinAcceso } from "@/features/mapa/domain/grafo";
 
 // Pure converters from live entities to GeoJSON for the map layers (zombies, survivors, horde zones).
@@ -8,6 +8,7 @@ export type ZombieProps = { id: string; tipo: Exclude<TipoZombie, "dormido"> };
 export type SobrevivienteProps = { id: string; estado: EstadoSobreviviente };
 export type ZonaHordaProps = { nodo: string; origen: "horda" | "vecino" };
 export type RefugioSinAccesoProps = { id: string; nombre: string };
+export type VehiculoProps = { id: string; nombre: string; pasajeros: number };
 
 const punto = <P>(nodo: Nodo, properties: P): Feature<Point, P> => ({
   type: "Feature",
@@ -45,6 +46,8 @@ export function sobrevivientesAGeoJSON(
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const features: Feature<Point, SobrevivienteProps>[] = [];
   for (const s of sobrevivientes) {
+    // Riding a rescue van: the van is drawn, not the person on foot.
+    if (s.vehiculo) continue;
     const nodo = nodos.get(s.nodo);
     if (nodo) features.push(punto(nodo, { id: s.id, estado: s.estado }));
   }
@@ -62,6 +65,18 @@ export function refugiosSinAccesoAGeoJSON(
   for (const r of grafo.refugios) {
     const nodo = nodos.get(r.nodo);
     if (nodo && cortados.has(r.id)) features.push(punto(nodo, { id: r.id, nombre: r.nombre }));
+  }
+  return { type: "FeatureCollection", features };
+}
+
+// Rescue fleet (Pro): one point per van with how many people it carries ("Camioneta 1", never V-1).
+export function vehiculosAGeoJSON(grafo: Grafo, vehiculos: readonly Vehiculo[] | undefined): FeatureCollection<Point, VehiculoProps> {
+  const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
+  const features: Feature<Point, VehiculoProps>[] = [];
+  for (const v of vehiculos ?? []) {
+    const nodo = nodos.get(v.nodo);
+    const numero = /^V-(\d+)$/.exec(v.id)?.[1];
+    if (nodo) features.push(punto(nodo, { id: v.id, nombre: numero ? `Camioneta ${numero}` : v.id, pasajeros: v.pasajeros.length }));
   }
   return { type: "FeatureCollection", features };
 }

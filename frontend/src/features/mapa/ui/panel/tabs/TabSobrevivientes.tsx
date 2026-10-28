@@ -83,7 +83,7 @@ export default function TabSobrevivientes(p: Props) {
                 <UserRound className="size-3.5" aria-hidden />
                 {nombreSobreviviente(s.id)}
               </span>
-              <span className="text-calabaza-900">{ESTADO[s.estado].texto}</span>
+              <span className="text-calabaza-900">{s.vehiculo ? "En camioneta" : ESTADO[s.estado].texto}</span>
               <span className="text-xs text-crimson-800">{s.callesRestantes !== undefined ? `faltan ${s.callesRestantes} calles` : ""}</span>
             </button>
           </li>
@@ -107,7 +107,7 @@ export default function TabSobrevivientes(p: Props) {
               <UserRound className="size-4" aria-hidden />
               {nombreSobreviviente(p.seleccionado.id)}
             </span>
-            <span className="text-calabaza-900">{ESTADO[p.seleccionado.estado].texto}</span>
+            <span className="text-calabaza-900">{p.seleccionado.vehiculo ? "En camioneta" : ESTADO[p.seleccionado.estado].texto}</span>
           </div>
           <dl className="space-y-1">
             <div className="flex justify-between gap-3"><dt className="text-crimson-800">Ubicación</dt><dd className="text-right text-calabaza-900">{lugarDeNodo(p.grafo, p.seleccionado.nodo)}</dd></div>
