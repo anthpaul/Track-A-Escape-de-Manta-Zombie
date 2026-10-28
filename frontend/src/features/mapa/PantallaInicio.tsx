@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { grafoManta } from "@/features/mapa/data/real/grafo-manta";
+import { horaDelTurno } from "@/features/mapa/domain/reloj";
 import { USAR_MOCKS, useEstadoEnVivo } from "@/features/mapa/data/real/useEstadoEnVivo";
 import EstadoRonda from "@/features/mapa/ui/inicio/EstadoRonda";
 import FondoGrafo from "@/features/mapa/ui/inicio/FondoGrafo";
@@ -19,11 +20,15 @@ const PASOS = [
   },
   {
     titulo: "El mapa cambia",
-    texto: "Un puente colapsa o una calle se bloquea en plena ronda. El motor recalcula la ruta de cada sobreviviente en cada turno: nunca sigue una ruta vieja.",
+    texto: "Un puente colapsa o una calle se bloquea en plena ronda. El motor recalcula la ruta de cada sobreviviente en cada turno, así que nunca sigue una ruta vieja.",
   },
   {
     titulo: "Hacia el refugio",
-    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores. Cada refugio tiene 50 lugares y nadie es enviado a uno lleno, y cinco camionetas de rescate buscan primero a quien está en peligro. Responde en milisegundos.",
+    texto: "El motor busca el camino más corto en turnos hasta el refugio más conveniente, esquivando zombies y anticipando a los corredores. Responde en milisegundos.",
+  },
+  {
+    titulo: "Cupos y rescate",
+    texto: "Cada refugio tiene 50 lugares y nadie es enviado a uno lleno. Cinco camionetas de rescate, el doble de rápidas, buscan primero a quien está en peligro.",
   },
 ];
 
@@ -66,10 +71,13 @@ export default function PantallaInicio() {
           <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-4 py-20 sm:py-28 md:grid-cols-[1fr_auto]">
             <div className="flex flex-col items-start gap-6">
             <EstadoRonda conexion={vivo.conexion} ronda={vivo.snapshot?.ronda ?? null} turno={vivo.snapshot?.turno ?? null} />
-            <h1 className="font-pixel text-5xl leading-none text-calabaza-500 [text-shadow:4px_4px_0_#9a031e] sm:text-7xl">
+            <p className="font-pixel text-sm uppercase text-crimson-700">
+              Manta · {horaDelTurno(vivo.snapshot?.turno ?? 0).fecha} · {horaDelTurno(vivo.snapshot?.turno ?? 0).hora}
+            </p>
+            <h1 className="font-pixel text-4xl leading-none text-calabaza-500 [text-shadow:4px_4px_0_#9a031e] min-[420px]:text-5xl sm:text-7xl">
               Spondylus Z
             </h1>
-            <p className="max-w-xl text-lg leading-relaxed">
+            <p className="max-w-xl text-xl leading-relaxed">
               La noche del 31 de octubre, Manta amanece infestada. Nuestro motor de rutas guía a cada sobreviviente, paso a paso y en
               tiempo real, hacia un refugio sin ser mordido, mientras el mapa cambia a su alrededor.
             </p>
@@ -88,27 +96,27 @@ export default function PantallaInicio() {
               alt="Spondylus Z: calabaza con sombrero de bruja dentro de un anillo naranja"
               width={252}
               height={315}
-              className="mx-auto w-48 [image-rendering:pixelated] sm:w-60 md:mx-0"
+              className="mx-auto w-60 [image-rendering:pixelated] sm:w-72 md:mx-0 lg:w-80"
             />
           </div>
         </section>
 
         <section id="como-funciona" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-16">
-          <h2 className="mb-8 font-pixel text-3xl text-calabaza-500 [text-shadow:3px_3px_0_#9a031e]">Cómo funciona</h2>
-          <ol className="grid gap-4 md:grid-cols-3">
+          <h2 className="mb-8 font-pixel text-4xl text-calabaza-500 [text-shadow:3px_3px_0_#9a031e] sm:text-5xl">Cómo funciona</h2>
+          <ol className="grid gap-4 md:grid-cols-2">
             {PASOS.map((paso, i) => (
               <li key={paso.titulo} className="rounded-lg border border-crimson-300 bg-card p-5">
-                <span className="font-pixel text-2xl text-calabaza-500">{String(i + 1).padStart(2, "0")}</span>
-                <h3 className="mt-3 font-semibold">{paso.titulo}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-crimson-800">{paso.texto}</p>
+                <span className="font-pixel text-3xl text-calabaza-500">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="mt-3 text-xl font-semibold">{paso.titulo}</h3>
+                <p className="mt-2 text-base leading-relaxed text-crimson-800">{paso.texto}</p>
               </li>
             ))}
           </ol>
         </section>
 
         <section id="refugios" className="mx-auto max-w-5xl scroll-mt-20 px-4 pb-20 pt-4">
-          <h2 className="mb-2 font-pixel text-3xl text-calabaza-500 [text-shadow:3px_3px_0_#9a031e]">Refugios</h2>
-          <p className="mb-6 text-sm text-crimson-800">
+          <h2 className="mb-2 font-pixel text-4xl text-calabaza-500 [text-shadow:3px_3px_0_#9a031e] sm:text-5xl">Refugios</h2>
+          <p className="mb-6 text-base text-crimson-800">
             Los cuatro refugios reales de la simulación. Con una ronda en curso, se ve cuántas personas llegaron a cada uno.
           </p>
           <RefugiosInicio filas={filas} />
