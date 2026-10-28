@@ -87,7 +87,7 @@ export default function PantallaInicio() {
               src="/spondylus-z.png"
               alt="Spondylus Z: calabaza con sombrero de bruja dentro de un anillo naranja"
               width={252}
-              height={308}
+              height={315}
               className="mx-auto w-48 [image-rendering:pixelated] sm:w-60 md:mx-0"
             />
           </div>
