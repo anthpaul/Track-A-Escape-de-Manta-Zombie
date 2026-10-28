@@ -30,6 +30,6 @@ test("a round with the fleet rescues people, publishes the five vans and never a
   assert.ok(rescatados > 0, "the vans brought someone to a shelter");
   const ultimo = await persistencia.leerUltimoTurnoCompleto();
   assert.equal(ultimo?.vehiculos?.length, 5);
-  // Nobody is left riding a van as bitten, and every rider is still on the road.
+  // Nadie queda mordido viajando en una camioneta, y todo pasajero sigue en ruta.
   assert.ok(config.sobrevivientes.every((s) => !s.vehiculo || s.estado === "en_ruta"));
 });

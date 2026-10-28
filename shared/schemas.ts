@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Keep the official /paso validators compatible with the original package exports.
+// Mantiene los validadores oficiales de /paso compatibles con las exportaciones originales del paquete.
 export const NodoIdSchema = z.string().regex(/^N-\d{4}$/);
 export const SobrevivienteIdSchema = z.string().regex(/^S-\d{4}$/);
 export const CalleIdSchema = z.string().regex(/^C-\d{4}$/);
@@ -101,11 +101,11 @@ export const SobrevivienteSchema = z.object({
   siguienteNodo: NodoIdSchema.optional(),
   refugio: RefugioIdSchema.nullable().optional(),
   callesRestantes: z.number().int().nonnegative().optional(),
-  // Rescue fleet (Pro): the van this survivor is riding, if any.
+  // Flota de rescate (Pro): la camioneta en la que viaja este sobreviviente, si viaja en alguna.
   vehiculo: VehiculoIdSchema.optional(),
 });
 
-// Rescue fleet (Pro): up to 4 people on board; destino is the node it is heading to this turn.
+// Flota de rescate (Pro): hasta 4 personas a bordo; `destino` es el nodo al que se dirige este turno.
 export const VehiculoSchema = z.object({
   id: VehiculoIdSchema,
   nodo: NodoIdSchema,
@@ -113,7 +113,7 @@ export const VehiculoSchema = z.object({
   destino: NodoIdSchema.nullable(),
 });
 
-// Shared snapshots contain visible zombies only, never sleeping zombies.
+// Los snapshots compartidos solo contienen zombies visibles, nunca dormidos.
 const ZombieVisibleSchema = ZombieSchema.extend({ tipo: z.enum(["caminante", "corredor", "horda"]) });
 export const EstadoTurnoSchema = z.object({
   partidaId: z.string().min(1),
@@ -124,8 +124,8 @@ export const EstadoTurnoSchema = z.object({
   aristasBloqueadas: z.array(CalleIdSchema),
   sobrevivientes: z.array(SobrevivienteSchema),
   vehiculos: z.array(VehiculoSchema).optional(),
-  // p95 of every POST /paso latency of the round so far, written by the HTTP simulator when it
-  // completes the turn; absent or null when nothing measured /paso (in-process demo rounds).
+  // p95 de todas las latencias de POST /paso de la ronda hasta ahora; lo escribe el simulador HTTP
+  // al completar el turno. Ausente o null cuando nadie midió /paso (rondas de demo en proceso).
   p95ms: z.number().nonnegative().nullable().optional(),
 });
 

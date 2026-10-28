@@ -1,8 +1,8 @@
 /**
- * Tests for the S1 turn loop.
+ * Tests del ciclo de turnos de S1.
  *
- * All tests run against the in-memory clock and in-memory persistence —
- * no real timers, no DynamoDB, no HTTP calls.
+ * Todos los tests corren con el reloj y la persistencia en memoria:
+ * sin timers reales, sin DynamoDB y sin llamadas HTTP.
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -16,17 +16,17 @@ import { ejecutarTurno, correrRonda } from "./turno";
 import type { ConfigTurno, ConfigRonda } from "./turno";
 
 // ---------------------------------------------------------------------------
-// Helpers: minimal graph fixture (12 nodes, straight line + one dead end)
+// Helpers: fixture de grafo mínimo (12 nodos, línea recta + un callejón sin salida)
 //
-// Layout (bidirectional):
+// Disposición (bidireccional):
 //   R-01 (refugio)
 //    N-0001 — N-0002 — N-0003 — N-0004
 //                              |
-//                            N-0005  (dead end)
+//                            N-0005  (sin salida)
 // ---------------------------------------------------------------------------
 
-// We use the real manta.json graph for a handful of tests to make sure
-// the loop works at scale, but most tests use a small fixture.
+// Unos pocos tests usan el grafo real de manta.json para asegurar que el
+// ciclo funciona a escala, pero la mayoría usa un fixture chico.
 
 const FIXTURE_MINI = {
   version: "test-1",
@@ -86,7 +86,7 @@ function configBase(): ConfigTurno {
 }
 
 // ---------------------------------------------------------------------------
-// Test 1: Turn sequence — write order
+// Test 1: secuencia del turno, orden de escritura
 // ---------------------------------------------------------------------------
 test("guardarTurnoIncompleto is called before completarTurno", async () => {
   const writes: string[] = [];
@@ -112,7 +112,7 @@ test("guardarTurnoIncompleto is called before completarTurno", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test 2: Incomplete turn is readable by the motor BEFORE completarTurno
+// Test 2: el motor puede leer el turno incompleto ANTES de completarTurno
 // ---------------------------------------------------------------------------
 test("incomplete turn is written to persistence before the motor is called", async () => {
   let turnoVistoAntesDePaso: { completo: boolean } | undefined;
@@ -120,8 +120,8 @@ test("incomplete turn is written to persistence before the motor is called", asy
 
   cfg.motor = {
     async pedirPaso(pedido) {
-      // Read persistence inside the motor call — should already have the
-      // incomplete record written.
+      // Lee la persistencia dentro de la llamada al motor: el registro
+      // incompleto ya debería estar escrito.
       const registro = await cfg.persistencia.leerTurno(pedido.turno);
       if (registro) turnoVistoAntesDePaso = registro as unknown as { completo: boolean };
       return { siguienteNodo: pedido.nodoActual };
@@ -135,12 +135,12 @@ test("incomplete turn is written to persistence before the motor is called", asy
 });
 
 // ---------------------------------------------------------------------------
-// Test 3: Invalid motor response falls back to staying put
+// Test 3: una respuesta inválida del motor equivale a quedarse quieto
 // ---------------------------------------------------------------------------
 test("invalid move from motor results in the survivor staying put", async () => {
   const cfg = configBase();
   cfg.motor = {
-    // Return a node that is not a neighbor of N-0001.
+    // Devuelve un nodo que no es vecino de N-0001.
     async pedirPaso() { return { siguienteNodo: "N-0005" }; },
   };
 
@@ -154,23 +154,23 @@ test("invalid move from motor results in the survivor staying put", async () => 
 });
 
 // ---------------------------------------------------------------------------
-// Test 4: Timeout fallback — motor takes too long → stay put
+// Test 4: respaldo por timeout, el motor tarda demasiado → se queda quieto
 // ---------------------------------------------------------------------------
 test("motor timeout causes survivor to stay put", async () => {
   const cfg = configBase();
   cfg.motor = {
-    // Never resolves within 500 ms — we use a 600 ms delay.
-    // With the fake clock, no real delay occurs, but the Promise itself
-    // races against our 500 ms AbortTimer; we simulate by just never resolving.
+    // Nunca resuelve dentro de los 500 ms (la idea es una demora de 600 ms).
+    // Con el reloj falso no hay demora real, pero la Promise compite contra
+    // el AbortTimer de 500 ms; se simula simplemente no resolviendo nunca.
     pedirPaso() {
-      return new Promise<never>(() => { /* intentionally never resolves */ });
+      return new Promise<never>(() => { /* a propósito, nunca resuelve */ });
     },
   };
 
-  // The test must resolve. ejecutarTurno enforces a 500 ms deadline via
-  // Promise.race internally.  We need a real timeout here because the fake
-  // clock does not affect setTimeout-based deadline enforcement.
-  // We give a generous 2-second wall-clock budget for the test itself.
+  // El test tiene que resolver. ejecutarTurno aplica internamente un límite
+  // de 500 ms con Promise.race. Acá hace falta un timeout real, porque el reloj
+  // falso no afecta el límite basado en setTimeout.
+  // El test en sí tiene un presupuesto generoso de 2 segundos de reloj.
   await Promise.race([
     ejecutarTurno(cfg, 1),
     new Promise<void>((_, reject) =>
@@ -185,17 +185,17 @@ test("motor timeout causes survivor to stay put", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test 5: Multiple survivors are queried concurrently within the same turn
+// Test 5: varios sobrevivientes se consultan en paralelo dentro del mismo turno
 // ---------------------------------------------------------------------------
 test("all active survivors are queried and their moves are applied", async () => {
   const cfg = configBase();
-  // Add a second survivor at N-0002.
+  // Agrega un segundo sobreviviente en N-0002.
   cfg.sobrevivientes.push({ id: "S-0002", nodo: "N-0002", estado: "en_ruta" });
   const queried = new Set<string>();
   cfg.motor = {
     async pedirPaso({ sobrevivienteId, nodoActual }) {
       queried.add(sobrevivienteId);
-      // Move toward the right neighbor.
+      // Avanza hacia el vecino de la derecha.
       const neighbors = cfg.grafo.vecinos(nodoActual);
       const siguiente = neighbors.find((n) => n > nodoActual) ?? nodoActual;
       return { siguienteNodo: siguiente };
@@ -206,13 +206,13 @@ test("all active survivors are queried and their moves are applied", async () =>
 
   assert.ok(queried.has("S-0001"), "S-0001 must be queried");
   assert.ok(queried.has("S-0002"), "S-0002 must be queried");
-  // Both survivors should have moved.
+  // Los dos sobrevivientes deberían haberse movido.
   assert.notEqual(cfg.sobrevivientes[0].nodo, "N-0001");
   assert.notEqual(cfg.sobrevivientes[1].nodo, "N-0002");
 });
 
 // ---------------------------------------------------------------------------
-// Test 6: Already-safe and dead survivors are skipped
+// Test 6: se omiten los sobrevivientes ya a salvo y los mordidos
 // ---------------------------------------------------------------------------
 test("a_salvo and mordido survivors are not queried", async () => {
   const cfg = configBase();
@@ -235,7 +235,7 @@ test("a_salvo and mordido survivors are not queried", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test 7: Complete round — survivors arrive at the refuge
+// Test 7: ronda completa, los sobrevivientes llegan al refugio
 // ---------------------------------------------------------------------------
 test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", async () => {
   const grafo = grafoMini();
@@ -244,13 +244,13 @@ test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", a
     { id: "S-0001", nodo: "N-0001", estado: "en_ruta" },
   ];
 
-  // Path to the refuge: N-0001 → N-0002 → N-0003 → N-0004 (3 hops).
-  // N-0003 also connects to N-0005 (dead end), so we must pick explicitly.
+  // Camino al refugio: N-0001 → N-0002 → N-0003 → N-0004 (3 saltos).
+  // N-0003 también conecta con N-0005 (sin salida), así que hay que elegir explícitamente.
   const ruta: Record<string, string> = {
     "N-0001": "N-0002",
     "N-0002": "N-0003",
     "N-0003": "N-0004",
-    "N-0004": "N-0004",   // already at refuge
+    "N-0004": "N-0004",   // ya está en el refugio
   };
 
   const cfg: ConfigRonda = {
@@ -274,7 +274,7 @@ test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", a
 
   const resultados = await correrRonda(cfg);
 
-  // The survivor should reach N-0004 in 3 turns and the round should stop early.
+  // El sobreviviente debería llegar a N-0004 en 3 turnos y la ronda debería terminar antes.
   assert.ok(resultados.length <= 5, "round should finish early once all survivors are safe");
   const ultimo = resultados.at(-1)!;
   assert.equal(ultimo.aSalvo, 1);
@@ -282,7 +282,7 @@ test("correrRonda runs multiple turns and marks survivors a_salvo on arrival", a
 });
 
 // ---------------------------------------------------------------------------
-// Test 8: Blocked street — survivor cannot use it
+// Test 8: calle bloqueada, el sobreviviente no puede usarla
 // ---------------------------------------------------------------------------
 test("blocked street prevents movement through that edge", async () => {
   const grafo = grafoMini();
@@ -291,9 +291,9 @@ test("blocked street prevents movement through that edge", async () => {
     grafo,
     zombies: [],
     sobrevivientes: ss,
-    aristasBloqueadas: ["C-0001"],   // block N-0001 ↔ N-0002
+    aristasBloqueadas: ["C-0001"],   // bloquea N-0001 ↔ N-0002
     motor: {
-      // Tries to move to N-0002 — should be rejected because C-0001 is blocked.
+      // Intenta moverse a N-0002: debe rechazarse porque C-0001 está bloqueada.
       async pedirPaso() { return { siguienteNodo: "N-0002" }; },
     },
     persistencia: crearPersistenciaMemoria(),
@@ -310,7 +310,7 @@ test("blocked street prevents movement through that edge", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test 9: Turn metrics are accurate
+// Test 9: las métricas del turno son exactas
 // ---------------------------------------------------------------------------
 test("ResultadoTurno counts are correct", async () => {
   const grafo = grafoMini();
@@ -343,7 +343,7 @@ test("ResultadoTurno counts are correct", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Test 10: Completed turn is stored with completo = true
+// Test 10: el turno completado se guarda con completo = true
 // ---------------------------------------------------------------------------
 test("leerUltimoTurnoCompleto returns the completed turn snapshot", async () => {
   const cfg = configBase();
@@ -357,12 +357,12 @@ test("leerUltimoTurnoCompleto returns the completed turn snapshot", async () => 
 });
 
 // ---------------------------------------------------------------------------
-// Published siguienteNodo: the next planned step, not the step just taken
+// siguienteNodo publicado: el próximo paso planificado, no el que se acaba de dar
 // ---------------------------------------------------------------------------
 
 test("with a planner, a completed turn publishes each survivor's next step from its new position", async () => {
   const config = configBase();
-  // The fake motor moves S-0001 from N-0001 to N-0002; from there the next step is N-0003.
+  // El motor falso mueve a S-0001 de N-0001 a N-0002; desde ahí el siguiente paso es N-0003.
   config.planificarSiguiente = (s) => (s.nodo === "N-0002" ? "N-0003" : s.nodo);
   await ejecutarTurno(config, 1);
   const publicado = (await config.persistencia.leerUltimoTurnoCompleto())!.sobrevivientes[0]!;

@@ -1,26 +1,26 @@
 /**
- * In-process motor for scheduled demo rounds (S6).
+ * Motor en proceso para las rondas de demo programadas (S6).
  *
- * Calls the same calcularSiguienteNodo that POST /paso runs, without HTTP: a
- * demo round every few minutes would otherwise send millions of billable API
- * Gateway requests a day just to keep the public map moving. It sees the world
- * the way /paso does: visible zombies only (sleepers are never published).
+ * Llama a la misma calcularSiguienteNodo que ejecuta POST /paso, sin HTTP: de lo
+ * contrario, una ronda de demo cada pocos minutos mandaría millones de pedidos
+ * facturables a API Gateway por día solo para mantener en movimiento el mapa público.
+ * Ve el mundo igual que /paso: solo zombies visibles (los dormidos nunca se publican).
  *
- * Evaluation rounds keep using MotorHttp, which measures the real /paso.
+ * Las rondas de evaluación siguen usando MotorHttp, que mide el /paso real.
  */
 import { zombiesVisibles, type Sobreviviente, type Zombie } from "@abcstack/shared";
 import { calcularSiguienteNodo } from "../../backend/src/motor/motor";
 import type { ClienteMotor } from "./motor-falso";
 
-/** The step /paso would answer for this world, computed in process. */
+/** El paso que respondería /paso para este mundo, calculado en proceso. */
 export function siguientePasoEnProceso(
   pedido: { sobrevivienteId: string; nodoActual: string; turno: number },
   zombiesTodos: readonly Zombie[],
   bloqueos: readonly string[],
-  // Who is where (Pro: shelter capacity), the same fields /paso reads from the published turn.
+  // Quién está dónde (Pro: capacidad de refugios), los mismos campos que /paso lee del turno publicado.
   sobrevivientes: readonly Pick<Sobreviviente, "id" | "nodo" | "estado">[] = [],
 ): string {
-  // zombiesVisibles already drops sleepers; the flatMap makes that explicit for the type checker.
+  // zombiesVisibles ya descarta a los dormidos; el flatMap lo hace explícito para el chequeo de tipos.
   const zombies = zombiesVisibles([...zombiesTodos]).flatMap((z) => (z.tipo === "dormido" ? [] : [{ ...z, tipo: z.tipo }]));
   const mundo = {
     partidaId: "demo",

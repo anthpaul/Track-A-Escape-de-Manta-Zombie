@@ -1,22 +1,22 @@
 /**
- * Turn coordinator — S1 + S2 + S3.
+ * Coordinador de turnos — S1 + S2 + S3.
  *
- * Implements the exact sequence from AGENTS.md §4.5:
+ * Implementa la secuencia exacta de AGENTS.md §4.5:
  *
- *   Step 1  Awaken sleeping zombies, then move all zombies.
- *   Step 2  Apply city-event blockages for this turn.
- *   Step 3  Write TURNO#N with completo = false.
- *   Step 4  Call POST /paso for every active survivor in one concurrent window.
- *   Step 5  Validate each response; fall back to "stay put" on timeout/error.
- *   Step 6  Move survivors, resolve bites (node + crossing), check arrivals,
- *           write completo = true.
+ *   Paso 1  Despierta a los zombies dormidos y después mueve a todos los zombies.
+ *   Paso 2  Aplica los bloqueos por eventos de ciudad de este turno.
+ *   Paso 3  Escribe TURNO#N con completo = false.
+ *   Paso 4  Llama a POST /paso por cada sobreviviente activo, todos en una misma ventana concurrente.
+ *   Paso 5  Valida cada respuesta; ante timeout o error, el sobreviviente se queda quieto.
+ *   Paso 6  Mueve a los sobrevivientes, resuelve mordidas (nodo + cruce), revisa llegadas
+ *           y escribe completo = true.
  *
- * Turns never overlap: we call esperarTick at the end to fill the 2-second
- * window, and we do not start turn N+1 until turn N's UpdateItem is done.
+ * Los turnos nunca se superponen: al final se llama a esperarTick para completar la ventana
+ * de 2 segundos, y el turno N+1 no arranca hasta que termina el UpdateItem del turno N.
  *
- * The round configuration bounds the population to at most 200 survivors.
- * Sequential batches would turn 200 timeouts into a five-second turn.
- * Every request instead has a concurrent 500 ms deadline and abort signal.
+ * La configuración de la ronda limita la población a 200 sobrevivientes como máximo.
+ * Con lotes secuenciales, 200 timeouts convertirían el turno en uno de cinco segundos;
+ * por eso cada pedido tiene su propio límite concurrente de 500 ms y su señal de aborto.
  */
 import type { GrafoIndexado, Zombie, Sobreviviente } from "@abcstack/shared";
 import type { Vehiculo } from "@abcstack/shared";
@@ -36,68 +36,69 @@ import type { PersistenciaPartida, TurnoParcial } from "./persistencia";
 import type { Reloj } from "./reloj";
 
 // -------------------------------------------------------------------------
-// Constants
+// Constantes
 // -------------------------------------------------------------------------
 
 const DURACION_TURNO_MS = 2_000;
 const PASO_TIMEOUT_MS = 500;
 
 // -------------------------------------------------------------------------
-// Types
+// Tipos
 // -------------------------------------------------------------------------
 
 export interface EventoRonda {
-  /** Turn number when the blockage takes effect. */
+  /** Número de turno en el que el bloqueo entra en vigor. */
   turno: number;
-  /** Street ID to block (AGENTS.md §0 — city events). */
+  /** Id de la calle a bloquear (AGENTS.md §0 — eventos de ciudad). */
   calleId: string;
-  /** Human-readable label for logging (e.g. "bridge collapse R2"). */
+  /** Etiqueta legible para los logs (por ejemplo "bridge collapse R2"). */
   descripcion?: string;
 }
 
 export interface ConfigTurno {
-  /** Indexed graph (for movement validation). */
+  /** Grafo indexado (para validar movimientos). */
   grafo: GrafoIndexado;
-  /** Current zombie state (mutable between turns) — includes sleeping zombies. */
+  /** Estado actual de los zombies (mutable entre turnos), dormidos incluidos. */
   zombies: ZombieInterno[];
-  /** Current survivor state (mutable between turns). */
+  /** Estado actual de los sobrevivientes (mutable entre turnos). */
   sobrevivientes: Sobreviviente[];
-  /** Currently blocked street IDs (e.g. bridge collapse events). */
+  /** Ids de las calles bloqueadas en este momento (por ejemplo, por colapso de un puente). */
   aristasBloqueadas: string[];
-  /** Motor client (real or fake). */
+  /** Cliente del motor (real o falso). */
   motor: ClienteMotor;
-  /** Persistence layer (in-memory or DynamoDB). */
+  /** Capa de persistencia (en memoria o DynamoDB). */
   persistencia: PersistenciaPartida;
-  /** Controllable clock. */
+  /** Reloj controlable. */
   reloj: Reloj;
-  /** Unique partition ID for this round (e.g. "demo-r1-1793030400000"). */
+  /** Id de partición único de esta ronda (por ejemplo "demo-r1-1793030400000"). */
   partidaId: string;
-  /** Round number (1 | 2 | 3). */
+  /** Número de ronda (1 | 2 | 3). */
   ronda: 1 | 2 | 3;
-  /** Set of refuge node IDs — survivors arriving here become "a_salvo". */
+  /** Conjunto de ids de nodos de refugio: los sobrevivientes que llegan acá pasan a "a_salvo". */
   nodosRefugio: ReadonlySet<string>;
-  /** Refuge node → capacity (Pro). A full refuge admits nobody else; without it every arrival gets in. */
+  /** Nodo de refugio → capacidad (Pro). Un refugio lleno no admite a nadie más; sin este dato entran todos los que llegan. */
   capacidadRefugio?: ReadonlyMap<string, number>;
-  /** Rescue fleet (Pro, shared/flota.ts). Demo rounds only: evaluation rounds have none. */
+  /** Flota de rescate (Pro, shared/flota.ts). Solo en rondas de demo: las de evaluación no tienen. */
   flota?: Vehiculo[];
-  /** Seeded random number generator — injected for reproducibility. */
+  /** Generador de números aleatorios con semilla, inyectado para que sea reproducible. */
   aleatorio: () => number;
-  /** Scheduled city events — applied at their designated turn (Step 2). */
+  /** Eventos de ciudad programados, aplicados en su turno asignado (Paso 2). */
   eventos?: readonly EventoRonda[];
   /**
-   * Next planned step of a survivor from its current node. When set (in-process demo rounds), the
-   * completed turn publishes it as siguienteNodo so the map can draw each survivor's arrow; without
-   * it (HTTP rounds, where planning would cost an extra /paso call) siguienteNodo is the step just taken.
+   * Próximo paso planificado de un sobreviviente desde su nodo actual. Cuando está definido (rondas
+   * de demo en proceso), el turno completo lo publica como siguienteNodo para que el mapa dibuje la
+   * flecha de cada sobreviviente; sin él (rondas HTTP, donde planificar costaría una llamada extra a
+   * /paso), siguienteNodo es el paso que se acaba de dar.
    */
   planificarSiguiente?: (sobreviviente: Sobreviviente) => string;
 }
 
-/** Summary returned after each turn for metrics / logging. */
+/** Resumen que se devuelve después de cada turno, para métricas y logs. */
 export interface ResultadoTurno {
   turno: number;
   respuestasValidas: number;
-  respuestasFallidas: number;   // timeout, HTTP error, or invalid move
-  /** People the rescue fleet brought to a shelter this turn (rounds with a fleet). */
+  respuestasFallidas: number;   // timeout, error HTTP o movimiento inválido
+  /** Personas que la flota de rescate llevó a un refugio este turno (rondas con flota). */
   rescatadosFlota?: number;
   enRuta: number;
   aSalvo: number;
@@ -111,17 +112,17 @@ export interface ResultadoTurno {
 
 
 // -------------------------------------------------------------------------
-// Core: advance one turn
+// Núcleo: avanzar un turno
 // -------------------------------------------------------------------------
 
 /**
- * Advance the world by exactly one turn.
+ * Avanza el mundo exactamente un turno.
  *
- * `config.zombies` and `config.sobrevivientes` are mutated in place so the
- * caller's arrays stay up to date without re-reading from persistence.
+ * `config.zombies` y `config.sobrevivientes` se modifican en el lugar, así los
+ * arreglos de quien llama quedan al día sin volver a leer de la persistencia.
  *
- * @param config  Shared mutable world state + injected dependencies.
- * @param turno   The turn number to execute (starts at 1 after turn-zero setup).
+ * @param config  Estado mutable compartido del mundo + dependencias inyectadas.
+ * @param turno   Número de turno a ejecutar (empieza en 1, después de preparar el turno cero).
  */
 export async function ejecutarTurno(
   config: ConfigTurno,
@@ -130,11 +131,11 @@ export async function ejecutarTurno(
   const iniciado = config.reloj.ahora();
 
   // -----------------------------------------------------------
-  // Step 1: Awaken sleeping zombies, then move all zombies.
+  // Paso 1: despierta a los dormidos y después mueve a todos los zombies.
   // -----------------------------------------------------------
   despertarDormidos(config.zombies, config.sobrevivientes, config.grafo);
 
-  // Snapshot zombie positions BEFORE moving (needed for crossing-bite detection).
+  // Guarda las posiciones de los zombies ANTES de moverlos (hace falta para detectar mordidas por cruce).
   const previoZombies = config.zombies.map((z) => ({ id: z.id, nodo: z.nodo, tipo: z.tipo }));
 
   for (const zombie of config.zombies) {
@@ -151,7 +152,7 @@ export async function ejecutarTurno(
   }
 
   // -----------------------------------------------------------
-  // Step 2: Apply city events scheduled for this turn.
+  // Paso 2: aplica los eventos de ciudad programados para este turno.
   // -----------------------------------------------------------
   if (config.eventos) {
     for (const evento of config.eventos) {
@@ -165,7 +166,7 @@ export async function ejecutarTurno(
   }
 
   // -----------------------------------------------------------
-  // Step 3: Write TURNO#N with completo = false.
+  // Paso 3: escribe TURNO#N con completo = false.
   // -----------------------------------------------------------
   const sobrevivientesAntesDeMoverse: Sobreviviente[] = config.sobrevivientes.map(
     (s) => ({ ...s }),
@@ -181,13 +182,13 @@ export async function ejecutarTurno(
   await config.persistencia.guardarTurnoIncompleto(parcial);
 
   // -----------------------------------------------------------
-  // Step 4 + 5: Query the motor for each active survivor.
+  // Pasos 4 + 5: consulta al motor por cada sobreviviente activo.
   //
-  // We only call /paso for survivors that are still "en_ruta".
-  // For each call we enforce a hard 500 ms deadline; any timeout or error
-  // counts as "stay put" (the survivor does not move that turn).
+  // Solo se llama a /paso por los sobrevivientes que siguen "en_ruta".
+  // Cada llamada tiene un límite estricto de 500 ms; cualquier timeout o error
+  // cuenta como "quedarse quieto" (el sobreviviente no se mueve ese turno).
   // -----------------------------------------------------------
-  // People riding a rescue van move with it: they never ask /paso.
+  // Quienes viajan en una camioneta de rescate se mueven con ella: nunca consultan /paso.
   const activos = config.sobrevivientes.filter((s) => s.estado === "en_ruta" && !s.vehiculo);
   let respuestasValidas = 0;
   let respuestasFallidas = 0;
@@ -212,7 +213,7 @@ export async function ejecutarTurno(
         }),
       ]);
 
-      // Validate: must be the same node or a neighbor via a non-blocked street.
+      // Valida: debe ser el mismo nodo o un vecino por una calle no bloqueada.
       const esValido = config.grafo.esMovimientoValido(
         sobreviviente.nodo,
         respuesta.siguienteNodo,
@@ -223,12 +224,12 @@ export async function ejecutarTurno(
         decisiones.set(sobreviviente.id, respuesta.siguienteNodo);
         respuestasValidas++;
       } else {
-        // Invalid move → stay put.
+        // Movimiento inválido → se queda quieto.
         decisiones.set(sobreviviente.id, sobreviviente.nodo);
         respuestasFallidas++;
       }
     } catch {
-      // Timeout or network error → stay put.
+      // Timeout o error de red → se queda quieto.
       decisiones.set(sobreviviente.id, sobreviviente.nodo);
       respuestasFallidas++;
     } finally {
@@ -239,12 +240,12 @@ export async function ejecutarTurno(
   await Promise.all(activos.map(consultarMotor));
 
   // -----------------------------------------------------------
-  // Step 6: Move survivors, resolve bites, check arrivals, write completo = true.
+  // Paso 6: mueve a los sobrevivientes, resuelve mordidas, revisa llegadas y escribe completo = true.
   // -----------------------------------------------------------
-  // Snapshot survivor positions BEFORE moving (for crossing-bite detection).
+  // Guarda las posiciones de los sobrevivientes ANTES de moverlos (para detectar mordidas por cruce).
   const previoSobrevivientes = config.sobrevivientes.map((s) => ({ id: s.id, nodo: s.nodo }));
 
-  // Apply movements.
+  // Aplica los movimientos.
   for (const sobreviviente of config.sobrevivientes) {
     if (sobreviviente.estado !== "en_ruta" || sobreviviente.vehiculo) continue;
     const siguienteNodo = decisiones.get(sobreviviente.id) ?? sobreviviente.nodo;
@@ -252,7 +253,7 @@ export async function ejecutarTurno(
     sobreviviente.siguienteNodo = siguienteNodo;
   }
 
-  // Resolve bites (node sharing first, then crossings).
+  // Resuelve las mordidas (primero por nodo compartido, después por cruce).
   resolverMordidasPorNodo(config.sobrevivientes, config.zombies);
   resolverMordidasPorCruce(
     config.sobrevivientes,
@@ -262,10 +263,10 @@ export async function ejecutarTurno(
     config.grafo,
   );
 
-  // Check shelter arrivals (after bites — a bitten survivor at a refuge is mordido).
+  // Revisa las llegadas a refugios (después de las mordidas: un mordido en un refugio queda mordido).
   resolverLlegadas(config.sobrevivientes, config.nodosRefugio, config.capacidadRefugio);
 
-  // Rescue fleet (Pro): vans move after everyone on foot, pick people up and drop them at shelters.
+  // Flota de rescate (Pro): las camionetas se mueven después de todos los que van a pie, recogen gente y la dejan en los refugios.
   let rescatadosFlota: number | undefined;
   if (config.flota) {
     const eventos = moverFlota(config.flota, {
@@ -279,14 +280,14 @@ export async function ejecutarTurno(
     rescatadosFlota = eventos.filter((e) => e.tipo === "dejo").reduce((t, e) => t + e.sobrevivientes.length, 0);
   }
 
-  // Only survivors still on the road get a next step; moves, bites and arrivals above are unchanged.
+  // Solo los sobrevivientes que siguen en ruta reciben un siguiente paso; los movimientos, mordidas y llegadas de arriba no cambian.
   let publicadas = decisiones;
   const planificar = config.planificarSiguiente;
   if (planificar) {
     publicadas = new Map(decisiones);
     for (const sobreviviente of config.sobrevivientes) {
       if (sobreviviente.estado !== "en_ruta") continue;
-      // A rider's next step is wherever the van goes: no arrow of their own.
+      // El siguiente paso de un pasajero es a donde vaya la camioneta: no tiene flecha propia.
       sobreviviente.siguienteNodo = sobreviviente.vehiculo ? sobreviviente.nodo : planificar(sobreviviente);
       publicadas.set(sobreviviente.id, sobreviviente.siguienteNodo);
     }
@@ -295,7 +296,7 @@ export async function ejecutarTurno(
   await config.persistencia.completarTurno(turno, publicadas, config.sobrevivientes, config.flota);
 
   // -----------------------------------------------------------
-  // Wait until the tick window is full.
+  // Espera hasta completar la ventana del tick.
   // -----------------------------------------------------------
   await config.reloj.esperarTick(iniciado, DURACION_TURNO_MS);
 
@@ -314,23 +315,23 @@ export async function ejecutarTurno(
 }
 
 // -------------------------------------------------------------------------
-// Round runner
+// Ejecutor de la ronda
 // -------------------------------------------------------------------------
 
 export interface ConfigRonda extends ConfigTurno {
-  /** Defaults to true for existing local callers; official scenarios run all 150 turns. */
+  /** Por defecto true para quienes ya lo llaman en local; los escenarios oficiales juegan los 150 turnos. */
   detenerSinActivos?: boolean;
-  /** Total number of turns to run (e.g. 150 for a 5-minute round at 2 s/turn). */
+  /** Cantidad total de turnos a ejecutar (por ejemplo 150 para una ronda de 5 minutos a 2 s por turno). */
   totalTurnos: number;
-  /** Optional callback invoked after each turn completes (for logging / metrics). */
+  /** Callback opcional que se invoca al completar cada turno (para logs y métricas). */
   onTurno?: (resultado: ResultadoTurno) => void;
-  /** Optional abort signal — check each turn to stop early. */
+  /** Señal de aborto opcional: se revisa en cada turno para terminar antes. */
   signal?: AbortSignal;
 }
 
 /**
- * Run a complete round from turn 1 to `totalTurnos`.
- * Returns an array of ResultadoTurno, one per turn executed.
+ * Juega una ronda completa desde el turno 1 hasta `totalTurnos`.
+ * Devuelve un arreglo de ResultadoTurno, uno por cada turno ejecutado.
  */
 export async function correrRonda(config: ConfigRonda): Promise<ResultadoTurno[]> {
   const resultados: ResultadoTurno[] = [];
@@ -342,7 +343,7 @@ export async function correrRonda(config: ConfigRonda): Promise<ResultadoTurno[]
     resultados.push(resultado);
     config.onTurno?.(resultado);
 
-    // Stop early when no one is still moving.
+    // Termina antes cuando ya nadie se está moviendo.
     if (resultado.enRuta === 0 && config.detenerSinActivos !== false) break;
   }
 

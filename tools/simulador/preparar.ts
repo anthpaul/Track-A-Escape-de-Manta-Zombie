@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { z } from "zod";
 import { GrafoSchema, SobrevivienteSchema, ZombieSchema } from "@abcstack/shared";
 
-// Local simulator input, not an API payload or a persisted world snapshot.
+// Entrada local del simulador; no es un payload de la API ni un snapshot persistido del mundo.
 const ConfigInicialSchema = z.object({
   semilla: z.number().int().min(0).max(0xffffffff),
   zombies: z.array(ZombieSchema),
@@ -15,7 +15,7 @@ export function crearAleatorio(semilla: number): () => number {
     throw new Error("Seed must be an unsigned 32-bit integer");
   }
   let state = semilla;
-  // Mulberry32: reproducible simulation randomness, not cryptographic randomness.
+  // Mulberry32: azar reproducible para la simulación, no azar criptográfico.
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;
     let value = Math.imul(state ^ (state >>> 15), state | 1);
@@ -24,7 +24,7 @@ export function crearAleatorio(semilla: number): () => number {
   };
 }
 
-/** Prepare an isolated local world; no turns, network calls or writes occur. */
+/** Prepara un mundo local aislado; no ejecuta turnos, ni llamadas de red, ni escrituras. */
 export async function prepararPartida(
   input: unknown,
   rutaGrafo = resolve(__dirname, "../../shared/data/manta.json"),

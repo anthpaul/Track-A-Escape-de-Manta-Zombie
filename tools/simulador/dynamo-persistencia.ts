@@ -7,10 +7,10 @@ import { crearPersistenciaMemoria, type PersistenciaPartida, type TurnoParcial }
 type Escritura = PutCommand | DeleteCommand | TransactWriteCommand;
 export interface ClienteEscritura { send(command: Escritura): Promise<unknown> }
 
-/** Owns only this game's new records; every turn write is fenced by the active lease. */
+/** Solo es dueña de los registros nuevos de esta partida; cada escritura de turno está protegida por el lease activo. */
 export class DynamoPersistencia implements PersistenciaPartida {
   private readonly memoria = crearPersistenciaMemoria();
-  /** Set by the HTTP runner: each completed turn then publishes the round's /paso p95 so far. */
+  /** Lo define el runner HTTP: así cada turno completo publica el p95 de /paso de la ronda hasta ese momento. */
   medirP95?: () => number | null;
   constructor(
     private readonly client: ClienteEscritura,
@@ -22,7 +22,7 @@ export class DynamoPersistencia implements PersistenciaPartida {
     if (!tableName || !partidaId) throw new Error("Table name and game ID are required");
   }
 
-  /** Demo rounds (S6) carry a "demo-" game id; the lock and metadata record that mode. */
+  /** Las rondas de demo (S6) llevan un id de partida "demo-"; el lock y la metadata registran ese modo. */
   private get modo(): "demo" | "evaluacion" { return this.partidaId.startsWith("demo-") ? "demo" : "evaluacion"; }
   private get segundos() { return Math.floor(this.ahora() / 1000); }
   private get ttl() { return this.segundos + 86_400; }
@@ -34,7 +34,7 @@ export class DynamoPersistencia implements PersistenciaPartida {
     };
   }
 
-  /** False means another game owns the lease; never force another round out. */
+  /** False significa que otra partida tiene el lease; nunca se expulsa a otra ronda. */
   async iniciar(semilla: number): Promise<boolean> {
     try {
       await this.client.send(new PutCommand({
@@ -82,7 +82,7 @@ export class DynamoPersistencia implements PersistenciaPartida {
     const sobrevivientes = (finales ?? parcial.sobrevivientes).map(s => ({ ...s,
       ...(decisiones.has(s.id) ? { siguienteNodo: decisiones.get(s.id)! } : {}) }));
     const p95 = this.medirP95 ? { expresion: ", #data.p95ms = :p95", valores: { ":p95": this.medirP95() } } : { expresion: "", valores: {} };
-    // Rescue fleet (Pro): the vans of this turn, so /estado can draw them.
+    // Flota de rescate (Pro): las camionetas de este turno, para que /estado pueda dibujarlas.
     const flota = vehiculos
       ? { expresion: ", #data.vehiculos = :vehiculos", valores: { ":vehiculos": vehiculos.map((v) => ({ ...v, pasajeros: [...v.pasajeros] })) } }
       : { expresion: "", valores: {} };

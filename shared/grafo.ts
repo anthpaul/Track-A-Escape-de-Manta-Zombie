@@ -13,7 +13,7 @@ export interface GrafoIndexado {
   nodosBloqueadosPorHordas(zombies: readonly Zombie[]): Set<string>;
 }
 
-/** Validate and index the static graph once, outside the per-survivor request path. */
+/** Valida e indexa el grafo estático una sola vez, fuera del camino de cada pedido por sobreviviente. */
 export function crearGrafo(input: unknown): GrafoIndexado {
   const graph = GrafoSchema.parse(input);
   const neighbors = new Map(graph.nodos.map((node) => [node.id, [] as string[]]));
