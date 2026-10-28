@@ -213,3 +213,47 @@ test("the rescue fleet rides in demo rounds by default and never in evaluation u
   assert.equal(parseEvento({ semilla: 1, flota: false }).flota, false);
   assert.throws(() => parseEvento({ flota: "si" }), /flota/);
 });
+
+test("demo rounds chain back to back while the invocation has time for another full round", async () => {
+  const { cliente, comandos } = clienteFalso();
+  const restante = [12 * 60_000, 4 * 60_000]; // after round 1: room for another; after round 2: not
+  const handler = crearHandler({ cliente, tabla: "t", reloj: crearRelojFake(), tiempoRestanteMs: () => restante.shift() ?? 0 });
+  const r = await handler({ ronda: 1, semilla: 3 });
+  assert.equal(r.iniciada, true);
+  if (!r.iniciada) return;
+  assert.equal(r.rondasJugadas, 2);
+  const tomas = comandos.filter((c) => c instanceof PutCommand && c.input.Item?.PK === KEYS.control().PK);
+  const ids = tomas.map((c) => (c as PutCommand).input.Item?.partidaId);
+  assert.equal(ids.length, 2, "each round takes the lock with its own game id");
+  assert.notEqual(ids[0], ids[1]);
+});
+
+test("evaluation rounds never chain, however much time is left", async () => {
+  const { cliente } = clienteFalso();
+  const handler = crearHandler({
+    cliente,
+    tabla: "t",
+    reloj: crearRelojFake(),
+    tiempoRestanteMs: () => 14 * 60_000,
+    crearMotorHttp: () => ({ latencias: [] as number[], async pedirPaso(p: { nodoActual: string }) { return { siguienteNodo: p.nodoActual }; } }),
+    pausaCalentamientoMs: 0,
+  });
+  const r = await handler({ ronda: 1, semilla: 3, modo: "evaluacion" });
+  assert.equal(r.iniciada && r.rondasJugadas, 1);
+});
+
+test("if another round grabs the lock between two demo rounds, the chain stops quietly", async () => {
+  let tomas = 0;
+  const { cliente } = clienteFalso();
+  const conCompetencia = {
+    async send(comando: Comando) {
+      if (comando instanceof PutCommand && comando.input.Item?.PK === KEYS.control().PK && ++tomas === 2) {
+        throw Object.assign(new Error("occupied"), { name: "ConditionalCheckFailedException" });
+      }
+      return cliente.send(comando);
+    },
+  };
+  const handler = crearHandler({ cliente: conCompetencia, tabla: "t", reloj: crearRelojFake(), tiempoRestanteMs: () => 12 * 60_000 });
+  const r = await handler({ ronda: 1, semilla: 3 });
+  assert.equal(r.iniciada && r.rondasJugadas, 1);
+});

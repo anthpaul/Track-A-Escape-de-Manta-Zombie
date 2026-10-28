@@ -10,6 +10,10 @@
  *
  * Event (all optional): { "ronda": 1 | 2 | 3, "semilla": number, "modo": "demo" | "evaluacion", "flota": boolean }.
  * The rescue fleet (Pro) rides in demo rounds by default and never in evaluation unless asked.
+ *
+ * Demo rounds chain: when one ends (often early, once nobody is on the road) the same invocation starts
+ * the next one right away while it still has time for a full round, so the public map waits ~2 s
+ * between rounds instead of up to a minute for the next schedule. Evaluation rounds never chain.
  * Default R2 demo, the round that shows every zombie type but sleepers plus a bridge collapse.
  *
  * Evaluation mode (`aws lambda invoke` with "modo": "evaluacion") calls the real POST /paso over
@@ -46,6 +50,8 @@ export type ResultadoDemo =
       aSalvo: number;
       mordidos: number;
       enRuta: number;
+      // Rounds this invocation played (demo rounds chain; the result describes the last one).
+      rondasJugadas?: number;
       // Rounds with the rescue fleet only.
       rescatadosFlota?: number;
       // Evaluation rounds only.
@@ -77,9 +83,10 @@ export function crearHandler(deps: {
   // Evaluation rounds: one call per motor (the round, then the warm-up). Defaults to POST /paso from PASO_URL / PASO_KEY.
   crearMotorHttp?: (opciones?: Pick<OpcionesMotorHttp, "timeoutMs">) => MotorMedido;
   pausaCalentamientoMs?: number;
+  // Milliseconds this invocation has left (Lambda context). Without it, demo rounds do not chain.
+  tiempoRestanteMs?: () => number;
 }) {
-  return async (evento: EventoDemo | null | undefined): Promise<ResultadoDemo> => {
-    const { ronda, semilla, modo, flota } = parseEvento(evento);
+  const jugar = async (ronda: 1 | 2 | 3, semilla: number, modo: Modo, flota: boolean): Promise<ResultadoDemo> => {
     const crear = ronda === 1 ? crearEscenarioR1 : ronda === 2 ? crearEscenarioR2 : crearEscenarioR3;
     const crearMotorHttp = deps.crearMotorHttp ?? ((opciones) => new MotorHttp(opciones));
     // Built before anything is written, so a missing PASO_URL / PASO_KEY fails without touching the lock.
@@ -163,8 +170,31 @@ export function crearHandler(deps: {
     });
     return { ...base, calentamiento, metricas };
   };
+
+  return async (evento: EventoDemo | null | undefined): Promise<ResultadoDemo> => {
+    const { ronda, semilla, modo, flota } = parseEvento(evento);
+    let ultimo = await jugar(ronda, semilla, modo, flota);
+    if (!ultimo.iniciada) return ultimo;
+    let rondasJugadas = 1;
+    // A demo round lasts at most 150 turns of 2 s: chain only while a whole one still fits.
+    while (modo === "demo" && deps.tiempoRestanteMs && deps.tiempoRestanteMs() >= MARGEN_RONDA_MS) {
+      const siguiente = await jugar(ronda, (semilla + rondasJugadas) % 0x100000000, modo, flota);
+      if (!siguiente.iniciada) break; // another round took the lock in between: it shows on the map instead
+      ultimo = siguiente;
+      rondasJugadas++;
+    }
+    return { ...ultimo, rondasJugadas };
+  };
 }
+
+// 150 turns × 2 s plus writes and a safety margin, against the 15-minute Lambda timeout.
+const MARGEN_RONDA_MS = 330_000;
 
 // Created once per warm instance, like the API Lambda's clients.
 const cliente = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-export const handler = (evento: EventoDemo) => crearHandler({ cliente, tabla: process.env.MUNDO_TABLE ?? "" })(evento);
+export const handler = (evento: EventoDemo, contexto?: { getRemainingTimeInMillis(): number }) =>
+  crearHandler({
+    cliente,
+    tabla: process.env.MUNDO_TABLE ?? "",
+    tiempoRestanteMs: contexto ? () => contexto.getRemainingTimeInMillis() : undefined,
+  })(evento);
