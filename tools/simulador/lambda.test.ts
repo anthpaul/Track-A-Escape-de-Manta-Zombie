@@ -102,7 +102,7 @@ test("event defaults to R2 with a fresh seed and rejects invalid rounds", () => 
   const e = parseEvento({});
   assert.equal(e.ronda, 2);
   assert.ok(Number.isInteger(e.semilla));
-  assert.deepEqual(parseEvento({ ronda: 3, semilla: 9 }), { ronda: 3, semilla: 9 });
+  assert.deepEqual(parseEvento({ ronda: 3, semilla: 9 }), { ronda: 3, semilla: 9, modo: "demo" });
   assert.throws(() => parseEvento({ ronda: 4 }));
   assert.throws(() => parseEvento({ semilla: -1 }));
 });
@@ -119,4 +119,73 @@ test("if the round breaks midway, the lock is still released and the error surfa
   };
   await assert.rejects(crearHandler({ cliente, tabla: "t", reloj: crearRelojFake() })({ ronda: 1, semilla: 1 }), /dynamo down/);
   assert.ok(comandos.at(-1) instanceof DeleteCommand, "the lock is released even after a failure");
+});
+
+test("the event picks evaluation mode explicitly; anything else is rejected", () => {
+  assert.equal(parseEvento({ modo: "evaluacion", semilla: 1 }).modo, "evaluacion");
+  assert.equal(parseEvento({ modo: "demo", semilla: 1 }).modo, "demo");
+  assert.throws(() => parseEvento({ modo: "prueba" }), /modo/);
+});
+
+// HTTP motor stand-in: every survivor stays where it is, each call records 1 ms.
+function motorHttpFalso() {
+  const motor = {
+    latencias: [] as number[],
+    llamadas: 0,
+    async pedirPaso(pedido: { nodoActual: string }) {
+      motor.llamadas++;
+      motor.latencias.push(1);
+      return { siguienteNodo: pedido.nodoActual };
+    },
+  };
+  return motor;
+}
+
+test("an evaluation round warms up first, then plays all 150 turns over HTTP and reports its metrics", async () => {
+  const { cliente, comandos } = clienteFalso();
+  const motores: ReturnType<typeof motorHttpFalso>[] = [];
+  const handler = crearHandler({
+    cliente,
+    tabla: "t",
+    reloj: crearRelojFake(),
+    crearMotorHttp: () => {
+      const m = motorHttpFalso();
+      motores.push(m);
+      return m;
+    },
+    pausaCalentamientoMs: 0,
+  });
+  const r = await handler({ ronda: 1, semilla: 3, modo: "evaluacion" });
+  assert.equal(r.iniciada, true);
+  if (!r.iniciada) return;
+  assert.match(r.partidaId, /^evaluacion-r1-/);
+  assert.equal(r.modo, "evaluacion");
+
+  // Warm-up: its own motor, 3 simultaneous waves as large as the round (20 survivors in R1).
+  // The round motor is built first (before the lock), the warm-up motor right before turn 1.
+  const [ronda, calentamiento] = motores;
+  assert.equal(motores.length, 2, "warm-up and round use separate motors, so their latencies never mix");
+  assert.deepEqual(r.calentamiento!.map((o) => [o.oleada, o.pedidos, o.errores]), [[1, 20, 0], [2, 20, 0], [3, 20, 0]]);
+  assert.equal(calentamiento.llamadas, 60);
+
+  // Evaluation rounds never stop early, and the metrics count only the round's own calls.
+  assert.equal(r.metricas!.turnosEjecutados, 150);
+  assert.equal(r.metricas!.totalLlamadas, ronda.llamadas);
+  assert.equal(r.metricas!.latenciaP95Ms, 1);
+  assert.equal(r.metricas!.errores, 0);
+  assert.ok(comandos.filter((c) => c instanceof TransactWriteCommand).length >= 2 * 150, "every turn is published twice");
+});
+
+test("an evaluation round without PASO_URL / PASO_KEY fails before taking the lock", async () => {
+  const { cliente, comandos } = clienteFalso();
+  const antes = { url: process.env.PASO_URL, key: process.env.PASO_KEY };
+  delete process.env.PASO_URL;
+  delete process.env.PASO_KEY;
+  try {
+    await assert.rejects(crearHandler({ cliente, tabla: "t", reloj: crearRelojFake() })({ ronda: 1, semilla: 3, modo: "evaluacion" }), /PASO_URL/);
+    assert.equal(comandos.length, 0, "nothing was written");
+  } finally {
+    if (antes.url !== undefined) process.env.PASO_URL = antes.url;
+    if (antes.key !== undefined) process.env.PASO_KEY = antes.key;
+  }
 });
