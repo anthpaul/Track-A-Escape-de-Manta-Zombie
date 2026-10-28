@@ -19,12 +19,14 @@
  * Every request instead has a concurrent 500 ms deadline and abort signal.
  */
 import type { GrafoIndexado, Zombie, Sobreviviente } from "@abcstack/shared";
+import type { Vehiculo } from "@abcstack/shared";
 import {
   despertarDormidos,
   moverZombie,
   resolverMordidasPorNodo,
   resolverMordidasPorCruce,
   resolverLlegadas,
+  moverFlota,
   zombiesVisibles,
   aplicarBloqueo,
 } from "@abcstack/shared";
@@ -76,6 +78,8 @@ export interface ConfigTurno {
   nodosRefugio: ReadonlySet<string>;
   /** Refuge node → capacity (Pro). A full refuge admits nobody else; without it every arrival gets in. */
   capacidadRefugio?: ReadonlyMap<string, number>;
+  /** Rescue fleet (Pro, shared/flota.ts). Demo rounds only: evaluation rounds have none. */
+  flota?: Vehiculo[];
   /** Seeded random number generator — injected for reproducibility. */
   aleatorio: () => number;
   /** Scheduled city events — applied at their designated turn (Step 2). */
@@ -93,6 +97,8 @@ export interface ResultadoTurno {
   turno: number;
   respuestasValidas: number;
   respuestasFallidas: number;   // timeout, HTTP error, or invalid move
+  /** People the rescue fleet brought to a shelter this turn (rounds with a fleet). */
+  rescatadosFlota?: number;
   enRuta: number;
   aSalvo: number;
   mordidos: number;
@@ -181,7 +187,8 @@ export async function ejecutarTurno(
   // For each call we enforce a hard 500 ms deadline; any timeout or error
   // counts as "stay put" (the survivor does not move that turn).
   // -----------------------------------------------------------
-  const activos = config.sobrevivientes.filter((s) => s.estado === "en_ruta");
+  // People riding a rescue van move with it: they never ask /paso.
+  const activos = config.sobrevivientes.filter((s) => s.estado === "en_ruta" && !s.vehiculo);
   let respuestasValidas = 0;
   let respuestasFallidas = 0;
 
@@ -239,7 +246,7 @@ export async function ejecutarTurno(
 
   // Apply movements.
   for (const sobreviviente of config.sobrevivientes) {
-    if (sobreviviente.estado !== "en_ruta") continue;
+    if (sobreviviente.estado !== "en_ruta" || sobreviviente.vehiculo) continue;
     const siguienteNodo = decisiones.get(sobreviviente.id) ?? sobreviviente.nodo;
     sobreviviente.nodo = siguienteNodo;
     sobreviviente.siguienteNodo = siguienteNodo;
@@ -258,6 +265,20 @@ export async function ejecutarTurno(
   // Check shelter arrivals (after bites — a bitten survivor at a refuge is mordido).
   resolverLlegadas(config.sobrevivientes, config.nodosRefugio, config.capacidadRefugio);
 
+  // Rescue fleet (Pro): vans move after everyone on foot, pick people up and drop them at shelters.
+  let rescatadosFlota: number | undefined;
+  if (config.flota) {
+    const eventos = moverFlota(config.flota, {
+      grafo: config.grafo,
+      sobrevivientes: config.sobrevivientes,
+      zombies: zombiesVisibles(config.zombies),
+      aristasBloqueadas: config.aristasBloqueadas,
+      nodosRefugio: config.nodosRefugio,
+      capacidadRefugio: config.capacidadRefugio,
+    });
+    rescatadosFlota = eventos.filter((e) => e.tipo === "dejo").reduce((t, e) => t + e.sobrevivientes.length, 0);
+  }
+
   // Only survivors still on the road get a next step; moves, bites and arrivals above are unchanged.
   let publicadas = decisiones;
   const planificar = config.planificarSiguiente;
@@ -265,12 +286,13 @@ export async function ejecutarTurno(
     publicadas = new Map(decisiones);
     for (const sobreviviente of config.sobrevivientes) {
       if (sobreviviente.estado !== "en_ruta") continue;
-      sobreviviente.siguienteNodo = planificar(sobreviviente);
+      // A rider's next step is wherever the van goes: no arrow of their own.
+      sobreviviente.siguienteNodo = sobreviviente.vehiculo ? sobreviviente.nodo : planificar(sobreviviente);
       publicadas.set(sobreviviente.id, sobreviviente.siguienteNodo);
     }
   }
 
-  await config.persistencia.completarTurno(turno, publicadas, config.sobrevivientes);
+  await config.persistencia.completarTurno(turno, publicadas, config.sobrevivientes, config.flota);
 
   // -----------------------------------------------------------
   // Wait until the tick window is full.
@@ -283,6 +305,7 @@ export async function ejecutarTurno(
     turno,
     respuestasValidas,
     respuestasFallidas,
+    ...(rescatadosFlota !== undefined && { rescatadosFlota }),
     enRuta: config.sobrevivientes.filter((s) => s.estado === "en_ruta").length,
     aSalvo: config.sobrevivientes.filter((s) => s.estado === "a_salvo").length,
     mordidos: config.sobrevivientes.filter((s) => s.estado === "mordido").length,

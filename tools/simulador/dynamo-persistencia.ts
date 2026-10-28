@@ -1,4 +1,5 @@
 import { PutCommand, DeleteCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import type { Vehiculo } from "@abcstack/shared";
 import { EstadoTurnoSchema, type Sobreviviente } from "@abcstack/shared";
 import { KEYS } from "../../backend/src/db/keys";
 import { crearPersistenciaMemoria, type PersistenciaPartida, type TurnoParcial } from "./persistencia";
@@ -70,24 +71,33 @@ export class DynamoPersistencia implements PersistenciaPartida {
     await this.memoria.guardarTurnoIncompleto(parcial);
   }
 
-  async completarTurno(turno: number, decisiones: ReadonlyMap<string, string>, finales?: readonly Sobreviviente[]): Promise<void> {
+  async completarTurno(
+    turno: number,
+    decisiones: ReadonlyMap<string, string>,
+    finales?: readonly Sobreviviente[],
+    vehiculos?: readonly Vehiculo[],
+  ): Promise<void> {
     const parcial = await this.memoria.leerTurno(turno);
     if (!parcial) throw new Error("Cannot complete an unpublished turn");
     const sobrevivientes = (finales ?? parcial.sobrevivientes).map(s => ({ ...s,
       ...(decisiones.has(s.id) ? { siguienteNodo: decisiones.get(s.id)! } : {}) }));
     const p95 = this.medirP95 ? { expresion: ", #data.p95ms = :p95", valores: { ":p95": this.medirP95() } } : { expresion: "", valores: {} };
+    // Rescue fleet (Pro): the vans of this turn, so /estado can draw them.
+    const flota = vehiculos
+      ? { expresion: ", #data.vehiculos = :vehiculos", valores: { ":vehiculos": vehiculos.map((v) => ({ ...v, pasajeros: [...v.pasajeros] })) } }
+      : { expresion: "", valores: {} };
     await this.client.send(new TransactWriteCommand({ TransactItems: [
       { ConditionCheck: this.cerco },
       { Update: { TableName: this.tableName, Key: KEYS.turno(this.partidaId, turno),
-        UpdateExpression: `SET #data.sobrevivientes = :survivors, #data.completo = :true${p95.expresion}`,
+        UpdateExpression: `SET #data.sobrevivientes = :survivors, #data.completo = :true${p95.expresion}${flota.expresion}`,
         ConditionExpression: "attribute_exists(PK) AND #data.completo = :false",
         ExpressionAttributeNames: { "#data": "data" },
-        ExpressionAttributeValues: { ":survivors": sobrevivientes, ":true": true, ":false": false, ...p95.valores } } },
+        ExpressionAttributeValues: { ":survivors": sobrevivientes, ":true": true, ":false": false, ...p95.valores, ...flota.valores } } },
       { Update: { TableName: this.tableName, Key: KEYS.metadata(this.partidaId),
         UpdateExpression: "SET #data.turnoActual = :turno",
         ExpressionAttributeNames: { "#data": "data" }, ExpressionAttributeValues: { ":turno": turno } } },
     ] }));
-    await this.memoria.completarTurno(turno, decisiones, finales);
+    await this.memoria.completarTurno(turno, decisiones, finales, vehiculos);
   }
 
   async cerrar(): Promise<void> {

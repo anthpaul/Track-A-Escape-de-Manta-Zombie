@@ -102,7 +102,7 @@ test("event defaults to R2 with a fresh seed and rejects invalid rounds", () => 
   const e = parseEvento({});
   assert.equal(e.ronda, 2);
   assert.ok(Number.isInteger(e.semilla));
-  assert.deepEqual(parseEvento({ ronda: 3, semilla: 9 }), { ronda: 3, semilla: 9, modo: "demo" });
+  assert.deepEqual(parseEvento({ ronda: 3, semilla: 9 }), { ronda: 3, semilla: 9, modo: "demo", flota: true });
   assert.throws(() => parseEvento({ ronda: 4 }));
   assert.throws(() => parseEvento({ semilla: -1 }));
 });
@@ -204,4 +204,12 @@ test("the in-process motor sees who is where, so demo rounds respect shelter cap
   const lleno = crearMotorEnProceso(() => [], () => [], () => [...dentro, yo]);
   assert.equal((await conLugar.pedirPaso(pedido)).siguienteNodo, uleam.nodo);
   assert.notEqual((await lleno.pedirPaso(pedido)).siguienteNodo, uleam.nodo);
+});
+
+test("the rescue fleet rides in demo rounds by default and never in evaluation unless asked", () => {
+  assert.equal(parseEvento({ semilla: 1 }).flota, true);
+  assert.equal(parseEvento({ semilla: 1, modo: "evaluacion" }).flota, false);
+  assert.equal(parseEvento({ semilla: 1, modo: "evaluacion", flota: true }).flota, true);
+  assert.equal(parseEvento({ semilla: 1, flota: false }).flota, false);
+  assert.throws(() => parseEvento({ flota: "si" }), /flota/);
 });

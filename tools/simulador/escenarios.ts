@@ -29,6 +29,7 @@ import type { ConfigRonda, EventoRonda } from "./turno";
 import type { DatosSobreviviente } from "./metricas";
 // Static import so esbuild bundles the graph into the simulator Lambda (S6); no file read at runtime.
 import grafoManta from "@abcstack/shared/data/manta.json";
+import { crearFlota } from "@abcstack/shared";
 
 // -------------------------------------------------------------------------
 // Graph loading (once per process)
@@ -133,6 +134,8 @@ interface OpcionesEscenario {
   reloj?: Reloj;
   /** Scheduled demo rounds (S6) are tagged "demo"; everything else stays "evaluacion". */
   modo?: "evaluacion" | "demo";
+  /** Rescue fleet (Pro): five vans. Off unless asked, so evaluation rounds stay as they are. */
+  flota?: boolean;
 }
 
 // Refuge node → capacity (Pro): a full refuge admits nobody else (shared/reglas.ts resolverLlegadas).
@@ -179,6 +182,7 @@ export function crearEscenarioR1(opts: OpcionesEscenario): Escenario {
     ronda: 1,
     nodosRefugio,
     capacidadRefugio: CAPACIDAD_REFUGIO,
+    ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
@@ -246,6 +250,7 @@ export function crearEscenarioR2(opts: OpcionesEscenario): Escenario {
     ronda: 2,
     nodosRefugio,
     capacidadRefugio: CAPACIDAD_REFUGIO,
+    ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.
@@ -319,6 +324,7 @@ export function crearEscenarioR3(opts: OpcionesEscenario): Escenario {
     ronda: 3,
     nodosRefugio,
     capacidadRefugio: CAPACIDAD_REFUGIO,
+    ...(opts.flota && { flota: crearFlota(cargarGrafo().refugios.map((x) => x.nodo)) }),
     aleatorio: rnd,
     totalTurnos: TOTAL_TURNOS,
     // Demo rounds end when nobody is left on the road, so the public map is not just zombies for minutes.

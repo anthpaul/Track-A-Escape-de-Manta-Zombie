@@ -8,7 +8,8 @@
  * if another round holds the lock (an evaluation, or a previous demo still
  * running) it exits without writing anything else.
  *
- * Event (all optional): { "ronda": 1 | 2 | 3, "semilla": number, "modo": "demo" | "evaluacion" }.
+ * Event (all optional): { "ronda": 1 | 2 | 3, "semilla": number, "modo": "demo" | "evaluacion", "flota": boolean }.
+ * The rescue fleet (Pro) rides in demo rounds by default and never in evaluation unless asked.
  * Default R2 demo, the round that shows every zombie type but sleepers plus a bridge collapse.
  *
  * Evaluation mode (`aws lambda invoke` with "modo": "evaluacion") calls the real POST /paso over
@@ -33,7 +34,7 @@ import { calentar, type ResultadoOleada } from "./calentar";
 import { calcularMetricas, p95DeLatencias, type MetricasRonda } from "./metricas";
 import type { ClienteMotor } from "./motor-falso";
 
-export type EventoDemo = { ronda?: unknown; semilla?: unknown; modo?: unknown };
+export type EventoDemo = { ronda?: unknown; semilla?: unknown; modo?: unknown; flota?: unknown };
 export type Modo = "demo" | "evaluacion";
 export type ResultadoDemo =
   | { iniciada: false }
@@ -45,6 +46,8 @@ export type ResultadoDemo =
       aSalvo: number;
       mordidos: number;
       enRuta: number;
+      // Rounds with the rescue fleet only.
+      rescatadosFlota?: number;
       // Evaluation rounds only.
       calentamiento?: ResultadoOleada[];
       metricas?: MetricasRonda;
@@ -53,7 +56,7 @@ export type ResultadoDemo =
 /** The HTTP motor of an evaluation round: answers /paso and records one latency per call. */
 export type MotorMedido = ClienteMotor & { readonly latencias: number[] };
 
-export function parseEvento(evento: EventoDemo | null | undefined): { ronda: 1 | 2 | 3; semilla: number; modo: Modo } {
+export function parseEvento(evento: EventoDemo | null | undefined): { ronda: 1 | 2 | 3; semilla: number; modo: Modo; flota: boolean } {
   const ronda = evento?.ronda ?? 2;
   if (ronda !== 1 && ronda !== 2 && ronda !== 3) throw new Error("ronda must be 1, 2 or 3");
   const semilla = evento?.semilla ?? Math.floor(Math.random() * 0xffffffff);
@@ -62,7 +65,9 @@ export function parseEvento(evento: EventoDemo | null | undefined): { ronda: 1 |
   }
   const modo = evento?.modo ?? "demo";
   if (modo !== "demo" && modo !== "evaluacion") throw new Error("modo must be 'demo' or 'evaluacion'");
-  return { ronda, semilla, modo };
+  const flota = evento?.flota ?? modo === "demo";
+  if (typeof flota !== "boolean") throw new Error("flota must be true or false");
+  return { ronda, semilla, modo, flota };
 }
 
 export function crearHandler(deps: {
@@ -74,7 +79,7 @@ export function crearHandler(deps: {
   pausaCalentamientoMs?: number;
 }) {
   return async (evento: EventoDemo | null | undefined): Promise<ResultadoDemo> => {
-    const { ronda, semilla, modo } = parseEvento(evento);
+    const { ronda, semilla, modo, flota } = parseEvento(evento);
     const crear = ronda === 1 ? crearEscenarioR1 : ronda === 2 ? crearEscenarioR2 : crearEscenarioR3;
     const crearMotorHttp = deps.crearMotorHttp ?? ((opciones) => new MotorHttp(opciones));
     // Built before anything is written, so a missing PASO_URL / PASO_KEY fails without touching the lock.
@@ -84,7 +89,7 @@ export function crearHandler(deps: {
     const motor =
       motorHttp ??
       crearMotorEnProceso(() => vivo?.zombies ?? [], () => vivo?.aristasBloqueadas ?? [], () => vivo?.sobrevivientes ?? []);
-    const escenario = crear({ semilla, motor, reloj: deps.reloj ?? relojReal, modo });
+    const escenario = crear({ semilla, motor, reloj: deps.reloj ?? relojReal, modo, flota });
     const { config } = escenario;
     vivo = config;
     // Publish each survivor's next step so the map draws its arrow; free here because the motor runs in process.
@@ -105,8 +110,10 @@ export function crearHandler(deps: {
     // Arrival turn of each survivor and every turn result, for the efficiency and error metrics.
     const llegadas = new Map<string, number>();
     const turnos: ResultadoTurno[] = [];
+    let rescatadosFlota = 0;
     config.onTurno = (resultado) => {
       turnos.push(resultado);
+      rescatadosFlota += resultado.rescatadosFlota ?? 0;
       for (const s of config.sobrevivientes) if (s.estado === "a_salvo" && !llegadas.has(s.id)) llegadas.set(s.id, resultado.turno);
     };
 
@@ -136,6 +143,7 @@ export function crearHandler(deps: {
       aSalvo: contar("a_salvo"),
       mordidos: contar("mordido"),
       enRuta: contar("en_ruta"),
+      ...(flota && { rescatadosFlota }),
     };
     if (!motorHttp) return base;
 
