@@ -1,5 +1,5 @@
-// Static graph types from docs/HOJA_DE_RUTA.md §2 (AGENTS.md §4.1).
-// Temporary local copy: replace with the shared/ exports once T0.2 is merged.
+// Tipos del grafo estático según docs/HOJA_DE_RUTA.md §2 (AGENTS.md §4.1).
+// Copia local temporal: reemplazar por los exports de shared/ cuando se integre T0.2.
 export type TipoCalle = "avenida" | "calle" | "callejon" | "puente";
 
 export type Nodo = {
@@ -15,14 +15,14 @@ export type Calle = {
   hasta: string;
   distancia_m: number;
   tipo: TipoCalle;
-  geometria: [number, number][]; // [lng, lat], only for drawing
+  geometria: [number, number][]; // [lng, lat], solo para dibujar
 };
 
 export type Refugio = { id: string; nodo: string; nombre: string; capacidad: number };
 
 export type Grafo = { version: string; nodos: Nodo[]; calles: Calle[]; refugios: Refugio[] };
 
-// Live state, shape of GET /api/estado (AGENTS.md §5). Same temporary-copy note as above.
+// Estado en vivo, forma de GET /api/estado (AGENTS.md §5). Misma nota de copia temporal que arriba.
 export type TipoZombie = "caminante" | "corredor" | "horda" | "dormido";
 export type Zombie = { id: string; tipo: TipoZombie; nodo: string };
 
@@ -32,35 +32,35 @@ export type Sobreviviente = {
   nodo: string;
   estado: EstadoSobreviviente;
   siguienteNodo?: string;
-  // Optional: filled by the simulator with the same shared/ route function (AGENTS.md §5).
-  refugio?: string | null; // destination shelter id, null when no safe route
+  // Opcional: lo llena el simulador con la misma función de rutas de shared/ (AGENTS.md §5).
+  refugio?: string | null; // id del refugio de destino; null si no hay ruta segura
   callesRestantes?: number;
-  // Rescue fleet (Pro): the van this person is riding, if any.
+  // Flota de rescate (Pro): la camioneta en la que viaja esta persona, si hay alguna.
   vehiculo?: string;
 };
 
-// Rescue fleet (Pro): a van with up to 4 people on board, heading to `destino` this turn.
+// Flota de rescate (Pro): una camioneta con hasta 4 personas a bordo, que va hacia `destino` en este turno.
 export type Vehiculo = { id: string; nodo: string; pasajeros: string[]; destino: string | null };
 
 export type OcupacionRefugio = { id: string; ocupacion: number; capacidad: number };
 export type Metricas = { vivos: number; aSalvo: number; mordidos: number; p95ms: number | null };
 
-// Where the snapshot on screen comes from. Every state but en_vivo and reconectando shows the simulation.
+// De dónde viene el snapshot en pantalla. Todos los estados salvo en_vivo y reconectando muestran la simulación.
 export type Conexion =
-  | "simulado" // local build without the API (NEXT_PUBLIC_USE_MOCKS unset)
-  | "conectando" // waiting for the first answer of GET /api/estado
+  | "simulado" // build local sin la API (NEXT_PUBLIC_USE_MOCKS sin definir)
+  | "conectando" // esperando la primera respuesta de GET /api/estado
   | "en_vivo"
-  | "reconectando" // last poll failed: the last real world stays a few turns
-  | "sin_partida" // the API answers but no game is running
-  | "sin_conexion"; // the API fails or breaks the contract
+  | "reconectando" // falló el último poll: el último mundo real se mantiene unos turnos
+  | "sin_partida" // la API responde, pero no hay ninguna partida en curso
+  | "sin_conexion"; // la API falla o rompe el contrato
 
 export type Snapshot = {
   turno: number;
   ronda: 1 | 2 | 3;
-  zombies: Zombie[]; // visible only: sleepers are never sent
+  zombies: Zombie[]; // solo los visibles: los dormidos nunca se envían
   aristasBloqueadas: string[];
   sobrevivientes: Sobreviviente[];
-  vehiculos?: Vehiculo[]; // only in rounds with the rescue fleet
+  vehiculos?: Vehiculo[]; // solo en rondas con flota de rescate
   refugios: OcupacionRefugio[];
   metricas: Metricas;
   generadoEn: string; // ISO 8601

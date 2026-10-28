@@ -1,8 +1,8 @@
 import { z } from "zod";
 import type { Grafo, OcupacionRefugio, Snapshot, Sobreviviente } from "@/features/mapa/domain/tipos";
 
-// Shape of GET /api/estado (AGENTS.md §5). Everything coming from the network is validated here,
-// so the map never draws half a world from a body that breaks the contract.
+// Forma de GET /api/estado (AGENTS.md §5). Todo lo que llega de la red se valida aquí,
+// para que el mapa nunca dibuje medio mundo a partir de un body que rompe el contrato.
 const SobrevivienteSchema = z.object({
   id: z.string(),
   nodo: z.string(),
@@ -22,7 +22,7 @@ const EstadoSchema = z.object({
   aristasBloqueadas: z.array(z.string()),
   sobrevivientes: z.array(SobrevivienteSchema),
   vehiculos: z.array(VehiculoSchema).optional(),
-  // Optional until the simulator publishes shelter occupancy.
+  // Opcional hasta que el simulador publique la ocupación de los refugios.
   refugios: z.array(z.object({ id: z.string(), ocupacion: z.number().int().nonnegative(), capacidad: z.number().int().nonnegative() })).optional(),
   metricas: z.object({
     vivos: z.number().int().nonnegative(),
@@ -33,7 +33,7 @@ const EstadoSchema = z.object({
   generadoEn: z.string(),
 });
 
-// /estado answers 200 with this body when no game is running (backend/src/routes/estado.ts).
+// /estado responde 200 con este body cuando no hay ninguna partida en curso (backend/src/routes/estado.ts).
 const SinPartidaSchema = z.object({ ok: z.literal(false), error: z.object({ code: z.string() }) });
 
 export type ResultadoEstado =
@@ -52,7 +52,7 @@ export function leerEstado(cuerpo: unknown, grafo: Grafo): ResultadoEstado {
   return { tipo: "partida", snapshot: { ...resto, refugios: refugios ?? ocupacionPorLlegadas(grafo, resto.sobrevivientes) } };
 }
 
-// A survivor that reached a shelter stays on its node, so occupancy can be counted from the snapshot.
+// Un sobreviviente que llegó a un refugio se queda en su nodo, así que la ocupación se puede contar desde el snapshot.
 function ocupacionPorLlegadas(grafo: Grafo, sobrevivientes: Sobreviviente[]): OcupacionRefugio[] {
   return grafo.refugios.map((refugio) => ({
     id: refugio.id,

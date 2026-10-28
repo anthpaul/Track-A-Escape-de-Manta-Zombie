@@ -1,4 +1,4 @@
-# One HTTP API with a catch-all route: Hono does the routing inside the Lambda.
+# Una sola HTTP API con una ruta comodín: Hono resuelve el enrutamiento dentro de la Lambda.
 resource "aws_apigatewayv2_api" "api" {
   name          = "${local.name_prefix}-api"
   protocol_type = "HTTP"

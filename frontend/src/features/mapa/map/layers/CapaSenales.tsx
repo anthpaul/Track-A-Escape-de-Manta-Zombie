@@ -8,8 +8,8 @@ import { capaSenales } from "@/features/mapa/map/layers/estilos";
 
 type Props = { grafo: Grafo; aristasBloqueadas: ReadonlySet<string> };
 
-// Traffic signs on blocked streets (S1). Mounted after the live layers so no zombie or survivor
-// standing next to a closed street ever hides its sign.
+// Señales de tránsito en calles bloqueadas (S1). Se montan después de las capas en vivo para que ningún zombie ni sobreviviente
+// parado junto a una calle cerrada tape su señal.
 export default function CapaSenales({ grafo, aristasBloqueadas }: Props) {
   const senales = useMemo(() => senalesAGeoJSON(grafo, aristasBloqueadas), [grafo, aristasBloqueadas]);
   return (

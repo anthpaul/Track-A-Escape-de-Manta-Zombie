@@ -112,7 +112,7 @@ export default function TabSobrevivientes(p: Props) {
           <dl className="space-y-1">
             <div className="flex justify-between gap-3"><dt className="text-crimson-800">Ubicación</dt><dd className="text-right text-calabaza-900">{lugarDeNodo(p.grafo, p.seleccionado.nodo)}</dd></div>
             {p.seleccionado.estado === "mordido" ? (
-              // A bitten person is out of the round: no destination, no streets left.
+              // Una persona mordida queda fuera de la ronda: sin destino ni calles restantes.
               <p className="text-crimson-800">Fue mordido y quedó fuera de la partida.</p>
             ) : (
               <>

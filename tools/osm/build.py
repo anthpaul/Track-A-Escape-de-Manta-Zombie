@@ -21,7 +21,7 @@ ALLOWED = {"primary", "primary_link", "secondary", "secondary_link", "tertiary",
 
 
 def distance(a, b):
-    """Great-circle meters, with input coordinates in (longitude, latitude) order."""
+    """Distancia ortodrómica en metros; las coordenadas de entrada van en orden (longitud, latitud)."""
     lon1, lat1, lon2, lat2 = map(math.radians, (*a, *b))
     value = math.sin((lat2 - lat1) / 2) ** 2
     value += math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
@@ -76,7 +76,7 @@ def target_position(anchor, nodes, ways):
 
 
 def make_network(nodes, ways, bbox):
-    """Use OSMnx to remove shape-only points without merging different road types."""
+    """Usa OSMnx para quitar los puntos que solo dan forma sin fusionar tipos de vía distintos."""
     selected = {}
     for identity, (refs, tags) in ways.items():
         if (tags.get("highway") not in ALLOWED or tags.get("area") == "yes"
@@ -99,7 +99,7 @@ def make_network(nodes, ways, bbox):
                 ET.SubElement(element, "tag", k=key, v=tags[key])
     ox.settings.log_console = False
     ox.settings.useful_tags_way = sorted(set(ox.settings.useful_tags_way) | {"bridge", "service"})
-    # No network calls: this is an intermediate XML assembled from the original tiles.
+    # Sin llamadas de red: es un XML intermedio armado a partir de los tiles originales.
     with tempfile.TemporaryDirectory(prefix="manta-osm-build-") as temporary:
         path = Path(temporary) / "streets.osm"
         ET.ElementTree(root).write(path, encoding="utf-8", xml_declaration=True)
@@ -148,7 +148,7 @@ def simplify_network(graph, nodes):
         way_ids = data["osmid"] if isinstance(data["osmid"], list) else [data["osmid"]]
         edge = {"length": float(data["length"]), "tipo": data["tipo"],
                 "geometry": geometry, "start": u, "ways": tuple(sorted(set(way_ids)))}
-        # Reverse directed copies are not distinct streets. Resolve genuine parallels together.
+        # Las copias dirigidas en sentido inverso no son calles distintas. Las paralelas reales se resuelven juntas.
         if simple.has_edge(u, v):
             existing = simple[u][v]
             if edge["ways"] != existing["ways"]:
@@ -164,7 +164,7 @@ def oriented(data, start):
 
 
 def contract_chains(graph, protected):
-    """Remove only degree-two points with matching types; keep geometry and loops."""
+    """Quita solo los puntos de grado dos con tipos iguales; conserva la geometría y los bucles."""
     graph = graph.copy()
     pending = list(graph)
     heapq.heapify(pending)
@@ -273,7 +273,7 @@ def main(argv=None):
                                            "algorithm": "corridors-and-local-mesh-v1"},
                                           sort_keys=True).encode()).hexdigest()
     result, mapping = export_graph(selected, anchors, config, signature, bridge)
-    # Any change in exported data changes its version, including algorithm/library changes.
+    # Cualquier cambio en los datos exportados cambia su versión, incluidos los cambios de algoritmo o de librería.
     payload = {key: value for key, value in result.items() if key != "version"}
     result["version"] = "manta-osm-" + hashlib.sha256(
         json.dumps({"inputs": signature, "graph": payload}, sort_keys=True).encode()

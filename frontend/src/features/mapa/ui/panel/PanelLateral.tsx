@@ -28,9 +28,9 @@ const CLASE_LATENCIA: Record<NivelLatencia, string> = {
   sin_datos: "text-crimson-800",
 };
 
-// Side panel: round and turn, the live indicator, the three numbers (safe, on the way, bitten) and the
-// p95 the challenge cares about, always visible whatever the tab, then the tab title. Bottom sheet on phones.
-// Why the panel is not showing the live game: the operator must never mistake the simulation for it.
+// Panel lateral: ronda y turno, el indicador en vivo, las tres cifras (a salvo, en camino, mordidos) y el
+// p95 que le importa al reto, siempre visibles en cualquier pestaña, y luego el título de la pestaña. Hoja inferior en teléfonos.
+// Por qué el panel no muestra la partida en vivo: el operador nunca debe confundir la simulación con ella.
 const AVISO: Record<Exclude<Conexion, "en_vivo">, { texto: string; detalle: string; Icono: LucideIcon; clase: string }> = {
   simulado: { texto: "Simulación local", detalle: "Datos de prueba generados en este navegador, sin el servidor", Icono: FlaskConical, clase: "bg-crimson-500 text-calabaza-900" },
   conectando: { texto: "Conectando…", detalle: "Esperando el primer turno del servidor; mientras tanto, una simulación local", Icono: RefreshCw, clase: "bg-crimson-500 text-calabaza-900" },
@@ -45,7 +45,7 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
     <section
       id="panel-mapa"
       aria-label={titulo}
-      // Sizes mirror map/padding.ts (DISENO).
+      // Los tamaños replican map/padding.ts (DISENO).
       className="absolute inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex max-h-[50dvh] flex-col gap-3.5 rounded-t-2xl border-t border-crimson-300 bg-crimson-200/95 p-5 backdrop-blur max-md:landscape:inset-y-0 max-md:landscape:bottom-0 max-md:landscape:left-14 max-md:landscape:right-auto max-md:landscape:max-h-none max-md:landscape:w-72 max-md:landscape:gap-2.5 max-md:landscape:rounded-none max-md:landscape:border-r max-md:landscape:border-t-0 max-md:landscape:p-3 md:inset-y-0 md:bottom-0 md:left-16 md:right-auto md:max-h-none md:w-[300px] md:rounded-none md:border-r md:border-t-0 xl:w-[340px]"
     >
       <header className="space-y-3">
@@ -53,7 +53,7 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
           <span className="font-semibold text-crimson-700">
             Ronda {resumen.ronda} · Turno {resumen.turno}
           </span>
-          {/* Only real snapshots get "EN VIVO": simulated turns are always fresh, so their age proves nothing. */}
+          {/* Solo los snapshots reales llevan "EN VIVO": los turnos simulados siempre son recientes, así que su edad no prueba nada. */}
           {(conexion === "en_vivo" || conexion === "reconectando") && <IndicadorEnVivo generadoEn={generadoEn} />}
           {aviso && (
             <span title={aviso.detalle} className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 text-[11px] font-semibold", aviso.clase)}>
@@ -62,7 +62,7 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
             </span>
           )}
         </div>
-        {/* The three numbers that tell how the round is going, always visible whatever the tab. */}
+        {/* Las tres cifras que dicen cómo va la ronda, siempre visibles en cualquier pestaña. */}
         <dl className="grid grid-cols-3 gap-2">
           {CIFRAS.map(({ clave, etiqueta, numero, texto }) => (
             <div key={clave} className="flex flex-col-reverse">
@@ -71,11 +71,11 @@ export default function PanelLateral({ titulo, resumen, generadoEn, conexion, ch
             </div>
           ))}
         </dl>
-        {/* Demo rounds call the engine in-process, so there is no response time to show: hide it instead of "—". */}
+        {/* Las rondas de demo llaman al motor en el mismo proceso, así que no hay tiempo de respuesta que mostrar: se oculta en lugar de mostrar "—". */}
         {resumen.p95ms !== null && (
           <p
             className={cn("inline-flex items-center gap-1 text-xs", CLASE_LATENCIA[resumen.latencia.nivel])}
-            // p95 in plain words: the time within which 95 % of the engine's answers arrive.
+            // El p95 en palabras simples: el tiempo dentro del cual llega el 95 % de las respuestas del motor.
             title="El 95 % de las respuestas del motor llega en este tiempo o menos. Se mide en las rondas de evaluación."
           >
             <Activity className="size-3.5" aria-hidden />

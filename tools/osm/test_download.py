@@ -1,4 +1,4 @@
-"""Offline checks for the public download command."""
+"""Comprobaciones sin conexión del comando público de descarga."""
 
 import subprocess
 import sys

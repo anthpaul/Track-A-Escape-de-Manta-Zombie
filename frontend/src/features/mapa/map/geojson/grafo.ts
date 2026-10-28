@@ -1,13 +1,13 @@
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Grafo, Nodo, TipoCalle } from "@/features/mapa/domain/tipos";
 
-// Pure graph → GeoJSON converters. MapLibre layers only consume their output,
-// so the map always draws exactly the graph the router uses.
+// Conversores puros de grafo → GeoJSON. Las capas de MapLibre solo consumen su salida,
+// así el mapa siempre dibuja exactamente el grafo que usa el motor de rutas.
 
 export type CalleProps = { id: string; tipo: TipoCalle; bloqueada: boolean };
 export type RefugioProps = { id: string; nombre: string; capacidad: number };
-// Traffic-sign points on blocked streets: a no-entry disc (street) or a danger triangle (bridge) in
-// the middle, and a stop bar at each end of a blocked street. rumbo is the street bearing there.
+// Puntos de señales de tránsito en calles bloqueadas: un disco de prohibido el paso (calle) o un triángulo de peligro (puente) en
+// el medio, y una barra de pare en cada extremo de una calle bloqueada. rumbo es el rumbo de la calle en ese punto.
 export type SenalProps = { calle: string; tipo: "prohibido" | "peligro" | "tope"; rumbo: number };
 
 const indexarNodos = (nodos: Nodo[]) => new Map(nodos.map((n) => [n.id, n]));
@@ -17,14 +17,14 @@ type Coord = [number, number];
 const coordenadasCalle = (geometria: Coord[], desde: Nodo, hasta: Nodo): Coord[] =>
   geometria.length >= 2 ? geometria : [[desde.lng, desde.lat], [hasta.lng, hasta.lat]];
 
-// Local flat approximation: plenty for a few hundred meters of street.
+// Aproximación plana local: suficiente para unos cientos de metros de calle.
 const dx = (a: Coord, b: Coord) => (b[0] - a[0]) * Math.cos((a[1] * Math.PI) / 180);
 const dy = (a: Coord, b: Coord) => b[1] - a[1];
 const largo = (a: Coord, b: Coord) => Math.hypot(dx(a, b), dy(a, b));
-// Degrees clockwise from north, as MapLibre's icon-rotate expects with map alignment.
+// Grados en sentido horario desde el norte, como espera icon-rotate de MapLibre con alineación al mapa.
 const rumbo = (a: Coord, b: Coord) => (Math.atan2(dx(a, b), dy(a, b)) * 180) / Math.PI;
 
-// Point halfway along the line (by length) and the bearing of the segment it falls on.
+// Punto a mitad de la línea (por longitud) y el rumbo del tramo donde cae.
 function puntoMedio(coords: Coord[]): { punto: Coord; rumbo: number } {
   const total = coords.slice(1).reduce((t, c, i) => t + largo(coords[i], c), 0);
   let resto = total / 2;
@@ -50,7 +50,7 @@ export function callesAGeoJSON(
   for (const calle of grafo.calles) {
     const desde = nodos.get(calle.desde);
     const hasta = nodos.get(calle.hasta);
-    // A street pointing to an unknown node is a data bug; skipping it keeps the rest of the map alive.
+    // Una calle que apunta a un nodo desconocido es un error de datos; saltarla mantiene vivo el resto del mapa.
     if (!desde || !hasta) continue;
 
     const coordinates = coordenadasCalle(calle.geometria, desde, hasta);

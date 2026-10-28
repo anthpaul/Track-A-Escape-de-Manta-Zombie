@@ -1,11 +1,12 @@
-// CloudFront viewer-request function (cloudfront-js-2.0) for the static Next.js export.
-// Loaded by infra/cloudfront.tf with file(); tested by rewrite-html.test.mjs.
+// Función viewer-request de CloudFront (cloudfront-js-2.0) para el export estático de Next.js.
+// La carga infra/cloudfront.tf con file(); la prueba rewrite-html.test.mjs.
 function handler(event) {
   var request = event.request;
   var uri = request.uri;
 
-  // Next 16 requests route payloads as /mapa/__next.mapa.__PAGE__.txt, but the static export stores
-  // them as /mapa/__next.mapa/__PAGE__.txt: keep the first dot after "__next" and turn the rest into "/".
+  // Next 16 pide los payloads de ruta como /mapa/__next.mapa.__PAGE__.txt, pero el export estático los
+  // guarda como /mapa/__next.mapa/__PAGE__.txt: se conserva el primer punto después de "__next" y el
+  // resto se convierte en "/".
   var payload = uri.match(/^(.*\/__next\.)([^\/]+)\.txt$/);
   if (payload) {
     var partes = payload[2].split('.');
@@ -15,7 +16,7 @@ function handler(event) {
     return request;
   }
 
-  // Clean URLs to exported files: / -> /index.html, /mapa and /mapa/ -> /mapa.html
+  // URL limpias a archivos exportados: / -> /index.html, /mapa y /mapa/ -> /mapa.html
   if (uri === '/') {
     request.uri = '/index.html';
     return request;

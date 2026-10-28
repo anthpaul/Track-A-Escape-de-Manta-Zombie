@@ -1,13 +1,13 @@
-// Recolors the CARTO Dark Matter base layers into a dark, low-saturation night palette so the base
-// map stays in the background and every game color (orange zombies, tide-blue survivors, pink bitten,
-// red danger, cream streets) stands out. Pure mapping from layer id/type to paint properties; MapaBase
-// applies it once the style loads. Our own game layers are added later and are never touched.
+// Recolorea las capas base de CARTO Dark Matter con una paleta nocturna oscura y poco saturada, para que el mapa
+// base quede de fondo y resalte cada color del juego (zombies naranjas, sobrevivientes azul marea, mordidos rosas,
+// peligro rojo, calles crema). Mapeo puro de id/tipo de capa a propiedades de paint; MapaBase
+// lo aplica cuando carga el estilo. Nuestras capas del juego se agregan después y nunca se tocan.
 
 type Capa = { id: string; type: string };
 type PropiedadPintura = "background-color" | "fill-color" | "line-color" | "text-color" | "text-halo-color";
 type Pintura = [propiedad: PropiedadPintura, valor: string];
 
-// Near-black plum land, deep navy sea (the coastline reads at a glance) and dim grey-plum streets.
+// Tierra ciruela casi negra, mar azul marino profundo (la costa se lee de un vistazo) y calles gris ciruela tenues.
 const FONDO = "#1b141f";
 const AGUA = "#0d2436";
 const SUELO = "#1e1622";
@@ -15,7 +15,7 @@ const EDIFICIO = "#281e2d";
 const CALLE_BORDE = "#120d15";
 const CALLE_MENOR = "#2a2131";
 const CALLE_MAYOR = "#372c3f";
-const VIAS = "#2e2434"; // rail and runways
+const VIAS = "#2e2434"; // vías férreas y pistas de aterrizaje
 const LIMITE = "#5a4862";
 const TEXTO = "#b9a9c2";
 const HALO = "#110c14";

@@ -1,15 +1,15 @@
 /**
- * K1 A* tests — HOJA_DE_RUTA §4.1 item 3
+ * Tests del A* de K1 (HOJA_DE_RUTA §4.1, ítem 3).
  *
- * Acceptance criteria:
- *   - Shortest route in TURNS on the fixture
- *   - Respects blocked edges (aristasBloqueadas)
- *   - Safe fallback when no path exists
+ * Criterios de aceptación:
+ *   - Ruta más corta en TURNOS sobre el fixture
+ *   - Respeta las aristas bloqueadas (aristasBloqueadas)
+ *   - Fallback seguro cuando no existe camino
  *
- * All tests run against the shared fixture-mini.json so the same data
- * validates the router, shared/grafo.ts, and the schema in one pass.
+ * Todos los tests corren sobre el fixture-mini.json compartido, así los mismos
+ * datos validan el ruteador, shared/grafo.ts y el schema de una sola vez.
  *
- * Fixture topology (12 nodes, 15 streets, 2 shelters):
+ * Topología del fixture (12 nodos, 15 calles, 2 refugios):
  *
  *   N-0001(tarqui)    —C-0001—  N-0002  —C-0002—  N-0003  —C-0003—  N-0004(los_esteros)
  *      |C-0010                    |C-0014                                |C-0012
@@ -17,8 +17,8 @@
  *      |C-0011                    |C-0015                                |C-0013
  *   N-0009(barb.)     —C-0007—  N-0010  —C-0008—  N-0011  —C-0009—  N-0012(jocay)
  *
- *   Shelters: R-01 @ N-0001, R-02 @ N-0012
- *   Bridge:   C-0005 (N-0006 ↔ N-0007)
+ *   Refugios: R-01 @ N-0001, R-02 @ N-0012
+ *   Puente:   C-0005 (N-0006 ↔ N-0007)
  */
 
 import assert from "node:assert/strict";
@@ -31,7 +31,7 @@ import { MinHeap } from "./min-heap";
 import type { MundoTurno } from "./fuente-mundo";
 
 // ---------------------------------------------------------------------------
-// Test helpers
+// Funciones auxiliares de los tests
 // ---------------------------------------------------------------------------
 
 const grafo = crearGrafo(fixture);
@@ -44,10 +44,10 @@ function siguiente(nodo: string, mundo = sinPeligro): string {
   const r = buscarRuta(nodo, contexto, mundo);
   if (r.tipo === "ya_en_refugio") return nodo;
   if (r.tipo === "movimiento") return r.siguienteNodo;
-  return nodo; // sin_ruta → stay put
+  return nodo; // sin_ruta → quedarse quieto
 }
 
-/** Walk the A* step-by-step until a shelter or a cycle/limit is hit. */
+/** Recorre el A* paso a paso hasta llegar a un refugio o toparse con un ciclo o el límite. */
 function caminoCompleto(inicio: string, mundo = sinPeligro): string[] {
   const path = [inicio];
   const visited = new Set([inicio]);
@@ -58,16 +58,16 @@ function caminoCompleto(inicio: string, mundo = sinPeligro): string[] {
     if (r.tipo === "sin_ruta") return path;
     const next = r.siguienteNodo;
     path.push(next);
-    if (visited.has(next)) return path; // cycle — test should fail
+    if (visited.has(next)) return path; // ciclo: el test debería fallar
     visited.add(next);
     current = next;
     if (fixture.refugios.some((ref) => ref.nodo === next)) return path;
   }
-  return path; // exceeded limit — test should fail
+  return path; // se pasó del límite: el test debería fallar
 }
 
 // ---------------------------------------------------------------------------
-// Shortest route in turns
+// Ruta más corta en turnos
 // ---------------------------------------------------------------------------
 
 describe("shortest route in turns (K1)", () => {
@@ -136,17 +136,17 @@ describe("shortest route in turns (K1)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Respects blocked edges
+// Respeta las aristas bloqueadas
 // ---------------------------------------------------------------------------
 
 describe("respects blocked edges (aristasBloqueadas)", () => {
   it("blocks C-0001 and forces N-0002 to detour to R-01 via N-0006 → N-0005 → N-0001", () => {
-    // Without block: N-0002 → N-0001 (1 hop via C-0001)
-    // With C-0001 blocked: N-0002 → N-0006 → N-0005 → N-0001 (3 hops)
+    // Sin bloqueo: N-0002 → N-0001 (1 salto por C-0001)
+    // Con C-0001 bloqueada: N-0002 → N-0006 → N-0005 → N-0001 (3 saltos)
     const blocked = { zombies: [], aristasBloqueadas: ["C-0001"] };
     const path = caminoCompleto("N-0002", blocked);
     assert.ok(!path.includes("C-0001"), "path should not use blocked edge (internal check)");
-    // The first step must not be N-0001 directly (that requires C-0001).
+    // El primer paso no puede ser N-0001 directo (eso requiere C-0001).
     assert.notEqual(path[1], "N-0001",
       "first move should not cross blocked C-0001 to N-0001 directly"
     );
@@ -158,7 +158,7 @@ describe("respects blocked edges (aristasBloqueadas)", () => {
   });
 
   it("blocks the bridge C-0005 and survivor still reaches a shelter", () => {
-    // C-0005 is the bridge between N-0006 and N-0007.
+    // C-0005 es el puente entre N-0006 y N-0007.
     const blocked = { zombies: [], aristasBloqueadas: ["C-0005"] };
     const path = caminoCompleto("N-0007", blocked);
     const last = path.at(-1)!;
@@ -169,12 +169,12 @@ describe("respects blocked edges (aristasBloqueadas)", () => {
   });
 
   it("stays put when all exits from a node are blocked", () => {
-    // N-0001 has only C-0001 (→ N-0002) and C-0010 (→ N-0005).
-    // If we also block all those but N-0001 is a shelter, it returns ya_en_refugio.
-    // So test with N-0003 instead: C-0002 (← N-0002) and C-0003 (→ N-0004).
+    // N-0001 solo tiene C-0001 (→ N-0002) y C-0010 (→ N-0005).
+    // Aunque se bloqueen todas, N-0001 es un refugio y devuelve ya_en_refugio.
+    // Por eso se prueba con N-0003: C-0002 (← N-0002) y C-0003 (→ N-0004).
     const blocked = { zombies: [], aristasBloqueadas: ["C-0002", "C-0003"] };
     const r = buscarRuta("N-0003", contexto, blocked);
-    // N-0003 has only two edges; both blocked → sin_ruta.
+    // N-0003 tiene solo dos aristas; ambas bloqueadas → sin_ruta.
     assert.equal(r.tipo, "sin_ruta");
     assert.equal((r as Extract<ResultadoBusqueda, { tipo: "sin_ruta" }>).nodo, "N-0003");
   });
@@ -192,50 +192,50 @@ describe("respects blocked edges (aristasBloqueadas)", () => {
         `move to ${r.siguienteNodo} is blocked`
       );
     }
-    // sin_ruta is also acceptable here (all meaningful paths might be blocked)
+    // sin_ruta también es aceptable acá (todos los caminos útiles podrían estar bloqueados)
   });
 });
 
 // ---------------------------------------------------------------------------
-// Horde-blocked nodes
+// Nodos bloqueados por hordas
 // ---------------------------------------------------------------------------
 
 describe("horde blocks its node and all static neighbors (K1 danger model)", () => {
   it("avoids a horde-blocked node on the direct path", () => {
-    // Put a horde on N-0002. Direct path N-0003 → N-0002 → N-0001 becomes blocked.
+    // Se pone una horda en N-0002. El camino directo N-0003 → N-0002 → N-0001 queda bloqueado.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "horda" as const, nodo: "N-0002" }],
       aristasBloqueadas: [],
     };
     const r = buscarRuta("N-0003", contexto, mundo);
-    // N-0002 and its neighbors (N-0001, N-0003, N-0006) are blocked by the horde.
-    // N-0003 itself is a neighbor of N-0002 → also blocked → sin_ruta expected
-    // (N-0003 is inside the horde zone, all its exits go through blocked nodes).
+    // N-0002 y sus vecinos (N-0001, N-0003, N-0006) quedan bloqueados por la horda.
+    // El propio N-0003 es vecino de N-0002 → también bloqueado → se espera sin_ruta
+    // (N-0003 está dentro de la zona de la horda; todas sus salidas pasan por nodos bloqueados).
     if (r.tipo === "movimiento") {
-      // If a path was found, make sure it doesn't go through N-0002 or its neighbors.
+      // Si se encontró un camino, se verifica que no pase por N-0002 ni por sus vecinos.
       const hordeBlocked = grafo.nodosBloqueadosPorHordas(mundo.zombies);
       assert.ok(
         !hordeBlocked.has(r.siguienteNodo),
         `next node ${r.siguienteNodo} is inside horde zone`
       );
     }
-    // sin_ruta is valid if N-0003 is itself in the horde zone.
+    // sin_ruta es válido si el propio N-0003 está en la zona de la horda.
   });
 
   it("finds a path that bypasses the horde zone entirely", () => {
-    // Horde at N-0010: blocks N-0009, N-0010, N-0011, N-0006, N-0007.
-    // N-0008 is NOT a neighbor of N-0010 in this fixture, so it's safe.
+    // Horda en N-0010: bloquea N-0009, N-0010, N-0011, N-0006, N-0007.
+    // N-0008 NO es vecino de N-0010 en este fixture, así que es seguro.
     const mundo = {
       zombies: [{ id: "Z-0001", tipo: "horda" as const, nodo: "N-0010" }],
       aristasBloqueadas: [],
     };
     const hordeBlocked = grafo.nodosBloqueadosPorHordas(mundo.zombies);
-    // Find a start node that is not in the horde zone.
-    const safeStart = "N-0004"; // far corner, not adjacent to N-0010
+    // Se elige un nodo de inicio que no esté en la zona de la horda.
+    const safeStart = "N-0004"; // esquina lejana, no adyacente a N-0010
     if (!hordeBlocked.has(safeStart)) {
       const path = caminoCompleto(safeStart, mundo);
       const last = path.at(-1)!;
-      // Every node in the path must be outside the horde zone.
+      // Cada nodo del camino debe estar fuera de la zona de la horda.
       for (const node of path) {
         assert.ok(!hordeBlocked.has(node), `path visits horde-blocked node ${node}`);
       }
@@ -248,12 +248,12 @@ describe("horde blocks its node and all static neighbors (K1 danger model)", () 
 });
 
 // ---------------------------------------------------------------------------
-// Safe fallback — never throws, always returns a valid node
+// Fallback seguro: nunca lanza errores y siempre devuelve un nodo válido
 // ---------------------------------------------------------------------------
 
 describe("safe fallback", () => {
   it("returns sin_ruta with current node when completely surrounded", () => {
-    // Block every edge connected to N-0003.
+    // Se bloquean todas las aristas conectadas a N-0003.
     const blocked = { zombies: [], aristasBloqueadas: ["C-0002", "C-0003"] };
     const r = buscarRuta("N-0003", contexto, blocked);
     assert.equal(r.tipo, "sin_ruta");
@@ -284,7 +284,7 @@ describe("safe fallback", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Min-heap correctness (internal — keeps K1 self-contained)
+// Corrección del min-heap (interno: mantiene K1 autocontenido)
 // ---------------------------------------------------------------------------
 
 describe("MinHeap", () => {
@@ -320,7 +320,7 @@ describe("MinHeap", () => {
 
 describe("shelter capacity (Pro): only the allowed shelters count", () => {
   it("heads to the allowed shelter even when another is closer", () => {
-    // From N-0002, R-01 (N-0001) is 1 street away; only R-02 (N-0012) is allowed.
+    // Desde N-0002, R-01 (N-0001) está a 1 calle; solo se permite R-02 (N-0012).
     const r = buscarRuta("N-0002", contexto, sinPeligro, undefined, new Set(["R-02"]));
     assert.equal(r.tipo, "movimiento");
     if (r.tipo === "movimiento") assert.equal(r.refugio, "R-02");

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-// Debug overlay to measure rendering cost with 200 survivors. Shown only with ?debug in the URL.
+// Overlay de depuración para medir el costo de renderizado con 200 sobrevivientes. Solo se muestra con ?debug en la URL.
 export default function MedidorFps() {
   const [visible, setVisible] = useState(false);
   const [fps, setFps] = useState(0);

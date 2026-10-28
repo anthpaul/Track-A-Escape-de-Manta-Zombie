@@ -1,22 +1,22 @@
 import type { TipoCalle } from "./tipos";
 
-// When each blocked street was first seen blocked, so the map can say "since turn 21".
-// The snapshot only lists the streets blocked now; the front remembers the rest.
+// Cuándo se vio bloqueada por primera vez cada calle bloqueada, para que el mapa pueda decir "desde el turno 21".
+// El snapshot solo lista las calles bloqueadas ahora; el front recuerda el resto.
 export type Bloqueos = {
   turno: number;
-  // Street id → first turn seen blocked, or null when it was already blocked on the first
-  // snapshot this page saw (the real start is unknown).
+  // Id de calle → primer turno en que se vio bloqueada, o null si ya estaba bloqueada en el primer
+  // snapshot que vio esta página (el inicio real es desconocido).
   desde: Map<string, number | null>;
 };
 
 export function actualizarBloqueos(previo: Bloqueos | null, turno: number, aristas: readonly string[]): Bloqueos {
-  // A new round restarts the turn count: nothing from the previous round applies.
+  // Una ronda nueva reinicia la cuenta de turnos: nada de la ronda anterior aplica.
   const nuevaRonda = previo === null || turno < previo.turno;
   const desde = new Map<string, number | null>();
   for (const id of aristas) {
     if (!nuevaRonda && previo.desde.has(id)) desde.set(id, previo.desde.get(id)!);
-    // On turn 1 nothing can have started earlier; otherwise a street already blocked on the first
-    // snapshot seen has an unknown start.
+    // En el turno 1 nada puede haber empezado antes; en otro caso, una calle ya bloqueada en el primer
+    // snapshot visto tiene un inicio desconocido.
     else desde.set(id, previo === null && turno > 1 ? null : turno);
   }
   return { turno, desde };

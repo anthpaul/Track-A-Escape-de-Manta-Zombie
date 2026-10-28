@@ -5,9 +5,9 @@ import { calcularSiguienteNodo, contextoGrafo } from "./motor";
 const { indexado, refugios } = contextoGrafo;
 
 test("with every shelter taken by a walker, the survivor escapes instead of waiting next to a zombie", () => {
-  // Walkers stand on the four real shelters, so A* answers sin_ruta for everyone.
+  // Hay caminantes parados en los cuatro refugios reales, así que A* responde sin_ruta para todos.
   const enRefugios = refugios.map((r, i) => ({ id: `Z-000${i + 1}`, tipo: "caminante" as const, nodo: r.nodo }));
-  // A runner right next to the survivor: waiting means being bitten next turn.
+  // Un corredor justo al lado del sobreviviente: esperar significa ser mordido el próximo turno.
   const nodoActual = refugios.map((r) => indexado.vecinos(r.nodo)).flat().find((n) => indexado.vecinos(n).length >= 3)!;
   const corredor = indexado.vecinos(nodoActual).find((n) => !refugios.some((r) => r.nodo === n))!;
   const mundo = { partidaId: "t", turno: 1, zombies: [...enRefugios, { id: "Z-0099", tipo: "corredor" as const, nodo: corredor }], aristasBloqueadas: [] };
@@ -21,7 +21,7 @@ test("with every shelter taken by a walker, the survivor escapes instead of wait
 
 test("Pro capacity: with ULEAM full, a survivor at its door is sent to another shelter", () => {
   const uleam = contextoGrafo.refugios.find((r) => r.nombre.includes("ULEAM"))!;
-  // N-0274 is ULEAM's only way in (one street from its node).
+  // N-0274 es la única entrada a la ULEAM (a una calle de su nodo).
   const puerta = contextoGrafo.indexado.vecinos(uleam.nodo)[0]!;
   const dentro = Array.from({ length: uleam.capacidad }, (_, i) => ({
     id: `S-${String(i + 100).padStart(4, "0")}`,

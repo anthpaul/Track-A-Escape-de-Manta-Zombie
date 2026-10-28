@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { nodosBloqueadosPorHordas, refugiosSinAcceso, vecinos } from "@/features/mapa/domain/grafo";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
-// N-0001 — N-0002 — N-0003 — N-0004 (a line)
+// N-0001 — N-0002 — N-0003 — N-0004 (una línea)
 const grafo: Grafo = {
   version: "test",
   nodos: [1, 2, 3, 4].map((i) => ({ id: `N-000${i}`, lat: -0.95 - i / 1000, lng: -80.72 })),
@@ -31,7 +31,7 @@ test("a horde blocks its node and all its neighbors", () => {
 });
 
 
-// N-0001 — … — N-0005 (a line) with the shelter at the far end, like Faro de Manta on its pier.
+// N-0001 — … — N-0005 (una línea) con el refugio en el extremo, como el Faro de Manta en su muelle.
 const muelle: Grafo = {
   version: "test",
   nodos: [1, 2, 3, 4, 5].map((i) => ({ id: `N-000${i}`, lat: -0.95 - i / 1000, lng: -80.72 })),

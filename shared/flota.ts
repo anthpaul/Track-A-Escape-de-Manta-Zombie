@@ -1,20 +1,23 @@
 /**
- * Rescue fleet (Pro): "5 camionetas el doble de rápidas, hasta 4 personas; a quién recoger y en qué orden".
+ * Flota de rescate (Pro): "5 camionetas el doble de rápidas, hasta 4 personas; a quién recoger y en qué orden".
  *
- * Runs once per turn in the simulator, after survivors move, bites and arrivals. Pure and
- * deterministic (no randomness), so a seed replays the same rescues.
+ * Se ejecuta una vez por turno en el simulador, después del movimiento de los sobrevivientes, las
+ * mordidas y las llegadas. Es pura y determinista (sin azar), así que una semilla repite los mismos
+ * rescates.
  *
- * Who and in what order:
- *   - candidates are survivors on the road, on foot, not already chosen by another van this turn;
- *   - someone with a visible zombie 2 streets away or less is urgent and goes first;
- *   - otherwise a van only goes for someone it reaches sooner than they would reach a shelter alone
- *     (the van covers 2 streets a turn), and prefers whoever is farthest from safety;
- *   - each van, in id order, takes the candidate with the best priority minus its own distance.
- * With 4 on board, or nobody worth fetching and people on board, the van drives to the closest
- * shelter with room and lets out as many as fit.
+ * A quién y en qué orden:
+ *   - los candidatos son sobrevivientes en ruta, a pie, que ninguna otra camioneta eligió este turno;
+ *   - quien tiene un zombie visible a 2 calles o menos es urgente y va primero;
+ *   - si no, una camioneta solo va por alguien al que llega antes de lo que esa persona llegaría
+ *     sola a un refugio (la camioneta recorre 2 calles por turno), y prefiere a quien está más lejos
+ *     de ponerse a salvo;
+ *   - cada camioneta, en orden de id, toma al candidato con mejor prioridad menos su propia distancia.
+ * Con 4 a bordo, o con gente a bordo y nadie a quien valga la pena buscar, la camioneta va al refugio
+ * con espacio más cercano y deja bajar a todos los que quepan.
  *
- * Vans never drive onto a node with a visible zombie or into a horde zone, never use a closed
- * street, and cannot be bitten; neither can whoever rides them (reglas.ts skips riders).
+ * Las camionetas nunca entran a un nodo con un zombie visible ni a una zona de horda, nunca usan una
+ * calle cerrada y no pueden ser mordidas; tampoco quienes viajan en ellas (reglas.ts omite a los
+ * pasajeros).
  */
 import type { GrafoIndexado } from "./grafo";
 import type { Sobreviviente, Zombie } from "./schemas";
@@ -37,7 +40,7 @@ export interface MundoFlota {
   capacidadRefugio?: ReadonlyMap<string, number>;
 }
 
-/** Five vans, starting at the shelters in turns. */
+/** Cinco camionetas, que arrancan repartidas por turnos entre los refugios. */
 export function crearFlota(nodosRefugio: readonly string[], cantidad = VEHICULOS): Vehiculo[] {
   return Array.from({ length: cantidad }, (_, i) => ({
     id: `V-${i + 1}`,
@@ -47,7 +50,7 @@ export function crearFlota(nodosRefugio: readonly string[], cantidad = VEHICULOS
   }));
 }
 
-// Street distances from several sources at once (BFS), skipping closed streets and forbidden nodes.
+// Distancias en calles desde varios orígenes a la vez (BFS), sin calles cerradas ni nodos prohibidos.
 function bfs(mundo: MundoFlota, origenes: readonly string[], prohibidos: ReadonlySet<string> = new Set()) {
   const bloqueadas = new Set(mundo.aristasBloqueadas);
   const dist = new Map<string, number>();
@@ -76,7 +79,7 @@ function bfs(mundo: MundoFlota, origenes: readonly string[], prohibidos: Readonl
 export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] {
   const eventos: EventoFlota[] = [];
   const zombies = mundo.zombies.filter((z) => z.tipo !== "dormido");
-  // Where a van may never be: visible zombies, and every horde node plus its neighbors.
+  // Donde una camioneta nunca puede estar: zombies visibles y cada nodo de horda con sus vecinos.
   const prohibidos = new Set(zombies.map((z) => z.nodo));
   for (const z of zombies) if (z.tipo === "horda") for (const v of mundo.grafo.vecinos(z.nodo)) prohibidos.add(v);
 
@@ -93,7 +96,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
   for (const v of [...flota].sort((a, b) => a.id.localeCompare(b.id))) {
     const desdeVan = bfs(mundo, [v.nodo], prohibidos);
 
-    // 1. Where to go this turn.
+    // 1. A dónde ir este turno.
     let destino: string | null = null;
     if (v.pasajeros.length < CAPACIDAD_VEHICULO) {
       let mejor: { s: Sobreviviente; valor: number } | null = null;
@@ -103,7 +106,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
         if (dVan === undefined) continue;
         const urgente = (distZombie.get(s.nodo) ?? Infinity) <= DISTANCIA_PELIGRO;
         const lejania = distRefugio.get(s.nodo) ?? Infinity;
-        // Only worth it if the van gets there before they would reach a shelter on their own.
+        // Solo vale la pena si la camioneta llega antes de que esa persona alcance un refugio por su cuenta.
         if (!urgente && Math.ceil(dVan / CALLES_POR_TURNO) >= lejania) continue;
         const valor = (urgente ? 1000 : 0) + Math.min(lejania, 100) * CALLES_POR_TURNO - dVan;
         if (!mejor || valor > mejor.valor || (valor === mejor.valor && s.id < mejor.s.id)) mejor = { s, valor };
@@ -114,7 +117,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
       }
     }
     if (destino === null && v.pasajeros.length > 0) {
-      // Closest shelter that still fits at least one more person.
+      // Refugio más cercano que todavía admite al menos a una persona más.
       const cercano = refugiosConLugar
         .filter((n) => desdeVan.dist.has(n) && libres(n) > 0)
         .sort((a, b) => desdeVan.dist.get(a)! - desdeVan.dist.get(b)! || a.localeCompare(b))[0];
@@ -122,7 +125,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
     }
     v.destino = destino;
 
-    // 2. Drive up to 2 streets along the shortest safe path.
+    // 2. Avanzar hasta 2 calles por el camino seguro más corto.
     if (destino !== null && destino !== v.nodo && desdeVan.dist.has(destino)) {
       const camino = [destino];
       while (desdeVan.previo.has(camino[0]!)) camino.unshift(desdeVan.previo.get(camino[0]!)!);
@@ -133,7 +136,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
       if (s) s.nodo = v.nodo;
     }
 
-    // 3. At a shelter with room: let out as many as fit.
+    // 3. En un refugio con espacio: bajan todos los que quepan.
     if (mundo.nodosRefugio.has(v.nodo) && v.pasajeros.length > 0) {
       const bajan = v.pasajeros.slice(0, Math.max(0, libres(v.nodo)));
       for (const id of bajan) {
@@ -146,7 +149,7 @@ export function moverFlota(flota: Vehiculo[], mundo: MundoFlota): EventoFlota[] 
       if (bajan.length > 0) eventos.push({ tipo: "dejo", vehiculo: v.id, nodo: v.nodo, sobrevivientes: bajan });
     }
 
-    // 4. Pick up whoever is waiting here on foot (closest to danger first), up to 4 on board.
+    // 4. Recoger a quienes esperan a pie en este nodo (primero los más cerca del peligro), hasta 4 a bordo.
     const suben = mundo.sobrevivientes
       .filter((s) => s.estado === "en_ruta" && !s.vehiculo && s.nodo === v.nodo)
       .sort((a, b) => (distZombie.get(a.nodo) ?? Infinity) - (distZombie.get(b.nodo) ?? Infinity) || a.id.localeCompare(b.id))

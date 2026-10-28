@@ -10,8 +10,8 @@ import EstadoRonda from "@/features/mapa/ui/inicio/EstadoRonda";
 import FondoGrafo from "@/features/mapa/ui/inicio/FondoGrafo";
 import RefugiosInicio, { type FilaRefugio } from "@/features/mapa/ui/inicio/RefugiosInicio";
 
-// Only what the engine really does: routes every turn, predicts runners, never sends anyone to a full shelter
-// and runs a rescue fleet in the demo rounds.
+// Solo lo que el motor hace de verdad: calcula rutas en cada turno, predice a los corredores, nunca envía a nadie a un refugio lleno
+// y opera una flota de rescate en las rondas de demo.
 const PASOS = [
   {
     titulo: "Turnos de 2 segundos",
@@ -27,7 +27,7 @@ const PASOS = [
   },
 ];
 
-// Public landing (N5): what this is, how it works, live shelters and the way into the live map.
+// Landing pública (N5): qué es, cómo funciona, los refugios en vivo y el acceso al mapa en vivo.
 export default function PantallaInicio() {
   const grafo = grafoManta;
   const vivo = useEstadoEnVivo(grafo, !USAR_MOCKS);

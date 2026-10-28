@@ -1,11 +1,11 @@
 /**
- * Full planned route for one survivor — K6, used only by GET /api/sobrevivientes/:id/ruta.
+ * Ruta planificada completa de un sobreviviente (K6); solo la usa GET /api/sobrevivientes/:id/ruta.
  *
- * It walks buscarRuta step by step over the same frozen world instead of changing
- * the A* that /paso runs, so:
- *   - the first step is exactly what /paso answers for that world (AGENTS.md §4.2);
- *   - /paso keeps its latency, because this runs only when the map asks for a route.
- * Every step reuses the dangers computed once for the world.
+ * Recorre `buscarRuta` paso a paso sobre el mismo mundo congelado, en lugar de modificar
+ * el A* que ejecuta /paso. Así:
+ *   - el primer paso es exactamente lo que /paso responde para ese mundo (AGENTS.md §4.2);
+ *   - /paso conserva su latencia, porque esto solo corre cuando el mapa pide una ruta.
+ * Cada paso reutiliza los peligros calculados una sola vez para el mundo.
  */
 
 import type { MundoTurno } from "./fuente-mundo";
@@ -20,7 +20,7 @@ export function calcularRutaCompleta(
   nodoActual: string,
   contexto: ContextoGrafo,
   mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,
-  // Shelter capacity (Pro): the same allowed shelters /paso uses for this survivor (cupos.ts).
+  // Capacidad de refugios (Pro): los mismos refugios permitidos que /paso usa para este sobreviviente (cupos.ts).
   refugiosPermitidos?: ReadonlySet<string>,
 ): RutaCompleta {
   const peligros = calcularPeligros(mundo, contexto.indexado);
@@ -28,13 +28,13 @@ export function calcularRutaCompleta(
   const visitados = new Set(ruta);
   let refugio: string | null = null;
 
-  // A simple path never has more nodes than the graph, so this always ends.
+  // Un camino simple nunca tiene más nodos que el grafo, así que este ciclo siempre termina.
   for (let i = 0; i < contexto.coordenadas.size; i++) {
     const paso = buscarRuta(ruta[ruta.length - 1], contexto, mundo, peligros, refugiosPermitidos);
     if (paso.tipo === "ya_en_refugio") return { refugio: paso.refugio, ruta };
     if (paso.tipo === "sin_ruta") break;
     refugio = paso.refugio;
-    if (visitados.has(paso.siguienteNodo)) break; // defensive: never draw a loop
+    if (visitados.has(paso.siguienteNodo)) break; // defensivo: nunca dibujar un ciclo
     visitados.add(paso.siguienteNodo);
     ruta.push(paso.siguienteNodo);
   }

@@ -1,27 +1,27 @@
 /**
- * Round metrics — S4 measurement (AGENTS.md §9 Fase 2 / HOJA_DE_RUTA §3).
+ * Métricas de ronda — medición de S4 (AGENTS.md §9 Fase 2 / HOJA_DE_RUTA §3).
  *
- * Calculates and formats:
- *   - Living fraction (active + rescued) and rescued fraction separately
- *   - Efficiency   (actual turns vs. BFS optimal turns, per survivor)
- *   - Latency      (p50 / p95 / p99 of all /paso response times)
- *   - Error rate   (invalid moves + timeouts over total /paso calls)
+ * Calcula y formatea:
+ *   - Fracción de vivos (activos + rescatados) y, por separado, fracción de rescatados
+ *   - Eficiencia     (turnos reales frente a turnos óptimos por BFS, por sobreviviente)
+ *   - Latencia       (p50 / p95 / p99 de todos los tiempos de respuesta de /paso)
+ *   - Tasa de error  (movimientos inválidos + timeouts sobre el total de llamadas a /paso)
  */
 import type { Sobreviviente } from "@abcstack/shared";
 import type { GrafoIndexado } from "@abcstack/shared";
 import type { ResultadoTurno } from "./turno";
 
 // -------------------------------------------------------------------------
-// Percentile helper
+// Helper de percentiles
 // -------------------------------------------------------------------------
 
-/** Live p95 of the round's /paso latencies so far (unsorted), or null before any call. */
+/** p95 en vivo de las latencias de /paso de la ronda hasta ahora (sin ordenar), o null antes de la primera llamada. */
 export function p95DeLatencias(latencias: readonly number[]): number | null {
   if (latencias.length === 0) return null;
   return percentil([...latencias].sort((a, b) => a - b), 95);
 }
 
-/** Return the p-th percentile (0–100) of a sorted array of numbers. */
+/** Devuelve el percentil p (0–100) de un arreglo de números ordenado. */
 export function percentil(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
   const idx = Math.ceil((p / 100) * sorted.length) - 1;
@@ -29,7 +29,7 @@ export function percentil(sorted: number[], p: number): number {
 }
 
 // -------------------------------------------------------------------------
-// BFS shortest hop distance (for efficiency calculation)
+// Distancia mínima en saltos por BFS (para calcular la eficiencia)
 // -------------------------------------------------------------------------
 
 function hopsBFS(grafo: GrafoIndexado, origen: string, destinos: ReadonlySet<string>): number {
@@ -50,7 +50,7 @@ function hopsBFS(grafo: GrafoIndexado, origen: string, destinos: ReadonlySet<str
 }
 
 // -------------------------------------------------------------------------
-// Public types
+// Tipos públicos
 // -------------------------------------------------------------------------
 
 export interface MetricasRonda {
@@ -58,18 +58,18 @@ export interface MetricasRonda {
   totalSobrevivientes: number;
   aSalvo: number;
   mordidos: number;
-  enRuta: number;               // still active when round ended (time limit)
-  supervivencia: number;        // (aSalvo + enRuta) / total, 0–1; not an official scoring formula
+  enRuta: number;               // seguía activo cuando terminó la ronda (límite de tiempo)
+  supervivencia: number;        // (aSalvo + enRuta) / total, 0–1; no es una fórmula oficial de puntaje
   vivos: number;
   rescatados: number;
-  /** Average ratio actual_turns / optimal_turns for survivors that reached a shelter.
-   *  1.0 = perfect efficiency. Higher = took more turns than the BFS minimum. */
+  /** Promedio de turnos_reales / turnos_óptimos de los sobrevivientes que llegaron a un refugio.
+   *  1.0 = eficiencia perfecta. Mayor = tardó más turnos que el mínimo por BFS. */
   eficienciaPromedio: number | null;
   latenciaP50Ms: number | null;
   latenciaP95Ms: number | null;
   latenciaP99Ms: number | null;
   totalLlamadas: number;
-  errores: number;              // invalid moves + timeouts
+  errores: number;              // movimientos inválidos + timeouts
   tasaError: number;            // errores / totalLlamadas, 0–1
   turnosEjecutados: number;
   duracionTotalMs: number;
@@ -77,22 +77,22 @@ export interface MetricasRonda {
 
 export interface DatosSobreviviente {
   id: string;
-  /** Node where the survivor started the round. */
+  /** Nodo donde el sobreviviente empezó la ronda. */
   nodoInicial: string;
-  /** Final state after the round. */
+  /** Estado final después de la ronda. */
   estado: Sobreviviente["estado"];
-  /** Turn on which they arrived (1-indexed). 0 if they never arrived. */
+  /** Turno en el que llegó (empieza en 1). 0 si nunca llegó. */
   turnoLlegada: number;
 }
 
 // -------------------------------------------------------------------------
-// Main function
+// Función principal
 // -------------------------------------------------------------------------
 
 export function calcularMetricas(opts: {
   ronda: 1 | 2 | 3;
   resultadosTurnos: ResultadoTurno[];
-  latencias: number[];           // one entry per /paso call, in ms
+  latencias: number[];           // una entrada por cada llamada a /paso, en ms
   sobrevivientes: readonly Sobreviviente[];
   datosIniciales: readonly DatosSobreviviente[];
   grafo: GrafoIndexado;
@@ -105,13 +105,13 @@ export function calcularMetricas(opts: {
   const mordidos = sobrevivientes.filter((s) => s.estado === "mordido").length;
   const enRuta = sobrevivientes.filter((s) => s.estado === "en_ruta").length;
 
-  // Efficiency: for each survivor that arrived, compare actual turns to BFS optimal.
+  // Eficiencia: por cada sobreviviente que llegó, compara los turnos reales con el óptimo por BFS.
   const ratiosEficiencia: number[] = [];
   for (const inicial of datosIniciales) {
     const datos = inicial;
-    if (datos.turnoLlegada === 0) continue;           // did not arrive
+    if (datos.turnoLlegada === 0) continue;           // no llegó
     const optimo = hopsBFS(grafo, datos.nodoInicial, nodosRefugio);
-    if (optimo === 0 || optimo === Infinity) continue; // already at refuge or unreachable
+    if (optimo === 0 || optimo === Infinity) continue; // ya estaba en el refugio o es inalcanzable
     ratiosEficiencia.push(datos.turnoLlegada / optimo);
   }
   const eficienciaPromedio =
@@ -119,13 +119,13 @@ export function calcularMetricas(opts: {
       ? ratiosEficiencia.reduce((a, b) => a + b, 0) / ratiosEficiencia.length
       : null;
 
-  // Latency percentiles.
+  // Percentiles de latencia.
   const sortedLatencias = [...latencias].sort((a, b) => a - b);
   const latenciaP50Ms = percentil(sortedLatencias, 50);
   const latenciaP95Ms = percentil(sortedLatencias, 95);
   const latenciaP99Ms = percentil(sortedLatencias, 99);
 
-  // Error rate: sum of respuestasFallidas across all turns.
+  // Tasa de error: suma de respuestasFallidas en todos los turnos.
   const totalLlamadas = resultadosTurnos.reduce(
     (acc, r) => acc + r.respuestasValidas + r.respuestasFallidas,
     0,
@@ -157,7 +157,7 @@ export function calcularMetricas(opts: {
 }
 
 // -------------------------------------------------------------------------
-// Console reporter
+// Reporte por consola
 // -------------------------------------------------------------------------
 
 export function imprimirMetricas(m: MetricasRonda): void {

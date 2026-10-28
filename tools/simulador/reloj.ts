@@ -1,23 +1,23 @@
 /**
- * Controllable clock for the simulator.
+ * Reloj controlable del simulador.
  *
- * In real execution every tick waits the full 2 seconds.
- * In tests we swap in a fake that resolves immediately, so a 5-minute
- * round of 150 turns does not take 5 actual minutes.
+ * En la ejecución real cada tick espera los 2 segundos completos.
+ * En los tests se reemplaza por uno falso que resuelve de inmediato, para que una
+ * ronda de 5 minutos con 150 turnos no tarde 5 minutos reales.
  */
 export interface Reloj {
   /**
-   * Wait until the end of the current tick window.
+   * Espera hasta el final de la ventana del tick actual.
    *
-   * @param iniciado  epoch-ms when the tick started (from Date.now())
-   * @param duracionMs  nominal tick length in ms (2000 in production)
+   * @param iniciado  epoch ms en que empezó el tick (de Date.now())
+   * @param duracionMs  duración nominal del tick en ms (2000 en producción)
    */
   esperarTick(iniciado: number, duracionMs: number): Promise<void>;
-  /** Current wall-clock time in epoch-ms. */
+  /** Hora actual del reloj en epoch ms. */
   ahora(): number;
 }
 
-/** Production clock — sleeps the remaining time in the tick window. */
+/** Reloj de producción: duerme el tiempo que falta de la ventana del tick. */
 export const relojReal: Reloj = {
   ahora: () => Date.now(),
   async esperarTick(iniciado, duracionMs) {
@@ -27,10 +27,10 @@ export const relojReal: Reloj = {
 };
 
 /**
- * Accelerated clock for tests.
- * `ahora()` returns a synthetic counter; `esperarTick` resolves immediately.
- * Both advance the counter by `duracionMs` so consumers that read `ahora()`
- * after each tick see monotonically increasing time, just like real code.
+ * Reloj acelerado para tests.
+ * `ahora()` devuelve un contador sintético; `esperarTick` resuelve de inmediato.
+ * Ambos avanzan el contador en `duracionMs`, así quien lee `ahora()` después de
+ * cada tick ve un tiempo que crece de forma monótona, igual que con el código real.
  */
 export function crearRelojFake(inicioMs = 0): Reloj & { _ms: number } {
   let ms = inicioMs;

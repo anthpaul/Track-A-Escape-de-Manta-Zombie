@@ -4,14 +4,14 @@ import { z } from "zod";
 import { ErrorFuenteMundo, type FuenteMundo, type MundoTurno } from "../motor/fuente-mundo";
 import { KEYS } from "./keys";
 
-/** Minimal injectable read surface; DynamoDBDocumentClient satisfies this interface. */
+/** Superficie mínima de lectura inyectable; DynamoDBDocumentClient cumple esta interfaz. */
 export interface ClienteLecturaDynamo {
   send(command: GetCommand): Promise<{ Item?: unknown }>;
   send(command: QueryCommand): Promise<{ Items?: unknown[] }>;
 }
 
 interface OpcionesDynamoFuente {
-  /** Epoch milliseconds; injectable to test expiration without sleeping. */
+  /** Epoch en milisegundos; inyectable para probar la expiración sin esperar. */
   ahora?: () => number;
   maxTurnosEnCache?: number;
 }
@@ -24,7 +24,7 @@ const ItemTurnoSchema = z.object({
     && /^\d{6}$/.test(key.slice(KEYS.prefixes.turnos.length))),
   ttl: z.number().int().nonnegative(),
   data: EstadoTurnoSchema.pick({ zombies: true, aristasBloqueadas: true, completo: true, sobrevivientes: true }).partial({ sobrevivientes: true }).extend({
-    // Optional duplicated identity must agree with the authoritative keys, when present.
+    // Si viene la identidad duplicada (opcional), debe coincidir con las claves autoritativas.
     partidaId: z.string().min(1).optional(),
     turno: NumeroTurnoSchema.optional(),
   }),
@@ -98,12 +98,12 @@ export class DynamoFuente implements FuenteMundo {
       partidaId, turno: actualTurn,
       zombies: Object.freeze(item.data.zombies.map((zombie) => Object.freeze(zombie))),
       aristasBloqueadas: Object.freeze(item.data.aristasBloqueadas),
-      // Shelter capacity (Pro): who is where this turn. Only id, node and state reach the motor.
+      // Capacidad de refugios (Pro): quién está dónde en este turno. Al motor solo llegan id, nodo y estado.
       ...(item.data.sobrevivientes && {
         sobrevivientes: Object.freeze(item.data.sobrevivientes.map(({ id, nodo, estado }) => Object.freeze({ id, nodo, estado }))),
       }),
     });
-    // Cache under the real turn, never alias an older fallback as the requested N.
+    // Se cachea bajo el turno real; nunca se guarda un turno anterior de respaldo como si fuera el N pedido.
     this.cache.set(cacheKey(partidaId, actualTurn), { mundo, ttl: item.ttl });
     if (this.cache.size > this.maxTurnosEnCache) this.cache.delete(this.cache.keys().next().value!);
     return mundo;

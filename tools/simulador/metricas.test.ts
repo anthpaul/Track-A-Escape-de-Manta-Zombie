@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { p95DeLatencias } from "./metricas";
 
 test("the live p95 uses every /paso latency of the round so far, nearest rank", () => {
-  const latencias = Array.from({ length: 100 }, (_, i) => i + 1); // 1..100 ms
+  const latencias = Array.from({ length: 100 }, (_, i) => i + 1); // de 1 a 100 ms
   assert.equal(p95DeLatencias(latencias), 95);
   assert.equal(p95DeLatencias([300, 10, 20]), 300, "order does not matter");
 });

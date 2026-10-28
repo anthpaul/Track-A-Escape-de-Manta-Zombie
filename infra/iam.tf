@@ -14,8 +14,8 @@ resource "aws_iam_role" "lambda" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-# Least privilege: only the API log group and only the operations the access
-# patterns need. Scan is deliberately not granted (AGENTS.md section 4).
+# Mínimo privilegio: solo el log group de la API y solo las operaciones que
+# necesitan los patrones de acceso. Scan no se concede a propósito (AGENTS.md sección 4).
 data "aws_iam_policy_document" "lambda_api" {
   statement {
     sid       = "Logs"

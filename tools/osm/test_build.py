@@ -1,4 +1,4 @@
-"""Exercise graph reduction/export through its command-line interface."""
+"""Prueba la reducción y exportación del grafo a través de su interfaz de línea de comandos."""
 
 import hashlib
 import json
@@ -101,7 +101,7 @@ class BuildCommandTests(unittest.TestCase):
             report = json.loads((root / "one.provenance.json").read_text())
             self.assertTrue(report["checks"]["connected"])
             self.assertTrue(report["checks"]["demo_bridge_has_detour"])
-            # Corrupt inputs fail before touching an existing output.
+            # Las entradas corruptas fallan antes de tocar una salida existente.
             original = (root / "one.json").read_bytes()
             (source / "tile.osm").write_bytes(raw + b" ")
             result = subprocess.run([*command, "--output", str(root / "one.json")],

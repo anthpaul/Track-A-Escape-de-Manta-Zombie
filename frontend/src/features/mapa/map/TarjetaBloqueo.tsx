@@ -6,7 +6,7 @@ import type { TipoCalle } from "@/features/mapa/domain/tipos";
 
 type Props = { lng: number; lat: number; tipo: TipoCalle; desde: number | null; onCerrar: () => void };
 
-// Card shown when a traffic sign is tapped (S1): what is blocked and since which turn.
+// Tarjeta que aparece al tocar una señal de tránsito (S1): qué está bloqueado y desde qué turno.
 export default function TarjetaBloqueo({ lng, lat, tipo, desde, onCerrar }: Props) {
   const { titulo, detalle } = textoBloqueo(tipo, desde);
   return (

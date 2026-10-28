@@ -1,14 +1,14 @@
 /**
- * Read-only repository for GET /estado.
+ * Repositorio de solo lectura para GET /estado.
  *
- * Reads two items from DynamoDB:
- *   1. CONTROL / PARTIDA_ACTIVA — which game is currently running.
- *   2. PARTIDA#<id> / TURNO#<last complete> — the most recent finished turn.
+ * Lee dos ítems de DynamoDB:
+ *   1. CONTROL / PARTIDA_ACTIVA: qué partida está en curso.
+ *   2. PARTIDA#<id> / TURNO#<último completo>: el turno terminado más reciente.
  *
- * This is intentionally separate from DynamoFuente (which serves the motor).
- * The motor needs any turn fast; /estado needs the LAST COMPLETE turn only.
+ * Está separado a propósito de DynamoFuente (que atiende al motor).
+ * El motor necesita cualquier turno, rápido; /estado necesita solo el ÚLTIMO turno COMPLETO.
  *
- * References: AGENTS.md §4.2, §4.5, §5
+ * Referencias: AGENTS.md §4.2, §4.5, §5
  */
 import { GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
@@ -20,8 +20,8 @@ import {
 import { KEYS } from "./keys";
 
 // ---------------------------------------------------------------------------
-// Injectable client interface (same as DynamoFuente — avoids importing the
-// full DynamoDBDocumentClient in tests)
+// Interfaz de cliente inyectable (igual que en DynamoFuente: evita importar el
+// DynamoDBDocumentClient completo en los tests)
 // ---------------------------------------------------------------------------
 
 export interface ClienteLectura {
@@ -30,10 +30,10 @@ export interface ClienteLectura {
 }
 
 // ---------------------------------------------------------------------------
-// Schemas for the two DynamoDB items we read
+// Schemas de los dos ítems de DynamoDB que se leen
 // ---------------------------------------------------------------------------
 
-/** CONTROL / PARTIDA_ACTIVA item */
+/** Ítem CONTROL / PARTIDA_ACTIVA */
 const CandadoSchema = z.object({
   PK: z.literal("CONTROL"),
   SK: z.literal("PARTIDA_ACTIVA"),
@@ -43,7 +43,7 @@ const CandadoSchema = z.object({
   expiraEn: z.number().int().positive(),
 });
 
-/** Subset of TURNO#N that /estado exposes publicly */
+/** Subconjunto de TURNO#N que /estado expone públicamente */
 const ItemTurnoEstadoSchema = EstadoTurnoSchema.pick({
   ronda: true,
   turno: true,
@@ -56,7 +56,7 @@ const ItemTurnoEstadoSchema = EstadoTurnoSchema.pick({
 });
 
 // ---------------------------------------------------------------------------
-// Public output type (matches AGENTS.md §5 GET /estado response)
+// Tipo de salida pública (coincide con la respuesta de GET /estado en AGENTS.md §5)
 // ---------------------------------------------------------------------------
 
 export interface RespuestaEstado {
@@ -65,20 +65,20 @@ export interface RespuestaEstado {
   zombies: EstadoTurno["zombies"];
   aristasBloqueadas: string[];
   sobrevivientes: Sobreviviente[];
-  /** Rescue fleet (Pro): the vans of the turn, only in rounds with a fleet. */
+  /** Flota de rescate (Pro): las camionetas del turno, solo en rondas con flota. */
   vehiculos?: NonNullable<EstadoTurno["vehiculos"]>;
   metricas: {
     vivos: number;
     aSalvo: number;
     mordidos: number;
-    /** p95 of the round's POST /paso latencies so far, from the turn; null when nothing measured /paso. */
+    /** p95 de las latencias de POST /paso de la ronda hasta ahora, tomado del turno; null si nadie midió /paso. */
     p95ms: number | null;
   };
   generadoEn: string;  // ISO 8601
 }
 
 // ---------------------------------------------------------------------------
-// Error type
+// Tipo de error
 // ---------------------------------------------------------------------------
 
 type CodigoErrorEstado = "SIN_PARTIDA_ACTIVA" | "PARTIDA_EXPIRADA" | "SIN_TURNO_COMPLETO" | "DATOS_INVALIDOS";
@@ -91,7 +91,7 @@ export class ErrorEstado extends Error {
 }
 
 // ---------------------------------------------------------------------------
-// Repository
+// Repositorio
 // ---------------------------------------------------------------------------
 
 export class EstadoRepo {
@@ -102,19 +102,19 @@ export class EstadoRepo {
   ) {}
 
   /**
-   * Return the current world state for GET /estado.
+   * Devuelve el estado actual del mundo para GET /estado.
    *
-   * Sequence:
-   *   1. Read CONTROL / PARTIDA_ACTIVA to discover the active game.
-   *   2. Verify the lock has not expired.
-   *   3. Query the last TURNO with completo = true.
-   *   4. Shape the response.
+   * Secuencia:
+   *   1. Leer CONTROL / PARTIDA_ACTIVA para descubrir la partida activa.
+   *   2. Verificar que el candado no haya expirado.
+   *   3. Consultar el último TURNO con completo = true.
+   *   4. Armar la respuesta.
    *
-   * Throws ErrorEstado for all expected failure modes so the route can return
-   * a clean 200 with an error body rather than a 500.
+   * Lanza ErrorEstado en todas las fallas esperadas para que la ruta pueda
+   * responder un 200 limpio con cuerpo de error en lugar de un 500.
    */
   async obtenerEstado(): Promise<RespuestaEstado> {
-    // Step 1: read the active-game lock.
+    // Paso 1: leer el candado de la partida activa.
     const { Item: rawCandado } = await this.client.send(
       new GetCommand({
         TableName: this.tableName,
@@ -132,7 +132,7 @@ export class EstadoRepo {
       throw new ErrorEstado("DATOS_INVALIDOS", "Active-game lock is malformed");
     }
 
-    // Step 2: verify the lock has not expired.
+    // Paso 2: verificar que el candado no haya expirado.
     const ahoraSegundos = Math.floor(this.ahora() / 1000);
     if (candado.data.expiraEn <= ahoraSegundos) {
       throw new ErrorEstado("PARTIDA_EXPIRADA", "Active-game lock has expired — no game is running");
@@ -140,21 +140,21 @@ export class EstadoRepo {
 
     const { partidaId } = candado.data;
 
-    // Step 3: get the last complete turn.
-    // Query PK = PARTIDA#<id>, SK between TURNO#000000 and TURNO#999999,
-    // sorted descending, limit 1 → last written turn.
-    // We filter for completo = true in the application layer because DynamoDB
-    // FilterExpression cannot use a sort-key condition AND a filter at the same
-    // time efficiently; since turns are written quickly (<2 s), the first result
-    // is almost always complete. We retry once with limit 5 if not.
+    // Paso 3: obtener el último turno completo.
+    // Query con PK = PARTIDA#<id> y SK entre TURNO#000000 y TURNO#999999,
+    // en orden descendente con límite 1 → último turno escrito.
+    // El filtro completo = true se aplica en la aplicación, porque en DynamoDB
+    // una condición sobre la sort key combinada con un FilterExpression no es
+    // eficiente; como los turnos se escriben rápido (<2 s), el primer resultado
+    // casi siempre está completo. Si no, se reintenta una vez con límite 5.
     const turnoCompleto = await this.leerUltimoTurnoCompleto(partidaId);
 
     if (!turnoCompleto) {
       throw new ErrorEstado("SIN_TURNO_COMPLETO", "No complete turn available yet for this game");
     }
 
-    // The simulator already excludes dormidos when writing EstadoTurnoSchema
-    // (ZombieVisibleSchema only allows caminante/corredor/horda). We cast directly.
+    // El simulador ya excluye a los dormidos al escribir EstadoTurnoSchema
+    // (ZombieVisibleSchema solo admite caminante/corredor/horda). Se convierte directamente.
     const zombiesVisibles = turnoCompleto.zombies as EstadoTurno["zombies"];
 
     const vivos = turnoCompleto.sobrevivientes.filter((s) => s.estado === "en_ruta").length;
@@ -172,20 +172,20 @@ export class EstadoRepo {
         vivos,
         aSalvo,
         mordidos,
-        p95ms: turnoCompleto.p95ms ?? null,  // stored by the HTTP simulator; /estado just relays it
+        p95ms: turnoCompleto.p95ms ?? null,  // lo guarda el simulador HTTP; /estado solo lo reenvía
       },
       generadoEn: new Date(this.ahora()).toISOString(),
     };
   }
 
   // ---------------------------------------------------------------------------
-  // Private helpers
+  // Funciones auxiliares privadas
   // ---------------------------------------------------------------------------
 
   private async leerUltimoTurnoCompleto(
     partidaId: string,
   ): Promise<z.infer<typeof ItemTurnoEstadoSchema> | null> {
-    // Try up to 5 recent turns to find one with completo = true.
+    // Revisa hasta 5 turnos recientes para encontrar uno con completo = true.
     const { Items } = await this.client.send(
       new QueryCommand({
         TableName: this.tableName,

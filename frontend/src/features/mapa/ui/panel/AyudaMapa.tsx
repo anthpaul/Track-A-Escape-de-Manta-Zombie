@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 
 type Props = { abierta: boolean; onCambiar: (abierta: boolean) => void };
 
-// What the visitor is looking at and what they can do, in three short blocks (no jargon).
+// Qué está viendo el visitante y qué puede hacer, en tres bloques cortos (sin jerga).
 export default function AyudaMapa({ abierta, onCambiar }: Props) {
   return (
     <Dialog open={abierta} onOpenChange={onCambiar}>

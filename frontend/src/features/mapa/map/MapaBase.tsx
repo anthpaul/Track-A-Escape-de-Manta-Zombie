@@ -8,15 +8,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } from "@/features/mapa/map/config";
 import { pinturaTematica } from "@/features/mapa/map/tema-mapa";
 
-// The worker is copied to public/ by scripts/copy-maplibre-worker.mjs; the version query busts stale caches.
+// scripts/copy-maplibre-worker.mjs copia el worker a public/; el parámetro de versión invalida las cachés viejas.
 setWorkerUrl(`/maplibre-gl-worker.js?v=${getVersion()}`);
 
-// Presentational base map. Live layers (streets, zombies, survivors) are passed as children.
+// Mapa base presentacional. Las capas en vivo (calles, zombies, sobrevivientes) se pasan como children.
 type Props = {
   children?: React.ReactNode;
-  // Layers whose features react to clicks (pointer cursor on hover).
+  // Capas cuyas features responden a clics (cursor de puntero al pasar por encima).
   capasInteractivas?: string[];
-  // Receives every interactive feature under the pointer (they often overlap on one node).
+  // Recibe todas las features interactivas bajo el puntero (suelen superponerse en un mismo nodo).
   onClickEntidad?: (entidades: { capa: string; propiedades: Record<string, unknown> }[]) => void;
 };
 
@@ -24,12 +24,12 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
   const [falloEstilo, setFalloEstilo] = useState(false);
   const [sobreEntidad, setSobreEntidad] = useState(false);
 
-  // Recolor only the CARTO base layers with the night palette; our GeoJSON layers keep their own colors.
-  // Runs on every styledata (not only on "load", which waits for every tile and shows the original CARTO
-  // colors first, and misses later style reloads). It only sets properties that drifted, so once they
-  // match it changes nothing and cannot loop.
+  // Recolorea solo las capas base de CARTO con la paleta nocturna; nuestras capas GeoJSON conservan sus propios colores.
+  // Se ejecuta en cada styledata (no solo en "load", que espera todos los tiles, muestra primero los colores
+  // originales de CARTO y no ve las recargas de estilo posteriores). Solo define las propiedades que cambiaron, así que cuando
+  // ya coinciden no cambia nada y no puede entrar en bucle.
   const recolorear = (mapa: MapaMaplibre) => {
-    // The style's layers exist once its JSON is parsed; isStyleLoaded() would wait for every tile too.
+    // Las capas del estilo existen apenas se parsea su JSON; isStyleLoaded() esperaría además todos los tiles.
     if (!mapa.getLayer("background")) return;
     for (const capa of mapa.getStyle().layers) {
       const fuente = "source" in capa && typeof capa.source === "string" ? mapa.getSource(capa.source) : undefined;
@@ -54,8 +54,8 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
         mapStyle={MAP_STYLE_URL}
         attributionControl={{ compact: false }}
         style={{ width: "100%", height: "100%" }}
-        // Only an error while the style itself is not loaded means the base map is missing
-        // (e.g. no network). Tile or glyph errors happen after the style loads and are ignored.
+        // Solo un error mientras el estilo mismo no está cargado significa que falta el mapa base
+        // (p. ej., sin red). Los errores de tiles o glifos ocurren después de cargar el estilo y se ignoran.
         onError={(e) => {
           if (!e.target.isStyleLoaded()) setFalloEstilo(true);
         }}

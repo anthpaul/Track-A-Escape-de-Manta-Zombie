@@ -85,7 +85,7 @@ test("signs: a blocked street gets a no-entry disc in the middle and a stop bar 
       ["tope", 0.002, 0],
     ],
   );
-  // A damaged bridge only gets the danger triangle in the middle.
+  // Un puente dañado solo lleva el triángulo de peligro en el medio.
   const puente = senalesAGeoJSON(recta, new Set(["C-0002"])).features;
   assert.deepEqual(puente.map((f) => [f.properties.tipo, f.properties.calle]), [["peligro", "C-0002"]]);
   assert.deepEqual(senalesAGeoJSON(recta, new Set()).features, []);

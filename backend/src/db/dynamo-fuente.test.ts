@@ -19,7 +19,7 @@ class FakeDynamo implements ClienteLecturaDynamo {
   }
 }
 
-// Compile-time compatibility with the real SDK, without resolving credentials or sending requests.
+// Compatibilidad en tiempo de compilación con el SDK real, sin resolver credenciales ni enviar pedidos.
 const acceptRealClient = (client: DynamoDBDocumentClient): ClienteLecturaDynamo => client;
 
 function snapshot(partidaId = "game-a", turno = 3) {
@@ -47,7 +47,7 @@ test("reads an incomplete turn strongly through KEYS and returns immutable dange
   assert.deepEqual(world, {
     partidaId: "game-a", turno: 3,
     zombies: item.data.zombies, aristasBloqueadas: item.data.aristasBloqueadas,
-    // Shelter capacity (Pro) needs who is where; only id, node and state, nothing else of the survivor.
+    // La capacidad de refugios (Pro) necesita saber quién está dónde: solo id, nodo y estado, nada más del sobreviviente.
     sobrevivientes: [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" }],
   });
   assert.ok(client.commands[0] instanceof GetCommand);

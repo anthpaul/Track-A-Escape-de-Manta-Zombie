@@ -13,8 +13,8 @@ const COLOR_TONO: Record<TonoResumen, string> = {
   llegada: "bg-marea-700",
 };
 
-// What happened this turn, in one line over the map. Stays closed after × until a turn brings bad
-// news again (reducer rule); arrivals alone never open it.
+// Qué pasó en este turno, en una línea sobre el mapa. Queda cerrada tras pulsar × hasta que un turno traiga malas
+// noticias otra vez (regla del reducer); las llegadas solas nunca la abren.
 export default function BarraTurno({ turno, chips, onVerAlertas, onCerrar }: Props) {
   if (chips.length === 0) return null;
   return (

@@ -1,7 +1,7 @@
 import type { EstadoSobreviviente } from "./tipos";
 
-// Panel state (tabs, selection, search, layers, alerts toast) as a pure reducer: React only holds it
-// with useReducer, so every interaction rule is tested here without a browser.
+// Estado del panel (pestañas, selección, búsqueda, capas, toast de alertas) como reducer puro: React solo lo guarda
+// con useReducer, así cada regla de interacción se prueba aquí sin navegador.
 
 export type Tab = "ref" | "surv" | "layers" | "alert";
 export type CapaClave = "caminante" | "corredor" | "horda" | "sobreviviente" | "mordido" | "refugio";
@@ -16,7 +16,7 @@ export type EstadoPanel = {
   capas: Record<CapaClave, boolean>;
   mostrarRuta: boolean;
   alertasLeidas: ReadonlySet<string>;
-  toastAlertaId: string | null; // alert shown in the toast; null when closed
+  toastAlertaId: string | null; // alerta mostrada en el toast; null cuando está cerrado
 };
 
 export type AccionPanel =
@@ -42,7 +42,7 @@ export function estadoInicialPanel(): EstadoPanel {
     busqueda: "",
     filtro: "todos",
     capas: { caminante: true, corredor: true, horda: true, sobreviviente: true, mordido: true, refugio: true },
-    // The planned route starts visible: the challenge requires it on the live map (plan A9).
+    // La ruta planificada arranca visible: el reto la exige en el mapa en vivo (plan A9).
     mostrarRuta: true,
     alertasLeidas: new Set(),
     toastAlertaId: null,

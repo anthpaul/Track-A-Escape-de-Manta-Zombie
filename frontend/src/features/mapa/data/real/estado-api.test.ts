@@ -5,7 +5,7 @@ import { grafoMini } from "@/features/mapa/data/mock/grafo-mini";
 
 const [norte, sur] = grafoMini.refugios;
 
-// Shape returned today by backend/src/routes/estado.ts: no "refugios" field yet.
+// Forma que devuelve hoy backend/src/routes/estado.ts: todavía sin el campo "refugios".
 const respuestaReal = {
   turno: 12,
   ronda: 2,

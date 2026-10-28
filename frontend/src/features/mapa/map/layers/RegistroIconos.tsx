@@ -4,8 +4,8 @@ import { useEffect, useRef } from "react";
 import { useMap } from "react-map-gl/maplibre";
 import { ICONOS_MAPA, LADO_ICONO, svgIconoMapa } from "@/features/mapa/simbologia/iconos";
 
-// Renders the Lucide components off-screen, serializes their SVG and registers each one as a
-// MapLibre image. Uses only the public lucide-react API and no emoji or image files.
+// Renderiza los componentes de Lucide fuera de pantalla, serializa su SVG y registra cada uno como
+// imagen de MapLibre. Usa solo la API pública de lucide-react, sin emojis ni archivos de imagen.
 export default function RegistroIconos() {
   const { current: mapa } = useMap();
   const contenedor = useRef<HTMLDivElement>(null);
@@ -17,29 +17,29 @@ export default function RegistroIconos() {
 
     const registrar = async () => {
       for (const svg of Array.from(nodos.querySelectorAll<SVGElement>("svg[data-icono]"))) {
-        // No style yet (or the map was removed): the "load" listener below runs this again.
+        // Todavía no hay estilo (o se eliminó el mapa): el listener de "load" de abajo vuelve a ejecutar esto.
         if (cancelado || !mapa.getMap().style) return;
         const nombre = svg.dataset.icono!;
-        // hasImage throws while the style is not ready (or after the map was removed). It lives inside
-        // the try so one failure skips only this icon; styleimagemissing retries it once a layer needs it.
+        // hasImage lanza un error mientras el estilo no está listo (o después de eliminar el mapa). Está dentro
+        // del try para que un fallo solo omita este ícono; styleimagemissing lo reintenta cuando una capa lo necesite.
         try {
           if (mapa.hasImage(nombre)) continue;
           const imagen = new Image(LADO_ICONO, LADO_ICONO);
           const { fondo, forma, borde } = ICONOS_MAPA[nombre];
           imagen.src = svgIconoMapa(svg.outerHTML, fondo, forma, borde);
           await imagen.decode();
-          // Re-check after the await: a parallel call (styleimagemissing) may have added it already.
+          // Se vuelve a verificar después del await: una llamada en paralelo (styleimagemissing) puede haberlo agregado ya.
           if (!cancelado && !mapa.hasImage(nombre)) mapa.addImage(nombre, imagen, { pixelRatio: 2 });
         } catch (error) {
-          // One broken icon must not stop the others from registering.
+          // Un ícono roto no debe impedir que se registren los demás.
           console.error(`No se pudo registrar el ícono "${nombre}"`, error);
         }
       }
     };
 
     void registrar();
-    // A style reload drops custom images; register them again when MapLibre asks for one, and once
-    // the map has loaded in case the first pass ran before the style was ready.
+    // Una recarga del estilo descarta las imágenes propias; se registran de nuevo cuando MapLibre pide una, y una vez
+    // que el mapa cargó, por si la primera pasada corrió antes de que el estilo estuviera listo.
     const alFaltar = () => void registrar();
     mapa.on("styleimagemissing", alFaltar);
     mapa.on("load", alFaltar);

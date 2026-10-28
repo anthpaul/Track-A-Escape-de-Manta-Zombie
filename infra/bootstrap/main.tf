@@ -1,6 +1,6 @@
-# One-time setup: creates the S3 bucket that stores the shared Terraform state
-# for infra/. Run once per AWS account, before the first `terraform init` in infra/.
-# This folder keeps its own state locally (terraform.tfstate here, gitignored).
+# Configuración única: crea el bucket S3 que guarda el state compartido de Terraform
+# de infra/. Se ejecuta una vez por cuenta AWS, antes del primer `terraform init` en infra/.
+# Esta carpeta guarda su propio state en local (terraform.tfstate aquí, en .gitignore).
 
 terraform {
   required_version = "~> 1.9"

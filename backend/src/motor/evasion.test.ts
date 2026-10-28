@@ -1,13 +1,13 @@
 /**
- * Escape step when no shelter is reachable (AGENTS.md §4.3 rule 2).
+ * Paso de escape cuando no hay refugio alcanzable (AGENTS.md §4.3, regla 2).
  *
- * Fixture topology (shared/data/fixture-mini.json):
+ * Topología del fixture (shared/data/fixture-mini.json):
  *   N-0001 — N-0002 — N-0003 — N-0004
  *     |        |                  |
  *   N-0005 — N-0006 — N-0007 — N-0008
  *     |        |                  |
  *   N-0009 — N-0010 — N-0011 — N-0012
- *   Shelters: R-01 @ N-0001, R-02 @ N-0012
+ *   Refugios: R-01 @ N-0001, R-02 @ N-0012
  */
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
@@ -38,7 +38,7 @@ function distancia(desde: string, mundo: Mundo): number {
 }
 
 describe("escape step when no shelter is reachable", () => {
-  // Walkers sit on both shelters, so A* has no destination; a runner closes in from N-0005.
+  // Hay caminantes en ambos refugios, así que A* no tiene destino; un corredor se acerca desde N-0005.
   const sinRefugio: Mundo = { zombies: [z(1, "caminante", "N-0001"), z(2, "caminante", "N-0012"), z(3, "corredor", "N-0005")], aristasBloqueadas: [] };
 
   it("moves to the legal neighbour farthest from every moving zombie", () => {
@@ -66,10 +66,10 @@ describe("escape step when no shelter is reachable", () => {
   });
 
   it("stays put when the current node is already the safest place", () => {
-    // Zombies far east; N-0009 has neighbours N-0005 and N-0010, both closer to them.
+    // Zombies lejos, al este; N-0009 tiene como vecinos a N-0005 y N-0010, ambos más cerca de ellos.
     const lejos: Mundo = { zombies: [z(1, "caminante", "N-0001"), z(2, "caminante", "N-0012"), z(3, "corredor", "N-0008")], aristasBloqueadas: [] };
     const p = calcularPeligros(lejos, indexado);
-    // N-0009 and N-0010 are both two streets from the nearest zombie; N-0005 is one. Ties keep the survivor in place.
+    // N-0009 y N-0010 están a dos calles del zombie más cercano; N-0005, a una. Ante un empate, el sobreviviente se queda en su lugar.
     assert.equal(distancia("N-0009", lejos), distancia("N-0010", lejos));
     assert.equal(elegirEscape("N-0009", contexto, lejos, p), "N-0009");
   });

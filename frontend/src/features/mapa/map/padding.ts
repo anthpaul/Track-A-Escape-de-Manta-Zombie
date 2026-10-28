@@ -1,14 +1,14 @@
-// Map padding so the visible center is never hidden behind the rail or the panel.
-// These sizes mirror the Tailwind classes of RielIconos and PanelLateral: change them together.
+// Padding del mapa para que el centro visible nunca quede detrás del riel o del panel.
+// Estos tamaños replican las clases de Tailwind de RielIconos y PanelLateral: cambiarlos juntos.
 export const DISENO = {
   escritorioDesde: 768, // md
   panelAnchoDesde: 1280, // xl
   riel: 64, // w-16
-  rielHorizontal: 56, // w-14, phone in landscape
+  rielHorizontal: 56, // w-14, teléfono en horizontal
   panel: 300, // w-[300px]
   panelAncho: 340, // xl:w-[340px]
-  panelHorizontal: 288, // w-72, phone in landscape
-  hojaMovil: 0.5, // max-h-[50dvh], bottom sheet on phones in portrait
+  panelHorizontal: 288, // w-72, teléfono en horizontal
+  hojaMovil: 0.5, // max-h-[50dvh], hoja inferior en teléfonos en vertical
 } as const;
 
 type Padding = { top: number; right: number; bottom: number; left: number };
@@ -20,10 +20,10 @@ export function paddingMapa({ ancho, alto, panelAbierto }: { ancho: number; alto
     const panel = ancho >= DISENO.panelAnchoDesde ? DISENO.panelAncho : DISENO.panel;
     return { ...base, left: DISENO.riel + (panelAbierto ? panel : 0) };
   }
-  // Phone in landscape: rail and panel move to the left, like on desktop but narrower.
+  // Teléfono en horizontal: el riel y el panel pasan a la izquierda, como en escritorio pero más angostos.
   if (ancho > alto) {
     return { ...base, left: DISENO.rielHorizontal + (panelAbierto ? DISENO.panelHorizontal : 0) };
   }
-  // Phone in portrait: the bottom sheet covers up to half of the screen height.
+  // Teléfono en vertical: la hoja inferior cubre hasta la mitad de la altura de la pantalla.
   return { ...base, bottom: panelAbierto ? Math.round(alto * DISENO.hojaMovil) : 0 };
 }

@@ -8,13 +8,13 @@ import { resolverConexion, type UltimoReal } from "@/features/mapa/data/real/con
 
 const TURNO_MS = 2000;
 
-// Build-time switches (AGENTS.md §8): the production build sets NEXT_PUBLIC_USE_MOCKS=false and
-// NEXT_PUBLIC_API_URL=/api. Local dev without them keeps the in-browser simulation.
+// Interruptores de build (AGENTS.md §8): el build de producción define NEXT_PUBLIC_USE_MOCKS=false y
+// NEXT_PUBLIC_API_URL=/api. El desarrollo local sin ellos mantiene la simulación en el navegador.
 export const USAR_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== "false";
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
-// Polls GET /api/estado once per turn. The decision of what to show lives in resolverConexion (pure,
-// tested); this hook only feeds it the latest poll and remembers the last real world.
+// Hace polling de GET /api/estado una vez por turno. La decisión de qué mostrar vive en resolverConexion (pura,
+// con tests); este hook solo le pasa el último poll y recuerda el último mundo real.
 export function useEstadoEnVivo(grafo: Grafo, activo: boolean): { snapshot: Snapshot | null; conexion: Conexion } {
   const consulta = useQuery({
     queryKey: ["estado", API_URL],
@@ -29,13 +29,13 @@ export function useEstadoEnVivo(grafo: Grafo, activo: boolean): { snapshot: Snap
     retry: false,
   });
 
-  // Memoized on the response so the same answer keeps the same snapshot object.
+  // Memoizado sobre la respuesta, para que la misma respuesta conserve el mismo objeto snapshot.
   const leido = useMemo(() => (consulta.data === undefined ? null : leerEstado(consulta.data, grafo)), [consulta.data, grafo]);
   const ultimoFallo = consulta.errorUpdatedAt > consulta.dataUpdatedAt;
   const resultado = ultimoFallo ? "error" : (leido ?? "pendiente");
   const ahora = Math.max(consulta.dataUpdatedAt, consulta.errorUpdatedAt);
 
-  // Updating state during render (guarded) is React's pattern for values derived from a previous render.
+  // Actualizar el estado durante el render (con guarda) es el patrón de React para valores derivados de un render anterior.
   const [ultimoReal, setUltimoReal] = useState<UltimoReal | null>(null);
   const salida = resolverConexion({ resultado, ultimoReal, ahora });
   if (salida.ultimoReal !== ultimoReal) setUltimoReal(salida.ultimoReal);

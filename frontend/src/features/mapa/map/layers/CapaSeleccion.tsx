@@ -31,8 +31,8 @@ const punto = (lng: number, lat: number, properties: Record<string, string>): Fe
 });
 const vacio: FeatureCollection<Point> = { type: "FeatureCollection", features: [] };
 
-// "Planned route" and selection layers: an arrow per direction for everyone, the dashed route of the
-// followed survivor, and rings with labels around the selected survivor and shelter.
+// Capas de "ruta planificada" y de selección: una flecha por dirección para todos, la ruta punteada del
+// sobreviviente seguido y anillos con etiquetas alrededor del sobreviviente y del refugio seleccionados.
 export default function CapaSeleccion({ grafo, snapshot, anilloSobrevivienteId, refugioId, ruta, flechasVisibles }: Props) {
   const flechas = useMemo(() => flechasAGeoJSON(grafo, snapshot.sobrevivientes), [grafo, snapshot.sobrevivientes]);
   const lineaRuta = useMemo(() => rutaAGeoJSON(grafo, ruta), [grafo, ruta]);
@@ -40,7 +40,7 @@ export default function CapaSeleccion({ grafo, snapshot, anilloSobrevivienteId, 
   const anilloSobreviviente = useMemo(() => {
     const s = snapshot.sobrevivientes.find((x) => x.id === anilloSobrevivienteId);
     const nodo = s && grafo.nodos.find((n) => n.id === s.nodo);
-    // "Sobreviviente 3" on the map, never the contract code S-0003; its state colors the ring and label.
+    // "Sobreviviente 3" en el mapa, nunca el código del contrato S-0003; su estado colorea el anillo y la etiqueta.
     return nodo ? punto(nodo.lng, nodo.lat, { id: s.id, estado: s.estado, nombre: etiquetaPersona(s.id, s.estado) }) : vacio;
   }, [grafo, snapshot.sobrevivientes, anilloSobrevivienteId]);
 

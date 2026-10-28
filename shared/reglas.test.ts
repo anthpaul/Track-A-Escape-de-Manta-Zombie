@@ -1,6 +1,6 @@
 /**
- * Tests for shared/reglas.ts — one test per rule row, as required by the
- * route plan (S2/S3 acceptance criteria in docs/HOJA_DE_RUTA.md §4.2).
+ * Tests de shared/reglas.ts: un test por cada fila de reglas, como pide la hoja
+ * de ruta (criterios de aceptación de S2/S3 en docs/HOJA_DE_RUTA.md §4.2).
  */
 import assert from "node:assert/strict";
 import { test } from "node:test";
@@ -21,9 +21,9 @@ import type { Sobreviviente } from "./schemas";
 
 const grafo = crearGrafo(fixture);
 
-// Deterministic fake random: always returns 0 (picks first available neighbor).
+// Aleatorio falso determinista: siempre devuelve 0 (elige el primer vecino disponible).
 const rnd0 = () => 0;
-// Always returns a value that picks the last neighbor.
+// Siempre devuelve un valor que elige el último vecino.
 const rndLast = () => 0.9999;
 
 // ---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ test("distanciaHops: unreachable node returns Infinity", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Caminante — moves 1 street every 2 turns
+// Caminante: se mueve 1 calle cada 2 turnos
 // ---------------------------------------------------------------------------
 
 test("caminante: moves on its first turn", () => {
@@ -67,8 +67,8 @@ test("caminante: stays put on its second turn", () => {
 });
 
 test("caminante: respects blocked streets (stays put if all exits blocked)", () => {
-  // N-0009 connects to N-0010 (C-0007) and N-0005 (C-0011).
-  // Block both so there is nowhere to go.
+  // N-0009 conecta con N-0010 (C-0007) y con N-0005 (C-0011).
+  // Se bloquean las dos para que no tenga a dónde ir.
   const z: ZombieInterno = { id: "Z-0001", tipo: "caminante", nodo: "N-0009", movioPasadoTurno: false };
   const bloqueadas = ["C-0007", "C-0011"];
   const { nuevoNodo } = moverZombie(z, grafo, bloqueadas, [], rnd0, 1);
@@ -76,49 +76,49 @@ test("caminante: respects blocked streets (stays put if all exits blocked)", () 
 });
 
 // ---------------------------------------------------------------------------
-// Corredor — 2 streets per turn; pursues survivor ≤3 hops
+// Corredor: 2 calles por turno; persigue a un sobreviviente a ≤3 saltos
 // ---------------------------------------------------------------------------
 
 test("corredor: moves 2 streets when no survivor nearby", () => {
   const z: ZombieInterno = { id: "Z-0002", tipo: "corredor", nodo: "N-0001" };
-  // No survivors anywhere. With rnd0 it picks the first neighbor each time.
-  // N-0001 neighbors (from fixture): N-0002, N-0005.
-  // Step 1: N-0001 → N-0002 (first neighbor of N-0001).
-  // Step 2: N-0002's first neighbor could be N-0001 (bounce back) — that is
-  //         valid behavior for a random corredor. We only assert it attempted
-  //         both steps, which means the corredor visited a neighbor at step 1.
-  // We verify by tracking the intermediate node via a custom aleatorio that
-  // records each call.
+  // No hay sobrevivientes. Con rnd0 elige siempre el primer vecino.
+  // Vecinos de N-0001 (según el fixture): N-0002, N-0005.
+  // Paso 1: N-0001 → N-0002 (primer vecino de N-0001).
+  // Paso 2: el primer vecino de N-0002 puede ser N-0001 (vuelve atrás); es un
+  //         comportamiento válido para un corredor aleatorio. Solo se verifica que
+  //         intentó los dos pasos, es decir, que en el paso 1 visitó un vecino.
+  // Se comprueba siguiendo el nodo intermedio con un `aleatorio` propio que
+  // registra cada llamada.
   const calls: number[] = [];
   const rndRecorder = () => { calls.push(0); return 0; };
   moverZombie(z, grafo, [], [], rndRecorder, 1);
-  // Corredor without a target always tries 2 random steps → 2 aleatorio calls.
+  // Un corredor sin objetivo siempre intenta 2 pasos aleatorios → 2 llamadas a aleatorio.
   assert.equal(calls.length, 2, "corredor should call aleatorio twice (2 steps)");
 });
 
 test("corredor: pursues survivor within 3 hops", () => {
-  // Place survivor at N-0003, corredor at N-0001.  Distance = 2 hops → pursue.
+  // Sobreviviente en N-0003, corredor en N-0001. Distancia = 2 saltos → persigue.
   const z: ZombieInterno = { id: "Z-0002", tipo: "corredor", nodo: "N-0001" };
   const s: Sobreviviente = { id: "S-0001", nodo: "N-0003", estado: "en_ruta" };
   const { nuevoNodo } = moverZombie(z, grafo, [], [s], rnd0, 1);
-  // After 2 pursuit steps: N-0001 → N-0002 → N-0003.
+  // Después de 2 pasos de persecución: N-0001 → N-0002 → N-0003.
   assert.equal(nuevoNodo, "N-0003", "corredor should have reached the survivor");
 });
 
 test("corredor: does not pursue survivor farther than 3 hops", () => {
-  // N-0001 to N-0012 is 4+ hops — no pursuit.
+  // De N-0001 a N-0012 hay 4 saltos o más: no persigue.
   const z: ZombieInterno = { id: "Z-0002", tipo: "corredor", nodo: "N-0001" };
   const s: Sobreviviente = { id: "S-0001", nodo: "N-0012", estado: "en_ruta" };
   const antes = z.nodo;
   const { nuevoNodo } = moverZombie(z, grafo, [], [s], rnd0, 1);
-  // Corredor moves randomly — it will NOT head specifically toward N-0012.
-  // We just confirm it didn't teleport directly there.
+  // El corredor se mueve al azar: NO se dirige específicamente hacia N-0012.
+  // Solo se confirma que no se teletransportó directamente ahí.
   assert.notEqual(nuevoNodo, "N-0012");
-  void antes; // silence unused warning
+  void antes; // silencia la advertencia de variable sin usar
 });
 
 // ---------------------------------------------------------------------------
-// Horda — immobile, blocks node + neighbors (blocking tested in grafo.test.ts)
+// Horda: inmóvil, bloquea su nodo y sus vecinos (el bloqueo se prueba en grafo.test.ts)
 // ---------------------------------------------------------------------------
 
 test("horda: never moves", () => {
@@ -128,7 +128,7 @@ test("horda: never moves", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Dormido — invisible until survivor ≤2 hops; awakens as caminante
+// Dormido: invisible hasta que un sobreviviente está a ≤2 saltos; despierta como caminante
 // ---------------------------------------------------------------------------
 
 test("dormido: stays put and does not move", () => {
@@ -139,7 +139,7 @@ test("dormido: stays put and does not move", () => {
 
 test("despertarDormidos: does not wake when survivor is 3+ hops away", () => {
   const z: ZombieInterno = { id: "Z-0004", tipo: "dormido", nodo: "N-0001" };
-  // N-0001 to N-0012 is 4 hops → should not wake.
+  // De N-0001 a N-0012 hay 4 saltos → no debe despertar.
   const s: Sobreviviente = { id: "S-0001", nodo: "N-0012", estado: "en_ruta" };
   despertarDormidos([z], [s], grafo);
   assert.equal(z.tipo, "dormido", "should still be asleep");
@@ -147,7 +147,7 @@ test("despertarDormidos: does not wake when survivor is 3+ hops away", () => {
 
 test("despertarDormidos: wakes when survivor is exactly 2 hops away", () => {
   const z: ZombieInterno = { id: "Z-0004", tipo: "dormido", nodo: "N-0001" };
-  // N-0001 → N-0002 → N-0003 = 2 hops.
+  // N-0001 → N-0002 → N-0003 = 2 saltos.
   const s: Sobreviviente = { id: "S-0001", nodo: "N-0003", estado: "en_ruta" };
   despertarDormidos([z], [s], grafo);
   assert.equal(z.tipo, "caminante", "should have awakened");
@@ -168,7 +168,7 @@ test("despertarDormidos: ignores a_salvo and mordido survivors", () => {
 });
 
 // ---------------------------------------------------------------------------
-// City event — street blockage
+// Evento de ciudad: bloqueo de una calle
 // ---------------------------------------------------------------------------
 
 test("aplicarBloqueo: adds a new street ID to the blocked list", () => {
@@ -188,7 +188,7 @@ test("aplicarBloqueo: does not mutate the original array", () => {
 });
 
 // ---------------------------------------------------------------------------
-// S3: Bite by node sharing
+// S3: mordida por nodo compartido
 // ---------------------------------------------------------------------------
 
 test("resolverMordidasPorNodo: survivor on the same node as a zombie is bitten", () => {
@@ -224,13 +224,13 @@ test("resolverMordidasPorNodo: already-safe and dead survivors are unaffected", 
 });
 
 // ---------------------------------------------------------------------------
-// S3: Bite by crossing (opposite directions on the same street)
+// S3: mordida por cruce (direcciones opuestas en la misma calle)
 // ---------------------------------------------------------------------------
 
 test("resolverMordidasPorCruce: crossing in opposite directions causes a bite", () => {
-  // Street C-0001: N-0001 ↔ N-0002
-  // Survivor: N-0001 → N-0002
-  // Zombie:   N-0002 → N-0001
+  // Calle C-0001: N-0001 ↔ N-0002
+  // Sobreviviente: N-0001 → N-0002
+  // Zombie:        N-0002 → N-0001
   const previoSobrevivientes = [{ id: "S-0001", nodo: "N-0001" }];
   const ss: Sobreviviente[] = [{ id: "S-0001", nodo: "N-0002", estado: "en_ruta" }];
   const previoZombies: Pick<ZombieInterno, "id" | "nodo" | "tipo">[] = [
@@ -243,7 +243,7 @@ test("resolverMordidasPorCruce: crossing in opposite directions causes a bite", 
 });
 
 test("resolverMordidasPorCruce: same direction on the same street is not a bite", () => {
-  // Both moving N-0001 → N-0002 (same direction, no cross)
+  // Los dos van de N-0001 → N-0002 (misma dirección, no hay cruce)
   const previoSobrevivientes = [{ id: "S-0001", nodo: "N-0001" }];
   const ss: Sobreviviente[] = [{ id: "S-0001", nodo: "N-0002", estado: "en_ruta" }];
   const previoZombies: Pick<ZombieInterno, "id" | "nodo" | "tipo">[] = [
@@ -268,12 +268,12 @@ test("resolverMordidasPorCruce: dormido zombie cannot cause crossing bite", () =
 });
 
 // ---------------------------------------------------------------------------
-// S3: Shelter arrivals
+// S3: llegadas a refugios
 // ---------------------------------------------------------------------------
 
 test("resolverLlegadas: survivor at a refuge node becomes a_salvo", () => {
   const ss: Sobreviviente[] = [{ id: "S-0001", nodo: "N-0001", estado: "en_ruta" }];
-  // N-0001 is the first refuge in fixture-mini.
+  // N-0001 es el primer refugio de fixture-mini.
   resolverLlegadas(ss, new Set(["N-0001"]));
   assert.equal(ss[0]!.estado, "a_salvo");
 });
@@ -286,7 +286,7 @@ test("resolverLlegadas: survivor not at a refuge stays en_ruta", () => {
 
 test("resolverLlegadas: a full shelter admits nobody else; the rest wait at the door, in id order", () => {
   const ss: Sobreviviente[] = [
-    { id: "S-0001", nodo: "N-0001", estado: "a_salvo" }, // already inside: 1 of 3
+    { id: "S-0001", nodo: "N-0001", estado: "a_salvo" }, // ya está adentro: 1 de 3
     { id: "S-0004", nodo: "N-0001", estado: "en_ruta" },
     { id: "S-0002", nodo: "N-0001", estado: "en_ruta" },
     { id: "S-0003", nodo: "N-0001", estado: "en_ruta" },
@@ -294,7 +294,7 @@ test("resolverLlegadas: a full shelter admits nobody else; the rest wait at the 
   resolverLlegadas(ss, new Set(["N-0001"]), new Map([["N-0001", 3]]));
   assert.deepEqual(ss.map((s) => [s.id, s.estado]), [
     ["S-0001", "a_salvo"],
-    ["S-0004", "en_ruta"], // no room left once S-0002 and S-0003 got in
+    ["S-0004", "en_ruta"], // no queda espacio después de que entraron S-0002 y S-0003
     ["S-0002", "a_salvo"],
     ["S-0003", "a_salvo"],
   ]);
@@ -313,7 +313,7 @@ test("resolverLlegadas: bitten survivor at a refuge stays mordido (bite takes pr
 });
 
 // ---------------------------------------------------------------------------
-// Visible zombie filter
+// Filtro de zombies visibles
 // ---------------------------------------------------------------------------
 
 test("zombiesVisibles: excludes dormido, includes all others", () => {
@@ -328,11 +328,11 @@ test("zombiesVisibles: excludes dormido, includes all others", () => {
   assert.ok(visibles.every((z) => z.tipo !== "dormido"));
 });
 
-// Ensure the rndLast helper is used in at least one test to avoid lint warnings.
+// Asegura que el helper rndLast se use en al menos un test, para evitar advertencias del linter.
 test("caminante: random direction — last neighbor is also reachable", () => {
   const z: ZombieInterno = { id: "Z-0001", tipo: "caminante", nodo: "N-0002", movioPasadoTurno: false };
   const { nuevoNodo } = moverZombie(z, grafo, [], [], rndLast, 1);
-  // N-0002 has neighbors N-0001, N-0003, N-0006. One of them must be chosen.
+  // N-0002 tiene como vecinos a N-0001, N-0003 y N-0006. Debe elegirse uno de ellos.
   const vecinos = grafo.vecinos("N-0002");
   assert.ok(vecinos.includes(nuevoNodo), `${nuevoNodo} must be a neighbor of N-0002`);
 });

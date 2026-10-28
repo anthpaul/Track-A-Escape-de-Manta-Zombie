@@ -1,13 +1,14 @@
 /**
- * Escape step when A* finds no reachable shelter (AGENTS.md §4.3 rule 2).
+ * Paso de escape cuando A* no encuentra un refugio alcanzable (AGENTS.md §4.3, regla 2).
  *
- * Staying put next to a zombie is how most survivors were lost in local R2/R3
- * runs: walkers and runners simply walk onto a survivor that waits. So when no
- * shelter is reachable this turn, the survivor moves to the legal option
- * (staying included) that is farthest, in streets, from every moving zombie.
- * Hordes do not move; their blocked zone is already in nodosProhibidos.
+ * Quedarse quieto al lado de un zombie es la forma en que se perdió a la mayoría de
+ * los sobrevivientes en las corridas locales de R2/R3: caminantes y corredores
+ * simplemente llegan hasta el sobreviviente que espera. Por eso, cuando no hay
+ * refugio alcanzable en este turno, el sobreviviente se mueve a la opción legal
+ * (incluido quedarse) más lejana, en calles, de todos los zombies que se mueven.
+ * Las hordas no se mueven; su zona bloqueada ya está en nodosProhibidos.
  *
- * Pure and cheap: one multi-source BFS over the graph, only on "sin_ruta".
+ * Puro y barato: un único BFS multiorigen sobre el grafo, solo en el caso "sin_ruta".
  */
 
 import type { ContextoGrafo } from "./astar";
@@ -24,7 +25,7 @@ export function elegirEscape(
   const distancia = distanciaAZombies(contexto, mundo);
   const lejania = (nodo: string) => distancia.get(nodo) ?? Infinity;
 
-  // Staying wins ties: a move is only worth it when it gains distance.
+  // Quedarse gana los empates: moverse solo vale la pena si gana distancia.
   let mejor = nodoActual;
   for (const vecino of indexado.vecinos(nodoActual)) {
     if (!indexado.esMovimientoValido(nodoActual, vecino, mundo.aristasBloqueadas)) continue;
@@ -35,7 +36,7 @@ export function elegirEscape(
   return mejor;
 }
 
-/** Streets from each node to the nearest moving zombie, walking only unblocked streets. */
+/** Calles desde cada nodo hasta el zombie móvil más cercano, recorriendo solo calles no bloqueadas. */
 function distanciaAZombies(
   contexto: ContextoGrafo,
   mundo: Pick<MundoTurno, "zombies" | "aristasBloqueadas">,

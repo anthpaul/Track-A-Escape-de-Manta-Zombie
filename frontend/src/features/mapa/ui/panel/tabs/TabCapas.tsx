@@ -21,7 +21,7 @@ const FILAS: { capa: CapaClave; texto: string; color: string; cuadrado?: boolean
   { capa: "refugio", texto: "Refugio", color: COLOR_REFUGIO.relleno, cuadrado: true },
 ];
 
-// Show or hide each kind of map element; the counts are what each layer currently draws.
+// Muestra u oculta cada tipo de elemento del mapa; los conteos son lo que cada capa dibuja ahora.
 export default function TabCapas(p: Props) {
   return (
     <div className="space-y-2">

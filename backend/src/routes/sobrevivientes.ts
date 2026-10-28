@@ -1,14 +1,15 @@
 /**
- * GET /api/sobrevivientes/:id/ruta — K6 (AGENTS.md §5).
+ * GET /api/sobrevivientes/:id/ruta: K6 (AGENTS.md §5).
  *
- * Public, read-only. Uses the last complete turn (the same one /estado shows) so
- * the drawn route always matches the map. Asked only when the map selects a survivor.
+ * Público y de solo lectura. Usa el último turno completo (el mismo que muestra /estado)
+ * para que la ruta dibujada siempre coincida con el mapa. Solo se pide cuando el mapa
+ * selecciona un sobreviviente.
  *
- *   200 en_ruta             { sobrevivienteId, turno, refugio, ruta }
- *   200 a_salvo | mordido   { sobrevivienteId, turno, refugio, ruta: [], estado }
- *   200 no shelter reachable { sobrevivienteId, turno, refugio: null, ruta: [nodo], motivo: "sin_ruta" }
- *   400 id outside the S-0000 format
- *   404 survivor not in the active game, or no game running
+ *   200 en_ruta                { sobrevivienteId, turno, refugio, ruta }
+ *   200 a_salvo | mordido      { sobrevivienteId, turno, refugio, ruta: [], estado }
+ *   200 sin refugio alcanzable { sobrevivienteId, turno, refugio: null, ruta: [nodo], motivo: "sin_ruta" }
+ *   400 id fuera del formato S-0000
+ *   404 el sobreviviente no está en la partida activa, o no hay partida en curso
  */
 import { Hono } from "hono";
 import { SobrevivienteIdSchema } from "@abcstack/shared";
@@ -33,7 +34,7 @@ export function crearRutaSobrevivientes(repo: Pick<EstadoRepo, "obtenerEstado">,
     try {
       estado = await repo.obtenerEstado();
     } catch (error) {
-      // No game running: the survivor cannot exist in it.
+      // No hay partida en curso: el sobreviviente no puede existir en ella.
       if (error instanceof ErrorEstado) return c.json({ ok: false, error: { code: error.code, message: error.message } }, 404);
       throw error;
     }
@@ -50,7 +51,7 @@ export function crearRutaSobrevivientes(repo: Pick<EstadoRepo, "obtenerEstado">,
     if (sobreviviente.estado !== "en_ruta") {
       return c.json({ ...base, refugio: sobreviviente.refugio ?? null, ruta: [], estado: sobreviviente.estado });
     }
-    // Same shelter allocation as /paso (Pro capacity), so the drawn route matches the steps taken.
+    // El mismo reparto de refugios que /paso (capacidad Pro), así la ruta dibujada coincide con los pasos que se dan.
     const cupos = asignarCupos(contexto, estado);
     let rutaCompleta = calcularRutaCompleta(sobreviviente.nodo, contexto, estado, cupos?.refugiosPara(sobrevivienteId));
     if (rutaCompleta.refugio === null && cupos && cupos.conLugar.size > 0) {

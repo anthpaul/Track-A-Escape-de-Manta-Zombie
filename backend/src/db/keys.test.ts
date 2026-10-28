@@ -1,9 +1,10 @@
 /**
- * Tests for the DynamoDB key builders.
+ * Tests de los constructores de claves de DynamoDB.
  *
- * The padding test is the critical one: without it a Query for the latest
- * turn returns wrong results once turn numbers have different digit counts
- * (e.g. turn 9 sorts after turn 20 under lexicographic order).
+ * El test de relleno con ceros es el crítico: sin él, una Query por el último
+ * turno devuelve resultados incorrectos cuando los números de turno tienen
+ * distinta cantidad de dígitos (por ejemplo, el turno 9 queda después del 20
+ * en orden lexicográfico).
  */
 
 import assert from "node:assert/strict";
@@ -11,7 +12,7 @@ import { describe, it } from "node:test";
 import { KEYS, _padTurn, ttlManana, generarPartidaId } from "./keys";
 
 // ---------------------------------------------------------------------------
-// padTurn — the fix for the lexicographic ordering bug
+// padTurn: la corrección del bug de orden lexicográfico
 // ---------------------------------------------------------------------------
 
 describe("_padTurn", () => {
@@ -35,10 +36,10 @@ describe("_padTurn", () => {
   });
 
   it("sorts correctly — the bug this prevents", () => {
-    // Without padding: "TURNO#9" > "TURNO#20" (lexicographic, wrong)
-    // With padding:    "TURNO#000009" < "TURNO#000020" (correct)
+    // Sin relleno: "TURNO#9" > "TURNO#20" (lexicográfico, incorrecto)
+    // Con relleno: "TURNO#000009" < "TURNO#000020" (correcto)
     const turns = [9, 1, 142, 20, 1000, 3].map(_padTurn);
-    const sorted = [...turns].sort(); // lexicographic, same as DynamoDB
+    const sorted = [...turns].sort(); // lexicográfico, igual que DynamoDB
     assert.deepEqual(sorted, ["000001", "000003", "000009", "000020", "000142", "001000"]);
   });
 });
@@ -152,7 +153,7 @@ describe("generarPartidaId", () => {
   it("generates unique IDs on subsequent calls", () => {
     const a = generarPartidaId("demo", 1);
     const b = generarPartidaId("demo", 1);
-    // Same millisecond is possible in tests; at minimum the format holds.
+    // En los tests puede caer en el mismo milisegundo; como mínimo, el formato se cumple.
     assert.match(a, /^demo-r1-\d+$/);
     assert.match(b, /^demo-r1-\d+$/);
   });

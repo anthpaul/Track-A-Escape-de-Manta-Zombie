@@ -1,7 +1,7 @@
 import type { Calle, Grafo, Nodo, TipoCalle } from "@/features/mapa/domain/tipos";
 
-// Small fake graph near central Manta, same shape as shared/data/manta.json.
-// Used until Alex merges the real OSMnx export (T0.3). Coordinates are illustrative, not real streets.
+// Grafo falso y pequeño cerca del centro de Manta, con la misma forma que shared/data/manta.json.
+// Se usa hasta que Alex integre la exportación real de OSMnx (T0.3). Las coordenadas son ilustrativas, no calles reales.
 const FILAS = 3;
 const COLUMNAS = 4;
 const PASO = 0.0027; // ~300 m
@@ -30,14 +30,14 @@ const agregarCalle = (desde: string, hasta: string, tipo: TipoCalle) => {
     hasta,
     distancia_m: 300,
     tipo,
-    // Straight street: its two nodes, never [] (docs/CONTRATO_GRAFO.md, T0.2).
+    // Calle recta: sus dos nodos, nunca [] (docs/CONTRATO_GRAFO.md, T0.2).
     geometria: [coordenadas(desde), coordenadas(hasta)],
   });
 };
 
 for (let fila = 0; fila < FILAS; fila++) {
   for (let col = 0; col < COLUMNAS - 1; col++) {
-    // Middle row is the avenue; one segment of it is a bridge.
+    // La fila del medio es la avenida; uno de sus tramos es un puente.
     const tipo: TipoCalle = fila === 1 ? (col === 1 ? "puente" : "avenida") : "calle";
     agregarCalle(idNodo(fila, col), idNodo(fila, col + 1), tipo);
   }

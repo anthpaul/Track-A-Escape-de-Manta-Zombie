@@ -1,21 +1,21 @@
 /**
- * K3 /paso route tests — HOJA_DE_RUTA §4.1 item 5.
+ * Tests de la ruta /paso de K3 (HOJA_DE_RUTA §4.1, ítem 5).
  *
- * Acceptance criteria:
- *   - 401 without API key or with wrong key
- *   - 400 with invalid body
- *   - Never 500 (safe fallback on any internal error)
- *   - Response shape is exactly { siguienteNodo } (no envelope on 200)
- *   - 300 ms internal budget: timeout returns nodoActual
- *   - esMovimientoValido is respected (siguienteNodo is always a valid node)
+ * Criterios de aceptación:
+ *   - 401 sin API key o con una key incorrecta
+ *   - 400 con un body inválido
+ *   - Nunca 500 (fallback seguro ante cualquier error interno)
+ *   - La respuesta es exactamente { siguienteNodo } (sin sobre en el 200)
+ *   - Presupuesto interno de 300 ms: si se agota, se devuelve nodoActual
+ *   - Se respeta esMovimientoValido (siguienteNodo siempre es un nodo válido)
  *
- * All tests use the Hono app directly (no real DynamoDB, no real AWS).
- * FuenteMundo and PartidaActivaResolver are replaced with in-memory fakes
- * injected through the testable factory exported by paso.ts.
+ * Todos los tests usan la app de Hono directamente (sin DynamoDB ni AWS reales).
+ * FuenteMundo y PartidaActivaResolver se reemplazan por fakes en memoria,
+ * inyectados a través de la fábrica testeable que exporta paso.ts.
  *
- * Note: the production route (rutaPaso) creates real AWS clients at module
- * load time. Tests use createRutaPasoParaTests() which accepts injectable
- * dependencies.
+ * Nota: la ruta de producción (rutaPaso) crea clientes reales de AWS al cargar
+ * el módulo. Los tests usan createRutaPasoParaTests(), que acepta dependencias
+ * inyectables.
  */
 
 import assert from "node:assert/strict";
@@ -27,13 +27,13 @@ import { createRutaPasoParaTests } from "./paso.test-factory";
 import { contextoGrafo } from "../motor/motor";
 
 // ---------------------------------------------------------------------------
-// Test helpers
+// Funciones auxiliares de los tests
 // ---------------------------------------------------------------------------
 
 const VALID_KEY = "test-api-key-that-is-at-least-32-chars!!";
 const VALID_BODY = { sobrevivienteId: "S-0001", nodoActual: "N-0001", turno: 1 };
 
-/** Minimal world: survivor at N-0001, no zombies, no blocked edges. */
+/** Mundo mínimo: sobreviviente en N-0001, sin zombies ni aristas bloqueadas. */
 const WORLD_SAFE: MundoTurno = Object.freeze({
   partidaId: "test-game",
   turno: 1,
@@ -41,19 +41,19 @@ const WORLD_SAFE: MundoTurno = Object.freeze({
   aristasBloqueadas: [],
 });
 
-/** Fake FuenteMundo that always returns WORLD_SAFE. */
+/** FuenteMundo falsa que siempre devuelve WORLD_SAFE. */
 const fuente_safe: FuenteMundo = { obtenerTurno: async () => WORLD_SAFE };
 
-/** Fake FuenteMundo that always throws a domain error. */
+/** FuenteMundo falsa que siempre lanza un error de dominio. */
 const fuente_error: FuenteMundo = {
   obtenerTurno: async () => {
     throw new ErrorFuenteMundo("TURN_NOT_FOUND", "No world data");
   },
 };
 
-/** Fake FuenteMundo that hangs forever (simulates a slow DynamoDB). */
+/** FuenteMundo falsa que nunca responde (simula un DynamoDB lento). */
 const fuente_hang: FuenteMundo = {
-  obtenerTurno: () => new Promise(() => { /* never resolves */ }),
+  obtenerTurno: () => new Promise(() => { /* nunca resuelve */ }),
 };
 
 function makeApp(
@@ -81,7 +81,7 @@ async function post(
 }
 
 // ---------------------------------------------------------------------------
-// §K3 — Authentication
+// §K3: autenticación
 // ---------------------------------------------------------------------------
 
 describe("K3 authentication", () => {
@@ -115,13 +115,13 @@ describe("K3 authentication", () => {
   it("accepts a correct x-api-key and proceeds to body validation", async () => {
     const app = makeApp(fuente_safe);
     const res = await post(app, VALID_BODY, { "x-api-key": VALID_KEY });
-    // Should not be 401
+    // No debería ser 401
     assert.notEqual(res.status, 401);
   });
 
   it("is not vulnerable to a trivial timing difference (key and '' differ at char 0)", async () => {
-    // This test does not measure timing — it verifies that the comparison
-    // function returns false for any prefix of the correct key.
+    // Este test no mide tiempos: verifica que la función de comparación
+    // devuelva false para cualquier prefijo de la key correcta.
     const app = makeApp(fuente_safe);
     for (const partial of [
       VALID_KEY.slice(0, 1),
@@ -135,7 +135,7 @@ describe("K3 authentication", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §K3 — Body validation
+// §K3: validación del body
 // ---------------------------------------------------------------------------
 
 describe("K3 body validation", () => {
@@ -195,7 +195,7 @@ describe("K3 body validation", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §K3 — Response shape
+// §K3: forma de la respuesta
 // ---------------------------------------------------------------------------
 
 describe("K3 response shape", () => {
@@ -225,13 +225,13 @@ describe("K3 response shape", () => {
     const res = await post(app, { ...VALID_BODY, nodoActual: nodoRefugio }, headers);
     assert.equal(res.status, 200);
     const { siguienteNodo } = await res.json() as { siguienteNodo: string };
-    // ya_en_refugio → motor returns nodoActual
+    // ya_en_refugio → el motor devuelve nodoActual
     assert.equal(siguienteNodo, nodoRefugio);
   });
 });
 
 // ---------------------------------------------------------------------------
-// §K3 — Never 500
+// §K3: nunca 500
 // ---------------------------------------------------------------------------
 
 describe("K3 never returns 500", () => {
@@ -240,9 +240,9 @@ describe("K3 never returns 500", () => {
   it("returns a safe fallback (nodoActual) when FuenteMundo throws", async () => {
     const app = makeApp(fuente_error);
     const res = await post(app, VALID_BODY, headers);
-    // Must not be 500
+    // No debe ser 500
     assert.notEqual(res.status, 500, "route must not return 500 on FuenteMundo error");
-    // Must still be a valid /paso response
+    // Igual debe ser una respuesta válida de /paso
     assert.equal(res.status, 200);
     const { siguienteNodo } = await res.json() as { siguienteNodo: string };
     assert.equal(siguienteNodo, VALID_BODY.nodoActual,
@@ -251,12 +251,12 @@ describe("K3 never returns 500", () => {
 
   it("returns a safe fallback when the resolver throws (no active partition)", async () => {
     const app = makeApp(fuente_safe);
-    // Override with a version that has no active partition configured.
+    // Se reemplaza por una versión sin partición activa configurada.
     const ruta = createRutaPasoParaTests({
       fuente: fuente_safe,
       apiKey: VALID_KEY,
       budgetMs: 300,
-      partidaId: null, // triggers NO_ACTIVE_PARTITION error
+      partidaId: null, // provoca el error NO_ACTIVE_PARTITION
     });
     const localApp = new Hono();
     localApp.route("/api/paso", ruta);
@@ -267,7 +267,7 @@ describe("K3 never returns 500", () => {
   });
 
   it("returns a safe fallback when FuenteMundo hangs beyond the budget", async () => {
-    // Budget of 50 ms — the hanging fuente will never resolve.
+    // Presupuesto de 50 ms: la fuente colgada nunca va a resolver.
     const app = makeApp(fuente_hang, VALID_KEY, 50);
     const res = await post(app, VALID_BODY, headers);
     assert.equal(res.status, 200,
@@ -279,14 +279,14 @@ describe("K3 never returns 500", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §K3 — Internal budget
+// §K3: presupuesto interno
 // ---------------------------------------------------------------------------
 
 describe("K3 internal 300 ms budget", () => {
   const headers = { "x-api-key": VALID_KEY };
 
   it("returns within the allotted budget even when the fuente is slow", async () => {
-    // Slow fuente that resolves after 80 ms (still within 300 ms).
+    // Fuente lenta que resuelve a los 80 ms (todavía dentro de los 300 ms).
     const slow: FuenteMundo = {
       obtenerTurno: () =>
         new Promise((resolve) => setTimeout(() => resolve(WORLD_SAFE), 80)),
@@ -300,7 +300,7 @@ describe("K3 internal 300 ms budget", () => {
   });
 
   it("fires the fallback when the budget expires", async () => {
-    // Budget of 20 ms, fuente takes 200 ms → must trigger fallback.
+    // Presupuesto de 20 ms y la fuente tarda 200 ms → debe activarse el fallback.
     const slow: FuenteMundo = {
       obtenerTurno: () =>
         new Promise((resolve) => setTimeout(() => resolve(WORLD_SAFE), 200)),
@@ -315,7 +315,7 @@ describe("K3 internal 300 ms budget", () => {
 });
 
 // ---------------------------------------------------------------------------
-// §K3 — esMovimientoValido respected (output is always a valid node)
+// §K3: se respeta esMovimientoValido (la salida siempre es un nodo válido)
 // ---------------------------------------------------------------------------
 
 describe("K3 siguienteNodo is always a reachable neighbour or the same node", () => {
@@ -323,7 +323,7 @@ describe("K3 siguienteNodo is always a reachable neighbour or the same node", ()
 
   it("result is either nodoActual or a known graph neighbour", async () => {
     const app = makeApp(fuente_safe);
-    // Test a few fixture nodes.
+    // Se prueban algunos nodos del fixture.
     for (const nodoActual of ["N-0001", "N-0006", "N-0010", "N-0012"]) {
       const res = await post(app, { ...VALID_BODY, nodoActual }, headers);
       assert.equal(res.status, 200);

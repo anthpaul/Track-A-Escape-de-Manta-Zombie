@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
-  // Hide the Next.js dev badge over the map; compile and runtime errors are still shown.
+  // Oculta el indicador de desarrollo de Next.js sobre el mapa; los errores de compilación y de ejecución se siguen mostrando.
   devIndicators: false,
   images: { unoptimized: true },
   turbopack: {

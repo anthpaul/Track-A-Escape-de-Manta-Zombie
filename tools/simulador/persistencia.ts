@@ -1,49 +1,49 @@
 /**
- * Persistence layer for the simulator.
+ * Capa de persistencia del simulador.
  *
- * The interface mirrors the DynamoDB write sequence described in AGENTS.md §4.2
- * and §4.5, but the in-memory implementation lets us verify the entire turn
- * loop locally before connecting to AWS.
+ * La interfaz replica la secuencia de escritura en DynamoDB descrita en AGENTS.md §4.2
+ * y §4.5, y la implementación en memoria permite verificar localmente todo el ciclo
+ * de turnos antes de conectarse a AWS.
  *
- * Write order (matches the contract):
- *   1. guardarTurnoIncompleto  — zombies moved, /paso not yet called
- *   2. completarTurno          — siguienteNodo filled, completo = true
+ * Orden de escritura (coincide con el contrato):
+ *   1. guardarTurnoIncompleto  — zombies ya movidos, /paso todavía sin llamar
+ *   2. completarTurno          — siguienteNodo completado, completo = true
  *
- * The motor reads a turn via leerTurno; it only needs the incomplete record
- * (zombies + blocked streets).  The dashboard reads via leerUltimoTurnoCompleto.
+ * El motor lee un turno con leerTurno; solo necesita el registro incompleto
+ * (zombies + calles bloqueadas). El panel lee con leerUltimoTurnoCompleto.
  */
 import type { Zombie, Sobreviviente } from "@abcstack/shared";
 import type { Vehiculo } from "@abcstack/shared";
 
 // -------------------------------------------------------------------------
-// Public types
+// Tipos públicos
 // -------------------------------------------------------------------------
 
-/** Snapshot written at phase 1 of each turn (incomplete). */
+/** Snapshot escrito en la fase 1 de cada turno (incompleto). */
 export interface TurnoParcial {
   turno: number;
-  zombies: readonly Zombie[];          // already moved for this turn
+  zombies: readonly Zombie[];          // ya movidos en este turno
   aristasBloqueadas: readonly string[];
-  sobrevivientes: readonly Sobreviviente[];   // positions BEFORE this turn's move
+  sobrevivientes: readonly Sobreviviente[];   // posiciones ANTES del movimiento de este turno
 }
 
-/** Full snapshot after phase 2 (complete = true). */
+/** Snapshot completo después de la fase 2 (completo = true). */
 export interface TurnoCompleto extends TurnoParcial {
   completo: true;
-  /** Rescue fleet (Pro): the vans after this turn, when the round has a fleet. */
+  /** Flota de rescate (Pro): las camionetas después de este turno, cuando la ronda tiene flota. */
   vehiculos?: Vehiculo[];
 }
 
 export interface PersistenciaPartida {
   /**
-   * Phase 1: write the turn with completo = false.
-   * The motor can read this right away.
+   * Fase 1: escribe el turno con completo = false.
+   * El motor puede leerlo de inmediato.
    */
   guardarTurnoIncompleto(parcial: TurnoParcial): Promise<void>;
 
   /**
-   * Phase 2: add siguienteNodo to each survivor and set completo = true.
-   * One single write (matches the single UpdateItem in AGENTS.md §4.2).
+   * Fase 2: agrega siguienteNodo a cada sobreviviente y marca completo = true.
+   * Una sola escritura (coincide con el único UpdateItem de AGENTS.md §4.2).
    */
   completarTurno(
     turno: number,
@@ -53,36 +53,36 @@ export interface PersistenciaPartida {
   ): Promise<void>;
 
   /**
-   * Read a turn by number.  Returns undefined if not yet written.
-   * Used by the motor to fetch zombie positions (it only needs the partial record).
+   * Lee un turno por número. Devuelve undefined si todavía no se escribió.
+   * Lo usa el motor para obtener las posiciones de los zombies (solo necesita el registro parcial).
    */
   leerTurno(turno: number): Promise<TurnoParcial | TurnoCompleto | undefined>;
 
   /**
-   * Return the most recent turn marked completo = true.
-   * Used by GET /estado (the dashboard never sees a partial turn).
-   * Returns undefined when no complete turn exists yet.
+   * Devuelve el turno más reciente marcado con completo = true.
+   * Lo usa GET /estado (el panel nunca ve un turno a medias).
+   * Devuelve undefined cuando todavía no existe ningún turno completo.
    */
   leerUltimoTurnoCompleto(): Promise<TurnoCompleto | undefined>;
 }
 
 // -------------------------------------------------------------------------
-// In-memory implementation
+// Implementación en memoria
 // -------------------------------------------------------------------------
 
 /**
- * Volatile in-process store.  Data lives only for the duration of the process;
- * nothing is written to disk or to DynamoDB.
+ * Almacén volátil en proceso. Los datos viven solo mientras dura el proceso;
+ * no se escribe nada en disco ni en DynamoDB.
  *
- * Use this for:
- *   - local development (npm run dev:simulador)
- *   - unit and integration tests
+ * Usarlo para:
+ *   - desarrollo local (npm run dev:simulador)
+ *   - tests unitarios y de integración
  *
- * For production swap in DynamoPersistencia (implemented in S5).
+ * En producción se reemplaza por DynamoPersistencia (implementada en S5).
  */
 export function crearPersistenciaMemoria(): PersistenciaPartida {
-  // Maps turn number → record.  Stored as mutable internally but exposed as
-  // readonly to callers so they cannot bypass the write methods.
+  // Mapea número de turno → registro. Internamente es mutable, pero se expone como
+  // readonly a quien llama para que no pueda saltarse los métodos de escritura.
   const turnos = new Map<number, TurnoParcial & { completo: boolean }>();
   let ultimoCompleto: TurnoCompleto | undefined;
 
@@ -95,7 +95,7 @@ export function crearPersistenciaMemoria(): PersistenciaPartida {
       const existing = turnos.get(turno);
       if (!existing) throw new Error(`Turn ${turno} not found — call guardarTurnoIncompleto first`);
 
-      // Apply siguienteNodo to each survivor whose ID appears in decisions.
+      // Aplica siguienteNodo a cada sobreviviente cuyo id aparece en las decisiones.
       const sobrevivientesActualizados: Sobreviviente[] = (sobrevivientesFinales ?? existing.sobrevivientes).map((s) => {
         const siguiente = decisiones.get(s.id);
         return siguiente !== undefined ? { ...s, siguienteNodo: siguiente } : s;

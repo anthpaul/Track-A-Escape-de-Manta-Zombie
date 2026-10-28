@@ -1,5 +1,5 @@
 /**
- * Rescue fleet (Pro): who to pick up and in what order, on fixture-mini.json.
+ * Flota de rescate (Pro): a quién recoger y en qué orden, sobre fixture-mini.json.
  *
  *   N-0001(R-01) — N-0002 — N-0003 — N-0004
  *      |             |                  |
@@ -35,7 +35,7 @@ test("five vans start at the shelters, taking turns", () => {
 });
 
 test("a van moves up to two streets a turn and picks up the person waiting there", () => {
-  const s = aPie("S-0001", "N-0003"); // 2 streets from R-01: alone it needs 2 turns, the van 1
+  const s = aPie("S-0001", "N-0003"); // A 2 calles de R-01: a pie necesita 2 turnos, la camioneta 1
   const v = camioneta("N-0001");
   const eventos = moverFlota([v], mundo([s]));
   assert.equal(v.nodo, "N-0003");
@@ -48,13 +48,13 @@ test("someone with a zombie two streets away goes first, even if farther from th
   const tranquilo = aPie("S-0001", "N-0003");
   const enPeligro = aPie("S-0002", "N-0007");
   const v = camioneta("N-0001");
-  // The walker on N-0010 is 2 streets from N-0007 (via N-0006) and 3 from N-0003.
+  // El caminante en N-0010 está a 2 calles de N-0007 (por N-0006) y a 3 de N-0003.
   moverFlota([v], mundo([tranquilo, enPeligro], [{ id: "Z-1", tipo: "caminante", nodo: "N-0010" }]));
   assert.equal(v.destino, "N-0007");
 });
 
 test("a van does not fetch someone who reaches a shelter alone sooner", () => {
-  const s = aPie("S-0001", "N-0002"); // 1 street from R-01; the van at R-02 is 4 streets away
+  const s = aPie("S-0001", "N-0002"); // A 1 calle de R-01; la camioneta de R-02 está a 4 calles
   const v = camioneta("N-0012");
   assert.deepEqual(moverFlota([v], mundo([s])), []);
   assert.deepEqual([v.nodo, v.destino, v.pasajeros], ["N-0012", null, []]);
@@ -79,7 +79,7 @@ test("a full shelter is skipped: the van heads to one with room", () => {
 });
 
 test("a van never drives onto a zombie: it takes the long way around", () => {
-  const s = aPie("S-0001", "N-0003"); // a walker on N-0002, next to them: they are in danger
+  const s = aPie("S-0001", "N-0003"); // un caminante en N-0002, a su lado: está en peligro
   const v = camioneta("N-0001");
   moverFlota([v], mundo([s], [{ id: "Z-1", tipo: "caminante", nodo: "N-0002" }]));
   assert.equal(v.nodo, "N-0006", "N-0001 → N-0005 → N-0006, never through N-0002");

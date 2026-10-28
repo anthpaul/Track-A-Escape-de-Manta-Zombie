@@ -48,7 +48,7 @@ test("the summary carries round, turn, totals and survival rate", () => {
     { enRuta: r.enRuta, aSalvo: r.aSalvo, mordidos: r.mordidos, total: r.total },
     { enRuta: 50, aSalvo: 20, mordidos: 10, total: 80 },
   );
-  // Survival = everyone not bitten (on the road or safe) over the total.
+  // Supervivencia = todos los no mordidos (en camino o a salvo) sobre el total.
   assert.equal(r.supervivenciaPct, 87);
   assert.equal(r.callesBloqueadas, 1);
 });

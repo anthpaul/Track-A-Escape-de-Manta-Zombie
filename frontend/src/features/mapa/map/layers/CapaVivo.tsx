@@ -23,9 +23,9 @@ import { conFiltro, conVisibilidad, filtroZombies, type CapasVisibles } from "./
 
 type Props = { grafo: Grafo; snapshot: Snapshot; capas: CapasVisibles };
 
-// Live layers. Each snapshot only swaps the GeoJSON data of four sources (one setData each),
-// never one React component per entity, so 200 survivors stay smooth. Switched-off layers are
-// hidden by visibility or filter, without rebuilding any source.
+// Capas en vivo. Cada snapshot solo reemplaza los datos GeoJSON de cuatro fuentes (un setData por fuente),
+// nunca un componente React por entidad, así 200 sobrevivientes se mueven con fluidez. Las capas apagadas se
+// ocultan por visibility o por filtro, sin reconstruir ninguna fuente.
 export default function CapaVivo({ grafo, snapshot, capas }: Props) {
   const zonas = useMemo(() => zonasHordaAGeoJSON(grafo, snapshot.zombies), [grafo, snapshot.zombies]);
   const sobrevivientes = useMemo(
@@ -49,7 +49,7 @@ export default function CapaVivo({ grafo, snapshot, capas }: Props) {
         <Layer {...conVisibilidad(capaSobrevivientes, capas.sobreviviente)} />
         <Layer {...conVisibilidad(capaMordidos, capas.mordido)} />
       </Source>
-      {/* Rescue vans travel with the people layer: hiding survivors hides who carries them too. */}
+      {/* Las camionetas de rescate van con la capa de personas: ocultar a los sobrevivientes también oculta a quien los lleva. */}
       <Source id="vehiculos" type="geojson" data={vehiculos}>
         <Layer {...conVisibilidad(capaVehiculos, capas.sobreviviente)} />
       </Source>
