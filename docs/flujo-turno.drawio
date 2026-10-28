@@ -1,0 +1,154 @@
+<mxfile host="app.diagrams.net" agent="abcstack">
+  <diagram id="flujo-turno" name="Flujo de un turno">
+    <mxGraphModel dx="3433" dy="1873" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="2000" background="#16181F" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="manta" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=12;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Mapa de Manta&lt;/b&gt;&lt;br&gt;Intersecciones, calles y refugios (con cupo)" vertex="1">
+          <mxGeometry height="100" width="260" x="1000" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=12;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Estado compartido · DynamoDB&lt;/b&gt;&lt;br&gt;Partida activa y turnos guardados" vertex="1">
+          <mxGeometry height="110" width="220" x="470" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="sim" parent="1" style="swimlane;startSize=30;fillColor=#1B1F2A;strokeColor=#3A3F4B;fontColor=#E6E6E6;fontStyle=1;swimlaneFillColor=#1F2330;" value="1 · SIMULADOR — hace avanzar el juego" vertex="1">
+          <mxGeometry height="600" width="640" x="240" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Inicia la ronda&lt;/b&gt;&lt;br&gt;Ubica personas, zombies y camionetas" vertex="1">
+          <mxGeometry height="80" width="270" x="30" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Actualiza el turno&lt;/b&gt;&lt;br&gt;Despierta dormidos, mueve zombies y bloquea calles" vertex="1">
+          <mxGeometry height="80" width="270" x="30" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Publica el estado previo al movimiento&lt;/b&gt;&lt;br&gt;Posiciones, bloqueos y quién está dónde" vertex="1">
+          <mxGeometry height="80" width="270" x="30" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Consulta por cada sobreviviente&lt;/b&gt;&lt;br&gt;¿Cuál es su siguiente paso? (corte a 500 ms)" vertex="1">
+          <mxGeometry height="80" width="270" x="30" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Comprueba las respuestas&lt;/b&gt;&lt;br&gt;Tardía o inválida: se queda quieto" vertex="1">
+          <mxGeometry height="80" width="270" x="340" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s6" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Resuelve los movimientos&lt;/b&gt;&lt;br&gt;Mordidas y llegadas (un refugio lleno no deja entrar)" vertex="1">
+          <mxGeometry height="80" width="270" x="340" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="s7" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#3A1F00;strokeColor=#FB8B24;fontColor=#FFD2A3;" value="&lt;b&gt;Mueve las camionetas (Pro)&lt;/b&gt;&lt;br&gt;Recogen primero a quien está en peligro y lo dejan en un refugio con lugar" vertex="1">
+          <mxGeometry height="80" width="270" x="340" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="s8" parent="sim" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Publica el resultado completo&lt;/b&gt;&lt;br&gt;Posiciones finales, camionetas y métricas" vertex="1">
+          <mxGeometry height="80" width="270" x="340" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="mot" parent="1" style="swimlane;startSize=30;fillColor=#1B1F2A;strokeColor=#3A3F4B;fontColor=#E6E6E6;fontStyle=1;swimlaneFillColor=#1F2330;" value="2 · MOTOR — decide el siguiente paso (POST /paso)" vertex="1">
+          <mxGeometry height="700" width="460" x="20" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" parent="mot" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Recibe la consulta · POST /paso&lt;/b&gt;&lt;br&gt;Persona, ubicación y turno&lt;br&gt;Verifica la clave de acceso y los datos" vertex="1">
+          <mxGeometry height="80" width="380" x="40" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" parent="mot" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Consulta el estado del turno&lt;/b&gt;&lt;br&gt;Zombies visibles, calles bloqueadas y sobrevivientes" vertex="1">
+          <mxGeometry height="80" width="380" x="40" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="m3" parent="mot" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#3A1F00;strokeColor=#FB8B24;fontColor=#FFD2A3;" value="&lt;b&gt;Reparte los cupos (Pro)&lt;/b&gt;&lt;br&gt;Cada persona, al refugio más cercano que todavía tiene lugar" vertex="1">
+          <mxGeometry height="80" width="380" x="40" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="m4" parent="mot" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Busca con A*&lt;/b&gt;&lt;br&gt;Hacia los refugios donde tiene lugar&lt;br&gt;Considera turnos, tiempo y peligro (predicción de corredores)" vertex="1">
+          <mxGeometry height="90" width="380" x="40" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="m5" parent="mot" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Devuelve un paso válido&lt;/b&gt;&lt;br&gt;Sin ruta: se aleja del peligro&lt;br&gt;Más de 300 ms: responde un paso seguro" vertex="1">
+          <mxGeometry height="90" width="380" x="40" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="map" parent="1" style="swimlane;startSize=30;fillColor=#1B1F2A;strokeColor=#3A3F4B;fontColor=#E6E6E6;fontStyle=1;swimlaneFillColor=#1F2330;" value="3 · MAPA EN VIVO — muestra lo que ocurre" vertex="1">
+          <mxGeometry height="580" width="480" x="580" y="1080" as="geometry" />
+        </mxCell>
+        <mxCell id="v1" parent="map" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Consulta el último turno completo&lt;/b&gt;&lt;br&gt;GET /estado · cada 2 segundos" vertex="1">
+          <mxGeometry height="80" width="360" x="60" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="v2" parent="map" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Actualiza el mapa y el panel&lt;/b&gt;&lt;br&gt;Personas, zombies, camionetas, bloqueos y métricas" vertex="1">
+          <mxGeometry height="80" width="360" x="60" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="v3" parent="map" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;Al seleccionar una persona&lt;/b&gt;&lt;br&gt;Solicita su ruta planificada" vertex="1">
+          <mxGeometry height="80" width="360" x="60" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="v4" parent="map" style="rounded=1;whiteSpace=wrap;html=1;arcSize=18;fillColor=#0B2A4A;strokeColor=#1E5F99;fontColor=#9FD3FF;" value="&lt;b&gt;La API calcula la ruta&lt;/b&gt;&lt;br&gt;Con el mismo motor, los mismos cupos y el turno mostrado" vertex="1">
+          <mxGeometry height="80" width="360" x="60" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="manta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="s1" value="Red de calles">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="db" value="Guarda turno en preparación">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="m1" value="Ubicación y turno">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="m1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="m2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="m2" value="Estado del turno solicitado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="m2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="m3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="m3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="m4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="manta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="m4" value="Caminos disponibles">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="m4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="m5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="m5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="s5" value="Siguiente nodo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="s6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="s8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="db" value="Guarda turno completo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#1F2330;endArrow=classic;" target="s2" value="Siguiente turno (2 s)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="v1" value="Último resultado completo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="v1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="v2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="manta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="v2" value="Geometría para dibujar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="v2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="v3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="v3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;endArrow=classic;" target="v4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#16181F;endArrow=classic;" target="v4" value="Estado para calcular la ruta">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="v4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#C9D1D9;fontColor=#9FD3FF;labelBackgroundColor=#1F2330;endArrow=classic;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" target="v2" value="Ruta para dibujar">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ley" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontColor=#C9D1D9;fontSize=12;" value="Naranja = nivel Pro · Línea punteada = datos estáticos o pedidos ocasionales" vertex="1">
+          <mxGeometry height="30" width="620" x="20" y="1820" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
