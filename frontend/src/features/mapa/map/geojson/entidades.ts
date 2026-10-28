@@ -1,5 +1,5 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
-import type { EstadoSobreviviente, Grafo, Nodo, Sobreviviente, TipoZombie, Vehiculo, Zombie } from "@/features/mapa/domain/tipos";
+import type { EstadoSobreviviente, Grafo, Nodo, OcupacionRefugio, Sobreviviente, TipoZombie, Vehiculo, Zombie } from "@/features/mapa/domain/tipos";
 import { nodosBloqueadosPorHordas, refugiosSinAcceso } from "@/features/mapa/domain/grafo";
 
 // Conversores puros de entidades en vivo a GeoJSON para las capas del mapa (zombies, sobrevivientes, zonas de horda).
@@ -9,6 +9,7 @@ export type SobrevivienteProps = { id: string; estado: EstadoSobreviviente };
 export type ZonaHordaProps = { nodo: string; origen: "horda" | "vecino" };
 export type RefugioSinAccesoProps = { id: string; nombre: string };
 export type VehiculoProps = { id: string; nombre: string; pasajeros: number };
+export type OcupacionRefugioProps = { id: string; texto: string; lleno: boolean };
 
 const punto = <P>(nodo: Nodo, properties: P): Feature<Point, P> => ({
   type: "Feature",
@@ -65,6 +66,25 @@ export function refugiosSinAccesoAGeoJSON(
   for (const r of grafo.refugios) {
     const nodo = nodos.get(r.nodo);
     if (nodo && cortados.has(r.id)) features.push(punto(nodo, { id: r.id, nombre: r.nombre }));
+  }
+  return { type: "FeatureCollection", features };
+}
+
+// Cuántas personas ya están a salvo en cada refugio, como etiqueta sobre su ícono ("12/50 a salvo", "50/50 LLENO").
+// Sin ocupación en vivo para un refugio no hay etiqueta: nunca se muestra un número inventado.
+export function ocupacionRefugiosAGeoJSON(
+  grafo: Grafo,
+  ocupaciones: readonly OcupacionRefugio[],
+): FeatureCollection<Point, OcupacionRefugioProps> {
+  const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
+  const porId = new Map(ocupaciones.map((o) => [o.id, o]));
+  const features: Feature<Point, OcupacionRefugioProps>[] = [];
+  for (const r of grafo.refugios) {
+    const nodo = nodos.get(r.nodo);
+    const o = porId.get(r.id);
+    if (!nodo || !o) continue;
+    const lleno = o.ocupacion >= o.capacidad;
+    features.push(punto(nodo, { id: r.id, texto: `${o.ocupacion}/${o.capacidad} ${lleno ? "LLENO" : "a salvo"}`, lleno }));
   }
   return { type: "FeatureCollection", features };
 }

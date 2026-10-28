@@ -149,7 +149,7 @@ export function derivarAlertas(grafo: Grafo, previo: Snapshot | null, actual: Sn
 export const esUrgente = (a: Alerta) => a.tipo !== "llegada";
 
 export type TonoResumen = "mordido" | "peligro" | "aviso" | "llegada";
-export type ChipResumen = { texto: string; tono: TonoResumen };
+export type ChipResumen = { texto: string; tono: TonoResumen; tipo: TipoAlerta };
 
 // Una línea para la barra de turno sobre el mapa: "7 mordidos · 1 horda nueva · 2 llegaron".
 export function resumenTurno(alertas: Alerta[], turno: number): ChipResumen[] {
@@ -159,13 +159,13 @@ export function resumenTurno(alertas: Alerta[], turno: number): ChipResumen[] {
   const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
   const chips: (ChipResumen | null)[] = [
-    personas("mordido") ? { texto: plural(personas("mordido"), "mordido", "mordidos"), tono: "mordido" } : null,
-    contar("horda") ? { texto: plural(contar("horda"), "horda nueva", "hordas nuevas"), tono: "peligro" } : null,
+    personas("mordido") ? { texto: plural(personas("mordido"), "mordido", "mordidos"), tono: "mordido", tipo: "mordido" } : null,
+    contar("horda") ? { texto: plural(contar("horda"), "horda nueva", "hordas nuevas"), tono: "peligro", tipo: "horda" } : null,
     contar("calle_bloqueada")
-      ? { texto: plural(contar("calle_bloqueada"), "calle cerrada", "calles cerradas"), tono: "peligro" }
+      ? { texto: plural(contar("calle_bloqueada"), "calle cerrada", "calles cerradas"), tono: "peligro", tipo: "calle_bloqueada" }
       : null,
-    contar("refugio_lleno") ? { texto: plural(contar("refugio_lleno"), "refugio lleno", "refugios llenos"), tono: "aviso" } : null,
-    personas("llegada") ? { texto: plural(personas("llegada"), "llegó", "llegaron"), tono: "llegada" } : null,
+    contar("refugio_lleno") ? { texto: plural(contar("refugio_lleno"), "refugio lleno", "refugios llenos"), tono: "aviso", tipo: "refugio_lleno" } : null,
+    personas("llegada") ? { texto: plural(personas("llegada"), "llegó", "llegaron"), tono: "llegada", tipo: "llegada" } : null,
   ];
   return chips.filter((c): c is ChipResumen => c !== null);
 }

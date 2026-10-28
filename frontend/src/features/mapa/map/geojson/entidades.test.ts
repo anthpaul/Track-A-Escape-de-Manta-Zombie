@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { refugiosSinAccesoAGeoJSON, sobrevivientesAGeoJSON, vehiculosAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
+import { ocupacionRefugiosAGeoJSON, refugiosSinAccesoAGeoJSON, sobrevivientesAGeoJSON, vehiculosAGeoJSON, zombiesAGeoJSON, zonasHordaAGeoJSON } from "@/features/mapa/map/geojson/entidades";
 import type { Grafo } from "@/features/mapa/domain/tipos";
 
 // N-0001 — N-0002 — N-0003 — N-0004 (una línea)
@@ -81,4 +81,32 @@ test("rescue vans become points with how many people they carry and a short name
   ]);
   assert.deepEqual(fc.features.map((f) => f.properties), [{ id: "V-1", nombre: "Camioneta 1", pasajeros: 2 }]);
   assert.deepEqual(vehiculosAGeoJSON(grafo, undefined).features, []);
+});
+
+test("shelter occupancy labels show sheltered people over capacity and flag full shelters", () => {
+  const conRefugios: Grafo = {
+    ...grafo,
+    refugios: [
+      { id: "R-01", nodo: "N-0001", nombre: "Uno", capacidad: 50 },
+      { id: "R-02", nodo: "N-0004", nombre: "Dos", capacidad: 50 },
+      { id: "R-03", nodo: "N-9999", nombre: "Roto", capacidad: 50 },
+    ],
+  };
+  const fc = ocupacionRefugiosAGeoJSON(conRefugios, [
+    { id: "R-01", ocupacion: 12, capacidad: 50 },
+    { id: "R-02", ocupacion: 50, capacidad: 50 },
+    { id: "R-03", ocupacion: 1, capacidad: 50 },
+  ]);
+  assert.deepEqual(
+    fc.features.map((f) => f.properties),
+    [
+      { id: "R-01", texto: "12/50 a salvo", lleno: false },
+      { id: "R-02", texto: "50/50 LLENO", lleno: true },
+    ],
+  );
+});
+
+test("shelters without live occupancy get no label", () => {
+  const conRefugios: Grafo = { ...grafo, refugios: [{ id: "R-01", nodo: "N-0001", nombre: "Uno", capacidad: 50 }] };
+  assert.equal(ocupacionRefugiosAGeoJSON(conRefugios, []).features.length, 0);
 });

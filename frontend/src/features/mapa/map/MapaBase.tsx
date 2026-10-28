@@ -5,7 +5,16 @@ import Map, { type MapLayerMouseEvent } from "react-map-gl/maplibre";
 import type { Map as MapaMaplibre } from "maplibre-gl";
 import { getVersion, setWorkerUrl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { INITIAL_ZOOM, MANTA_BOUNDS, MANTA_CENTER, MAP_STYLE_URL, MIN_ZOOM } from "@/features/mapa/map/config";
+import {
+  INITIAL_ZOOM,
+  MANTA_BOUNDS,
+  MANTA_CENTER,
+  MAP_STYLE_URL,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  VELOCIDAD_ZOOM_RUEDA,
+  VELOCIDAD_ZOOM_TRACKPAD,
+} from "@/features/mapa/map/config";
 import { pinturaTematica } from "@/features/mapa/map/tema-mapa";
 
 // scripts/copy-maplibre-worker.mjs copia el worker a public/; el parámetro de versión invalida las cachés viejas.
@@ -51,6 +60,7 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
         initialViewState={{ ...MANTA_CENTER, zoom: INITIAL_ZOOM }}
         maxBounds={MANTA_BOUNDS}
         minZoom={MIN_ZOOM}
+        maxZoom={MAX_ZOOM}
         mapStyle={MAP_STYLE_URL}
         attributionControl={{ compact: false }}
         style={{ width: "100%", height: "100%" }}
@@ -63,7 +73,11 @@ export default function MapaBase({ children, capasInteractivas, onClickEntidad }
           setFalloEstilo(false);
           recolorear(e.target);
         }}
-        onLoad={(e) => recolorear(e.target)}
+        onLoad={(e) => {
+          recolorear(e.target);
+          e.target.scrollZoom.setWheelZoomRate(VELOCIDAD_ZOOM_RUEDA);
+          e.target.scrollZoom.setZoomRate(VELOCIDAD_ZOOM_TRACKPAD);
+        }}
         interactiveLayerIds={capasInteractivas}
         onClick={alHacerClick}
         onMouseEnter={() => setSobreEntidad(true)}

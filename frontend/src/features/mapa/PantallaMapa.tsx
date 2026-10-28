@@ -18,6 +18,7 @@ import MedidorFps from "@/features/mapa/ui/MedidorFps";
 import PanelLateral from "@/features/mapa/ui/panel/PanelLateral";
 import RielIconos from "@/features/mapa/ui/panel/RielIconos";
 import BarraTurno from "@/features/mapa/ui/panel/BarraTurno";
+import IndicadorSeguimiento from "@/features/mapa/ui/panel/IndicadorSeguimiento";
 import TabAlertas from "@/features/mapa/ui/panel/tabs/TabAlertas";
 import TabCapas from "@/features/mapa/ui/panel/tabs/TabCapas";
 import TabRefugios from "@/features/mapa/ui/panel/tabs/TabRefugios";
@@ -108,6 +109,8 @@ export default function PantallaMapa() {
     [grafo, snapshot, seguidoId, panel.mostrarRuta],
   );
   const ruta = rutaReal ?? rutaLocal;
+  const seguido = snapshot.sobrevivientes.find((s) => s.id === (seleccionado?.id ?? seguidoId)) ?? null;
+  const refugioSeguido = seguido?.refugio ? (grafo.refugios.find((r) => r.id === seguido.refugio)?.nombre ?? null) : null;
 
   // La misma instancia de Set mientras la lista de bloqueadas no cambie, para no reconstruir el GeoJSON de calles en cada turno.
   const clave = snapshot.aristasBloqueadas.join(",");
@@ -195,14 +198,27 @@ export default function PantallaMapa() {
         </PanelLateral>
       )}
 
-      {toastAlerta && (
-        <BarraTurno
-          turno={toastAlerta.turno}
-          chips={resumenTurno(alertas, toastAlerta.turno)}
-          onVerAlertas={() => enviarYAbrir({ tipo: "abrirAlertas" })}
-          onCerrar={() => dispatch({ tipo: "cerrarToast" })}
-        />
-      )}
+      {/* Arriba y al centro, apilados: qué pasó en el turno y a quién sigue el mapa. */}
+      <div className="pointer-events-none absolute left-1/2 top-[calc(0.75rem+env(safe-area-inset-top))] z-20 flex w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 flex-col items-center gap-2 [&>*]:pointer-events-auto">
+        {toastAlerta && (
+          <BarraTurno
+            turno={toastAlerta.turno}
+            chips={resumenTurno(alertas, toastAlerta.turno)}
+            onVerAlertas={() => enviarYAbrir({ tipo: "abrirAlertas" })}
+            onCerrar={() => dispatch({ tipo: "cerrarToast" })}
+          />
+        )}
+        {seguido && (
+          <IndicadorSeguimiento
+            sobrevivienteId={seguido.id}
+            estado={seguido.estado}
+            automatico={!seleccionado}
+            refugio={refugioSeguido}
+            calles={ruta.length > 1 ? ruta.length - 1 : null}
+            onVer={() => enviarYAbrir({ tipo: "seleccionarSobreviviente", id: seguido.id })}
+          />
+        )}
+      </div>
       <MedidorFps />
     </div>
   );

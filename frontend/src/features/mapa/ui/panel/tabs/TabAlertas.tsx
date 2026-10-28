@@ -1,7 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Alerta, TipoAlerta } from "@/features/mapa/domain/alertas";
+import type { Alerta } from "@/features/mapa/domain/alertas";
+import { horaDelTurno } from "@/features/mapa/domain/reloj";
+import { VOZ_ALERTA } from "@/features/mapa/ui/panel/vocesAlerta";
 
 type Props = {
   alertas: Alerta[];
@@ -10,17 +12,9 @@ type Props = {
   onUbicar: (alerta: Alerta) => void;
 };
 
-// Los mismos colores de punto que la barra de turno: rosa mordidas, rojo peligro, calabaza advertencias, marea llegadas.
-const COLOR_TIPO: Record<TipoAlerta, string> = {
-  mordido: "bg-crimson-700",
-  horda: "bg-sangre-700",
-  calle_bloqueada: "bg-sangre-700",
-  refugio_lleno: "bg-calabaza-500",
-  llegada: "bg-marea-700",
-};
-
-// Alertas agrupadas por turno, de la más nueva a la más vieja ("ESTE TURNO · 23", "TURNO 22"). Tocar una la muestra en el
-// mapa y la marca como leída; las leídas se atenúan.
+// Alertas agrupadas por turno, de la más nueva a la más vieja ("ESTE TURNO · 23 · 21:53", "TURNO 22 · 21:52"). Cada una
+// lleva el ícono y el nombre de quien la reporta (ver VOZ_ALERTA). Tocar una la muestra en el mapa y la marca como leída;
+// las leídas se atenúan.
 export default function TabAlertas({ alertas, turnoActual, leidas, onUbicar }: Props) {
   if (alertas.length === 0) return <p className="py-4 text-center text-sm text-crimson-800">Sin alertas todavía.</p>;
 
@@ -30,13 +24,14 @@ export default function TabAlertas({ alertas, turnoActual, leidas, onUbicar }: P
       {turnos.map((turno) => (
         <section key={turno}>
           <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-crimson-700">
-            {turno === turnoActual ? `Este turno · ${turno}` : `Turno ${turno}`}
+            {turno === turnoActual ? `Este turno · ${turno}` : `Turno ${turno}`} · {horaDelTurno(turno).hora}
           </h3>
           <ul>
             {alertas
               .filter((a) => a.turno === turno)
               .map((a) => {
                 const ubicable = Boolean(a.refugioId || a.sobrevivienteId);
+                const { Icono, voz, fondo } = VOZ_ALERTA[a.tipo];
                 return (
                   <li key={a.id}>
                     <button
@@ -48,8 +43,11 @@ export default function TabAlertas({ alertas, turnoActual, leidas, onUbicar }: P
                         leidas.has(a.id) && "opacity-60",
                       )}
                     >
-                      <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", COLOR_TIPO[a.tipo])} aria-hidden />
+                      <span className={cn("mt-0.5 flex size-8 shrink-0 items-center justify-center", fondo)} aria-hidden>
+                        <Icono className="size-4 text-crimson-100" />
+                      </span>
                       <span className="min-w-0">
+                        <span className="block font-pixel text-[10px] uppercase text-crimson-700">{voz}</span>
                         <span className="block text-sm font-semibold text-calabaza-900">{a.titulo}</span>
                         <span className="block text-xs text-crimson-800">{a.descripcion}</span>
                       </span>
