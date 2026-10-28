@@ -10,6 +10,7 @@ Todos los comandos se corren **desde la raíz del repo, en Git Bash**, con el pe
 | `tools/demo/demo.sh pausar` | Apaga las rondas demo automáticas; la que está corriendo termina sola (hasta 5 min) |
 | `tools/demo/demo.sh ronda 3 42` | Arranca ya una ronda R3 con semilla 42; necesita que ninguna otra ronda esté corriendo |
 | `tools/demo/demo.sh reanudar` | Vuelve a prender las rondas demo automáticas |
+| `tools/demo/demo.sh evaluar 3 42` | Ronda de **evaluación** R3 con semilla 42: calienta el API, juega 150 turnos llamando a `/paso` por HTTP desde AWS y muestra supervivencia, p95 y errores (espera unos 5 minutos) |
 
 ## Antes del viernes
 
@@ -20,7 +21,8 @@ Todos los comandos se corren **desde la raíz del repo, en Git Bash**, con el pe
 | Navegador actualizado con WebGL; hotspot del celular probado con ese navegador | Jueves | ⬜ |
 | API key de `/paso` en el gestor de contraseñas (nunca en una diapositiva) | Jueves | ⬜ |
 | Cargador y adaptador HDMI | Viernes | ⬜ |
-| Revisar si AWS aprobó el aumento de concurrencia de Lambda (caso abierto el 27) | Jueves | ⬜ |
+| Aumento de concurrencia de Lambda a 1000 | 27 oct | ✅ aplicado |
+| Prueba de fuego completa: `pausar`, luego `evaluar 1`, `evaluar 2` y `evaluar 3`, y anotar los resultados en el README | Jueves | ⬜ |
 
 ## Antes de subir al escenario
 

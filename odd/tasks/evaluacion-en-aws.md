@@ -15,8 +15,8 @@ Rama: `feat/evaluacion-en-aws` · Entrega: un PR con commits por unidad · Tests
 
 | ID | Specs | Ruta | Estado | Commit |
 |---|---|---|---|---|
-| T1 | S1, S2, S3 | inline | hecho (49 tests, bundle carga sin efectos) | ver log |
-| T2 | S4, S5 | inline | pendiente | |
+| T1 | S1, S2, S3 | inline | hecho (49 tests, bundle carga sin efectos) | 53b7ff8 |
+| T2 | S4, S5 | inline | hecho (terraform validate, prueba en seco de demo.sh) | ver log |
 
 Risk: item 2 (la key de `/paso` pasa a una segunda Lambda) e item 5 (cambio de infra en producción).
 
@@ -24,3 +24,4 @@ Risk: item 2 (la key de `/paso` pasa a una segunda Lambda) e item 5 (cambio de i
 
 - **L1** (27 oct, Anthony): "vamos implementa" — sobre la recomendación: "1 Correr las rondas de evaluación dentro de AWS … 2 Calentamiento automático antes de cada ronda"; provisioned concurrency queda como seguro opcional.
 - **L2** Evidencia: `calentar.ts` desde la laptop dio oleada 1 con 192 errores (~527 ms, arranques en frío) y p95 214–241 ms en oleadas calientes; la Lambda del API tarda 44–70 ms (p95) y la conexión laptop → us-east-2 cuesta ~76 ms. La cuota de concurrencia ya es 1000.
+- **L3** T2: `demo.sh evaluar` probado con un `aws` falso. La prueba encontró que `MSYS_NO_PATHCONV=1` también deja sin traducir las rutas temporales: `aws`/`node` de Windows buscaban `/tmp/...` en `C:/tmp`. Afectaba a `evaluar`, `ronda` y `pausar`/`reanudar` (`file://`); se arregló con `cygpath -w`. Sin verificar contra AWS: falta `terraform apply` y una corrida real.
