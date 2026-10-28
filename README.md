@@ -4,7 +4,7 @@
 
 Motor de rutas en tiempo real sobre AWS. Cada 2 segundos los zombies se mueven por el mapa de Manta y nuestro servicio le dice a cada sobreviviente cuál es su siguiente paso para llegar a un refugio sin ser mordido. Es el mismo problema que resuelven las apps de delivery o las rutas de evacuación: **el mapa cambia mientras te mueves**.
 
-> **Estado (27 de octubre de 2026):** desplegado en AWS (`us-east-2`) y verificado: el mapa público muestra rondas demo en vivo y `POST /paso` exige API key. Pendiente: las corridas completas de la prueba de fuego contra AWS (ver [Limitaciones](#limitaciones)).
+> **Estado (27 de octubre de 2026):** desplegado en AWS (`us-east-2`) y verificado: el mapa público muestra rondas demo en vivo y `POST /paso` exige API key. Las tres rondas de la prueba de fuego corrieron completas contra AWS el 27 de octubre (ver [Resultados](#resultados-de-nuestra-prueba-de-fuego)).
 
 | Enlace | URL |
 |---|---|
@@ -222,13 +222,23 @@ El contraste con CloudWatch de la primera R1 contra AWS (27 de octubre) está en
 
 **Primera R1 contra AWS (27 de octubre, 09:33 a 09:39, hora de Ecuador):** 369 pedidos a `/paso`, 32 respondieron HTTP 503 y 10 se cortaron a los 500 ms. CloudWatch explica ambos: la cuenta nueva tiene un límite de **10 ejecuciones simultáneas de Lambda** (lo habitual es 1000). La concurrencia quedó en 10, Lambda rechazó 32 invocaciones, que coinciden minuto a minuto con los 32 errores 5xx de API Gateway, y los 10 cortes coinciden con los 10 arranques en frío del primer minuto (p95 de 956 ms en ese minuto). Sin errores de ejecución, con 141 MB usados de 1024 y un p95 de 25 ms una vez calientes. Pedimos el aumento a 1000 en Service Quotas el mismo día; AWS lo aplicó esa misma tarde (`aws lambda get-account-settings` informa 1000).
 
-Las tres corridas completas contra AWS quedan **pendientes de ese aumento**: con un límite de 10, la R3 (200 pedidos simultáneos) mediría el límite de la cuenta y no el motor.
+**Prueba de fuego completa (27 de octubre, noche, semilla 42):** las tres rondas corrieron dentro de AWS con `tools/demo/demo.sh evaluar <ronda>`. La Lambda del simulador calienta el API y llama a `POST /paso` por HTTP desde `us-east-2`, con el corte oficial de 500 ms.
 
-| Ronda | Sobrevivientes | Supervivencia | Eficiencia | p95 `/paso` | Errores |
-|---|---|---|---|---|---|
-| R1 Anochecer | 20 | Pendiente | Pendiente | Pendiente | 42 de 369 (límite de concurrencia, ver arriba) |
-| R2 Medianoche | 80 | Pendiente | Pendiente | Pendiente | Pendiente |
-| R3 Apocalipsis | 200 | Pendiente | Pendiente | Pendiente | Pendiente |
+| Ronda | Sobrevivientes | A salvo | Mordidos | Eficiencia | p50 | p95 `/paso` | p99 | Errores |
+|---|---|---|---|---|---|---|---|---|
+| R1 Anochecer | 20 | 20 (100 %) | 0 | 1,09 | 37 ms | **77 ms** | 102 ms | 0 de 309 (0 %) |
+| R2 Medianoche | 80 | 24 (30 %) | 55 | 1,09 | 33 ms | **83 ms** | 99 ms | 0 de 1418 (0 %) |
+| R3 Apocalipsis | 200 | 29 (14,5 %) | 171 | 1,06 | 48 ms | **107 ms** | 248 ms | 0 de 1818 (0 %) |
+
+Eficiencia = turnos reales hasta el refugio ÷ ruta más corta sin zombies (1,00 es perfecta). En R2 quedó 1 sobreviviente en ruta al terminar los 150 turnos.
+
+Cómo llegamos a estos números, con lo que se midió en cada paso:
+
+- **Desde una laptop en Ecuador** el p95 de las oleadas calientes era de 214–241 ms con el API respondiendo en 44–70 ms: se medía internet. Por eso la prueba corre dentro de AWS.
+- **El calentamiento cortaba a 500 ms** y abandonaba instancias que todavía arrancaban. En una R2 dejó errores en las tres oleadas y un p99 de 439 ms; ahora espera hasta 3 s y hace 4 oleadas, y las tres rondas arrancaron con cero errores.
+- **El simulador a 512 MB** se saturaba abriendo 80 conexiones HTTPS a la vez: en una corrida midió 697 ms de p95 y 131 timeouts mientras API Gateway veía 35–53 ms. A 1024 MB la R2 dio 83 ms. En la R3, con 200 pedidos a la vez, la mediana del simulador (86 ms) triplicaba la del servidor (26 ms); con **2048 MB** el p95 bajó de 198 a 107 ms. Para la prueba, `tools/demo/demo.sh modo-prueba` sube el simulador a 2048 MB y `modo-demo` lo devuelve a 1024 MB.
+
+Con la misma semilla, la supervivencia se repite exacta entre corridas: lo único que cambió entre la R3 de 198 ms y la de 107 ms fue la memoria del simulador.
 
 Supervivencia medida en local con los mismos escenarios y el motor real en proceso (16 semillas por ronda, sin red): R1 95,3 %, R2 34,1 %, R3 17,3 % (`backend/README.md`).
 
@@ -246,7 +256,7 @@ queda pendiente de evidencia de facturación.
 
 ## Limitaciones
 
-- **Concurrencia de Lambda:** hasta que AWS apruebe el aumento, la cuenta admite 10 ejecuciones simultáneas; con más pedidos a la vez, API Gateway responde 503.
+- **Latencia medida de la R3:** depende de la CPU del simulador que la mide. Con 200 pedidos a la vez hace falta correrlo a 2048 MB (`demo.sh modo-prueba`); a 1024 MB el p95 medido sube a ~200 ms aunque el API responda igual de rápido.
 - **Simulador del jurado (pregunta abierta a la organización):** si el jurado corre su propio simulador, el motor necesita leer los zombies de su `/estado`. La lectura del mundo está detrás de una interfaz (`FuenteMundo`), pero hoy solo existe la implementación que lee nuestro DynamoDB.
 - **Capacidad de refugios (Pro):** no implementada; capacidades provisionales de 200.
 - **Flota de rescate (Pro):** no implementada.

@@ -5,6 +5,8 @@
 #   tools/demo/demo.sh reanudar          turn the scheduled demo rounds back on
 #   tools/demo/demo.sh ronda 3 [semilla] start one demo round now (needs the lock free)
 #   tools/demo/demo.sh evaluar 3 [semilla] fire-test round over HTTP from AWS, waits and prints the metrics
+#   tools/demo/demo.sh modo-prueba       before the fire test: demos off, simulator at 2048 MB
+#   tools/demo/demo.sh modo-demo         after it: simulator back to 1024 MB, demos on
 # Uses the AWS profile "spookython" in us-east-2. Never prints keys.
 set -euo pipefail
 
@@ -81,11 +83,33 @@ evaluar() {
   rm -f "$salida"
 }
 
+# The simulator measures /paso, so its own CPU is part of the measured latency: with 200 requests at
+# once (R3) it needs a full vCPU (2048 MB). The demos run on the same Lambda all day, so it goes back
+# to 1024 MB afterwards (the Terraform value) to keep them cheap.
+memoria_simulador() {
+  aws lambda update-function-configuration --function-name "$SIMULADOR" --memory-size "$1" --query MemorySize --output text > /dev/null
+  aws lambda wait function-updated --function-name "$SIMULADOR"
+  echo "Simulador: $(aws lambda get-function-configuration --function-name "$SIMULADOR" --query MemorySize --output text) MB"
+}
+
+modo_prueba() {
+  cambiar_scheduler DISABLED
+  memoria_simulador 2048
+  echo "Listo para evaluar cuando 'demo.sh estado' diga Sin partida activa."
+}
+
+modo_demo() {
+  memoria_simulador 1024
+  cambiar_scheduler ENABLED
+}
+
 case "${1:-}" in
   estado) estado ;;
   pausar) cambiar_scheduler DISABLED ;;
   reanudar) cambiar_scheduler ENABLED ;;
   ronda) shift; ronda "$@" ;;
   evaluar) shift; evaluar "$@" ;;
-  *) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
+  modo-prueba) modo_prueba ;;
+  modo-demo) modo_demo ;;
+  *) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
 esac
