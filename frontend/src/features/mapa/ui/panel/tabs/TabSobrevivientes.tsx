@@ -91,9 +91,19 @@ export default function TabSobrevivientes(p: Props) {
       </ul>
 
       {p.seleccionado && (
-        <div className="rounded-lg border border-marea-700 bg-crimson-100 p-3 text-sm">
+        <div
+          className={cn(
+            "rounded-lg border bg-crimson-100 p-3 text-sm",
+            p.seleccionado.estado === "mordido" ? "border-crimson-700" : "border-marea-700",
+          )}
+        >
           <div className="mb-2 flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-marea-700">
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 font-semibold",
+                p.seleccionado.estado === "mordido" ? "text-crimson-700" : "text-marea-700",
+              )}
+            >
               <UserRound className="size-4" aria-hidden />
               {nombreSobreviviente(p.seleccionado.id)}
             </span>
@@ -101,8 +111,15 @@ export default function TabSobrevivientes(p: Props) {
           </div>
           <dl className="space-y-1">
             <div className="flex justify-between gap-3"><dt className="text-crimson-800">Ubicación</dt><dd className="text-right text-calabaza-900">{lugarDeNodo(p.grafo, p.seleccionado.nodo)}</dd></div>
-            <div className="flex justify-between"><dt className="text-crimson-800">Destino</dt><dd className="text-calabaza-900">{nombreRefugio(p.seleccionado.refugio) ?? "—"}</dd></div>
-            <div className="flex justify-between"><dt className="text-crimson-800">Calles que faltan</dt><dd className="text-calabaza-900">{p.seleccionado.callesRestantes ?? "—"}</dd></div>
+            {p.seleccionado.estado === "mordido" ? (
+              // A bitten person is out of the round: no destination, no streets left.
+              <p className="text-crimson-800">Fue mordido y quedó fuera de la partida.</p>
+            ) : (
+              <>
+                <div className="flex justify-between"><dt className="text-crimson-800">Destino</dt><dd className="text-calabaza-900">{nombreRefugio(p.seleccionado.refugio) ?? "—"}</dd></div>
+                <div className="flex justify-between"><dt className="text-crimson-800">Calles que faltan</dt><dd className="text-calabaza-900">{p.seleccionado.callesRestantes ?? "—"}</dd></div>
+              </>
+            )}
           </dl>
         </div>
       )}

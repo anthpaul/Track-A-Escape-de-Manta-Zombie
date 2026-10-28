@@ -247,13 +247,22 @@ export const capaRuta: LayerProps = {
   paint: { "line-color": COLOR_RUTA, "line-width": 4, "line-dasharray": [2.5, 1.5] },
 };
 
+// The followed person's ring and label take their state color: pink once bitten, tide blue otherwise.
+const colorSeguido: ExpressionSpecification = [
+  "match",
+  ["get", "estado"],
+  "mordido",
+  COLOR_SOBREVIVIENTE.mordido,
+  COLOR_SELECCION.sobreviviente,
+];
+
 export const capaSeguido: LayerProps = {
   id: "seguido",
   type: "circle",
   paint: {
     "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, 7, 16, 12],
     "circle-color": "rgba(0,0,0,0)",
-    "circle-stroke-color": COLOR_SELECCION.sobreviviente,
+    "circle-stroke-color": colorSeguido,
     "circle-stroke-width": 3,
   },
 };
@@ -282,5 +291,5 @@ export const capaSeguidoEtiqueta: LayerProps = {
   id: "seguido-etiqueta",
   type: "symbol",
   layout: { ...ETIQUETA_SELECCION, "text-field": ["get", "nombre"], "text-anchor": "bottom", "text-offset": [0, -1.4] },
-  paint: { "text-color": COLOR_SELECCION.sobreviviente, "text-halo-color": "#13030d", "text-halo-width": 2 },
+  paint: { "text-color": colorSeguido, "text-halo-color": "#13030d", "text-halo-width": 2 },
 };

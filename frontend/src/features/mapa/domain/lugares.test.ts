@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lugarDeNodo, nombreSobreviviente, refugioMasCercano } from "./lugares";
+import { etiquetaPersona, lugarDeNodo, nombreSobreviviente, refugioMasCercano } from "./lugares";
 import type { Grafo } from "./tipos";
 
 const grafo: Grafo = {
@@ -42,4 +42,10 @@ test("an unknown node never shows a raw code", () => {
 test("the closest shelter is found by distance", () => {
   assert.equal(refugioMasCercano(grafo, grafo.nodos[1])?.id, "R-01");
   assert.equal(refugioMasCercano(grafo, undefined), undefined);
+});
+
+test("the map label says when the followed person was bitten or is already safe", () => {
+  assert.equal(etiquetaPersona("S-0019", "en_ruta"), "Sobreviviente 19");
+  assert.equal(etiquetaPersona("S-0019", "mordido"), "Sobreviviente 19 · mordido");
+  assert.equal(etiquetaPersona("S-0019", "a_salvo"), "Sobreviviente 19 · a salvo");
 });
