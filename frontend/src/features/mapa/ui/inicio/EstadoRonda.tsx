@@ -3,7 +3,7 @@ import type { Conexion } from "@/features/mapa/domain/tipos";
 
 type Props = { conexion: Conexion; ronda: number | null; turno: number | null };
 
-// One honest line about the live game behind the public URL.
+// Una línea honesta sobre la partida en vivo detrás de la URL pública.
 export default function EstadoRonda({ conexion, ronda, turno }: Props) {
   const enVivo = (conexion === "en_vivo" || conexion === "reconectando") && ronda !== null;
   const texto = enVivo

@@ -1,20 +1,20 @@
 import type { LayerProps } from "react-map-gl/maplibre";
 import type { CapaClave } from "@/features/mapa/domain/panel";
 
-// Layers switched off in the Capas tab are hidden with MapLibre's layout visibility:
-// no source rebuild and no component per marker.
+// Las capas apagadas en la pestaña Capas se ocultan con la propiedad visibility del layout de MapLibre:
+// sin reconstruir fuentes y sin un componente por marcador.
 export const visibilidad = (visible: boolean) => (visible ? "visible" : "none") as "visible" | "none";
 
 export type CapasVisibles = Record<CapaClave, boolean>;
 
-// Zombie types share one symbol layer, so they are filtered by type instead of hidden.
+// Los tipos de zombie comparten una capa de símbolos, así que se filtran por tipo en lugar de ocultarse.
 export function filtroZombies(capas: CapasVisibles) {
   const tipos = (["caminante", "corredor", "horda"] as const).filter((t) => capas[t]);
   return ["in", ["get", "tipo"], ["literal", tipos]] as unknown as ["in", ...unknown[]];
 }
 
-// Same layer with its visibility set. LayerProps is a union of every layer kind, so the override is
-// done here once instead of in each component.
+// La misma capa con su visibilidad definida. LayerProps es una unión de todos los tipos de capa, así que la sobrescritura se
+// hace aquí una sola vez en lugar de en cada componente.
 export function conVisibilidad(capa: LayerProps, visible: boolean): LayerProps {
   const layout = "layout" in capa ? capa.layout : undefined;
   return { ...capa, layout: { ...layout, visibility: visibilidad(visible) } } as LayerProps;

@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export type FilaRefugio = { id: string; nombre: string; ocupacion: number | null; capacidad: number };
 
-// Live occupancy of the four real shelters; without a round in progress, only their capacity.
+// Ocupación en vivo de los cuatro refugios reales; sin una ronda en curso, solo su capacidad.
 export default function RefugiosInicio({ filas }: { filas: FilaRefugio[] }) {
   return (
     <ul className="divide-y divide-crimson-300 border-y border-crimson-300">

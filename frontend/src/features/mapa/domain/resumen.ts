@@ -1,10 +1,10 @@
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
 
-// Pure view-model for the stats panel, derived only from the snapshot (no front-end state).
+// View-model puro del panel de estadísticas, derivado solo del snapshot (sin estado del front).
 
 export type NivelLatencia = "excelente" | "bueno" | "limite" | "fuera" | "sin_datos";
 
-// Official p95 scoring for POST /paso: ≤150 ms → 10, ≤300 → 7, ≤500 → 4, more → 0.
+// Puntuación oficial del p95 de POST /paso: ≤150 ms → 10, ≤300 → 7, ≤500 → 4, más → 0.
 export function nivelLatencia(p95ms: number | null): { nivel: NivelLatencia; puntos: number | null } {
   if (p95ms === null) return { nivel: "sin_datos", puntos: null };
   if (p95ms <= 150) return { nivel: "excelente", puntos: 10 };
@@ -41,7 +41,7 @@ export function resumenPanel(grafo: Grafo, snapshot: Snapshot): ResumenPanel {
     aSalvo,
     mordidos,
     total,
-    // Floor, so 100% only shows when nobody was bitten. Multiply first: (57 / 100) * 100 is 56.999…
+    // Se redondea hacia abajo, así el 100% solo aparece si nadie fue mordido. Primero se multiplica: (57 / 100) * 100 da 56.999…
     supervivenciaPct: total === 0 ? 100 : Math.floor(((total - mordidos) * 100) / total),
     p95ms,
     latencia: nivelLatencia(p95ms),

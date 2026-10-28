@@ -1,8 +1,8 @@
 import type { Grafo, Snapshot, Sobreviviente, Zombie } from "@/features/mapa/domain/tipos";
 import { nodosBloqueadosPorHordas, vecinos } from "@/features/mapa/domain/grafo";
 
-// Fake /api/estado for building the map before the real simulator exists (S1–S5).
-// Simplified rules, NOT the official ones: the real simulator lives in tools/simulador/.
+// /api/estado falso para construir el mapa antes de que exista el simulador real (S1–S5).
+// Reglas simplificadas, NO las oficiales: el simulador real vive en tools/simulador/.
 
 export type ConfigSimulacion = {
   sobrevivientes: number;
@@ -12,13 +12,13 @@ export type ConfigSimulacion = {
   semilla: number;
 };
 
-// Turns at which a mock city event blocks a street (R2/R3-like).
+// Turnos en los que un evento de ciudad simulado bloquea una calle (al estilo de R2/R3).
 const EVENTOS_BLOQUEO: Record<number, (g: Grafo) => string | undefined> = {
   8: (g) => g.calles.find((c) => c.tipo === "puente")?.id,
   16: (g) => g.calles.find((c) => c.tipo === "avenida")?.id,
 };
 
-// Small deterministic PRNG so the same seed always replays the same round.
+// PRNG determinista y pequeño, para que la misma semilla repita siempre la misma ronda.
 function mulberry32(semilla: number) {
   let a = semilla >>> 0;
   return () => {
@@ -32,7 +32,7 @@ function mulberry32(semilla: number) {
 
 const elegir = <T>(rng: () => number, xs: T[]): T => xs[Math.floor(rng() * xs.length)];
 
-// Indexes built once per graph: the real graph has 384 streets and 200 survivors look them up every turn.
+// Índices construidos una vez por grafo: el grafo real tiene 384 calles y 200 sobrevivientes las consultan en cada turno.
 type Indices = { adyacencia: Map<string, string[]>; calles: Map<string, string> };
 const cacheIndices = new WeakMap<Grafo, Indices>();
 const claveCalle = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
@@ -49,7 +49,7 @@ function indices(grafo: Grafo): Indices {
 const calleBloqueada = (grafo: Grafo, a: string, b: string, bloqueadas: Set<string>) =>
   bloqueadas.has(indices(grafo).calles.get(claveCalle(a, b)) ?? "");
 
-// Multi-source BFS from every shelter over open streets: distance to the nearest shelter per node.
+// BFS multiorigen desde cada refugio por las calles abiertas: distancia al refugio más cercano para cada nodo.
 function distanciaARefugio(grafo: Grafo, bloqueadas: Set<string>, evitar: Set<string>): Map<string, number> {
   const { adyacencia } = indices(grafo);
   const dist = new Map<string, number>();
@@ -77,11 +77,11 @@ function proximoPaso(grafo: Grafo, nodo: string, dist: Map<string, number>, bloq
   return nodo;
 }
 
-// Path to the nearest reachable shelter following the BFS distances. Shared by the movement
-// (destination and remaining streets) and the mock route endpoint, so both always agree.
+// Camino al refugio alcanzable más cercano siguiendo las distancias del BFS. Lo comparten el movimiento
+// (destino y calles restantes) y el endpoint simulado de ruta, así ambos coinciden siempre.
 function camino(grafo: Grafo, desde: string, dist: Map<string, number>, bloqueadas: Set<string>, evitar: Set<string>) {
   const ruta = [desde];
-  // Each step lowers the distance by one, so the walk ends within the node count.
+  // Cada paso reduce la distancia en uno, así que el recorrido termina dentro de la cantidad de nodos.
   for (let i = 0; i < grafo.nodos.length; i++) {
     const actual = ruta[ruta.length - 1];
     const siguiente = proximoPaso(grafo, actual, dist, bloqueadas, evitar);
@@ -123,7 +123,7 @@ export function crearSimulacion(grafo: Grafo, config: ConfigSimulacion, ahora: s
   agregar("corredor", config.corredores);
   agregar("horda", config.hordas);
 
-  // Survivors start in the four neighborhoods (Tarqui, Los Esteros, Barbasquillo, Jocay) when the graph has them.
+  // Los sobrevivientes arrancan en los cuatro barrios (Tarqui, Los Esteros, Barbasquillo, Jocay) cuando el grafo los tiene.
   const ocupados = new Set(zombies.map((z) => z.nodo));
   const bloqueadosHorda = nodosBloqueadosPorHordas(grafo, zombies);
   const conBarrio = new Set(grafo.nodos.filter((n) => n.barrio).map((n) => n.id));
@@ -141,7 +141,7 @@ export function crearSimulacion(grafo: Grafo, config: ConfigSimulacion, ahora: s
 
 export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semilla = 0): Snapshot {
   const turno = snap.turno + 1;
-  // Seed + turn: the same seed replays the same round, a different seed plays a different one.
+  // Semilla + turno: la misma semilla repite la misma ronda; otra semilla juega una distinta.
   const rng = mulberry32(semilla * 100_003 + turno * 7919 + snap.sobrevivientes.length);
   const { adyacencia } = indices(grafo);
 
@@ -150,7 +150,7 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
   if (evento && !aristasBloqueadas.includes(evento)) aristasBloqueadas.push(evento);
   const bloqueadas = new Set(aristasBloqueadas);
 
-  // 1) Zombies move first: walkers every 2 turns, runners 2 streets, hordes stay.
+  // 1) Primero se mueven los zombies: caminantes cada 2 turnos, corredores 2 calles, las hordas se quedan.
   const zombies = snap.zombies.map((z) => {
     const pasos = z.tipo === "corredor" ? 2 : z.tipo === "caminante" && turno % 2 === 0 ? 1 : 0;
     let nodo = z.nodo;
@@ -161,7 +161,7 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
     return { ...z, nodo };
   });
 
-  // 2) Survivors step toward the nearest shelter, avoiding zombies and horde zones.
+  // 2) Los sobrevivientes avanzan hacia el refugio más cercano, evitando zombies y zonas de horda.
   const peligro = peligroDe(grafo, zombies);
   const refugioDeNodo = new Map(grafo.refugios.map((r) => [r.nodo, r.id]));
   const dist = distanciaARefugio(grafo, bloqueadas, peligro);
@@ -172,7 +172,7 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
     const nodo = proximoPaso(grafo, s.nodo, dist, bloqueadas, peligro);
     if (refugioDeNodo.has(nodo)) return { id: s.id, nodo, estado: "a_salvo", refugio: refugioDeNodo.get(nodo)! };
     if (zombiesEn.has(nodo)) return { id: s.id, nodo, estado: "mordido" };
-    // Destination and remaining streets: optional /estado fields the real simulator also fills (AGENTS.md §5).
+    // Destino y calles restantes: campos opcionales de /estado que el simulador real también llena (AGENTS.md §5).
     const ruta = camino(grafo, nodo, dist, bloqueadas, peligro);
     const destino = refugioDeNodo.get(ruta[ruta.length - 1]) ?? null;
     return {
@@ -188,8 +188,8 @@ export function avanzarTurno(grafo: Grafo, snap: Snapshot, ahora: string, semill
   return completar(grafo, { turno, ronda: snap.ronda, zombies, aristasBloqueadas, sobrevivientes, generadoEn: ahora });
 }
 
-// Mock of GET /api/sobrevivientes/:id/ruta (K6): the node list from the survivor to the nearest
-// reachable shelter under the current snapshot. Same avoidance rules as the mock movement above.
+// Simulación de GET /api/sobrevivientes/:id/ruta (K6): la lista de nodos desde el sobreviviente hasta el refugio
+// alcanzable más cercano según el snapshot actual. Mismas reglas de evasión que el movimiento simulado de arriba.
 export function rutaHaciaRefugio(grafo: Grafo, snap: Snapshot, sobrevivienteId: string): string[] {
   const s = snap.sobrevivientes.find((x) => x.id === sobrevivienteId);
   if (!s || s.estado !== "en_ruta") return [];

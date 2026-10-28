@@ -10,7 +10,7 @@ type Props = {
   onUbicar: (alerta: Alerta) => void;
 };
 
-// Same dot colors as the turn bar: pink bites, red danger, pumpkin warnings, tide arrivals.
+// Los mismos colores de punto que la barra de turno: rosa mordidas, rojo peligro, calabaza advertencias, marea llegadas.
 const COLOR_TIPO: Record<TipoAlerta, string> = {
   mordido: "bg-crimson-700",
   horda: "bg-sangre-700",
@@ -19,8 +19,8 @@ const COLOR_TIPO: Record<TipoAlerta, string> = {
   llegada: "bg-marea-700",
 };
 
-// Alerts grouped by turn, newest first ("ESTE TURNO · 23", "TURNO 22"). Tapping one shows it on the
-// map and marks it read; read ones fade.
+// Alertas agrupadas por turno, de la más nueva a la más vieja ("ESTE TURNO · 23", "TURNO 22"). Tocar una la muestra en el
+// mapa y la marca como leída; las leídas se atenúan.
 export default function TabAlertas({ alertas, turnoActual, leidas, onUbicar }: Props) {
   if (alertas.length === 0) return <p className="py-4 text-center text-sm text-crimson-800">Sin alertas todavía.</p>;
 

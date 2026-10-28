@@ -1,7 +1,7 @@
 import type { Sobreviviente } from "@/features/mapa/domain/tipos";
 
-// Which survivor the map follows: the one picked by the user while on the road,
-// otherwise the lowest on-road id, so a planned route is always visible (plan A9).
+// A qué sobreviviente sigue el mapa: al que eligió el usuario mientras siga en camino;
+// si no, al de menor id en camino, así siempre hay una ruta planificada visible (plan A9).
 export function elegirSeguido(sobrevivientes: Sobreviviente[], actualId: string | null): string | null {
   const enRuta = sobrevivientes.filter((s) => s.estado === "en_ruta");
   if (actualId && enRuta.some((s) => s.id === actualId)) return actualId;

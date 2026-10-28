@@ -2,7 +2,7 @@ import type { Feature, FeatureCollection, Point } from "geojson";
 import type { EstadoSobreviviente, Grafo, Nodo, Sobreviviente, TipoZombie, Vehiculo, Zombie } from "@/features/mapa/domain/tipos";
 import { nodosBloqueadosPorHordas, refugiosSinAcceso } from "@/features/mapa/domain/grafo";
 
-// Pure converters from live entities to GeoJSON for the map layers (zombies, survivors, horde zones).
+// Conversores puros de entidades en vivo a GeoJSON para las capas del mapa (zombies, sobrevivientes, zonas de horda).
 
 export type ZombieProps = { id: string; tipo: Exclude<TipoZombie, "dormido"> };
 export type SobrevivienteProps = { id: string; estado: EstadoSobreviviente };
@@ -31,7 +31,7 @@ export function zombiesAGeoJSON(grafo: Grafo, zombies: Zombie[]): FeatureCollect
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const features: Feature<Point, ZombieProps>[] = [];
   for (const z of zombies) {
-    // Sleepers are invisible by rule; never reveal them even if a snapshot carries one by mistake.
+    // Los dormidos son invisibles por regla; nunca se revelan, aunque un snapshot traiga uno por error.
     if (z.tipo === "dormido") continue;
     const nodo = nodos.get(z.nodo);
     if (nodo) features.push(punto(nodo, { id: z.id, tipo: z.tipo }));
@@ -46,7 +46,7 @@ export function sobrevivientesAGeoJSON(
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const features: Feature<Point, SobrevivienteProps>[] = [];
   for (const s of sobrevivientes) {
-    // Riding a rescue van: the van is drawn, not the person on foot.
+    // Si viaja en una camioneta de rescate, se dibuja la camioneta, no a la persona a pie.
     if (s.vehiculo) continue;
     const nodo = nodos.get(s.nodo);
     if (nodo) features.push(punto(nodo, { id: s.id, estado: s.estado }));
@@ -54,7 +54,7 @@ export function sobrevivientesAGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
-// Shelters nobody can reach this turn (see refugiosSinAcceso), drawn with a danger ring and label.
+// Refugios que nadie puede alcanzar en este turno (ver refugiosSinAcceso), dibujados con un anillo y una etiqueta de peligro.
 export function refugiosSinAccesoAGeoJSON(
   grafo: Grafo,
   mundo: Parameters<typeof refugiosSinAcceso>[1],
@@ -69,7 +69,7 @@ export function refugiosSinAccesoAGeoJSON(
   return { type: "FeatureCollection", features };
 }
 
-// Rescue fleet (Pro): one point per van with how many people it carries ("Camioneta 1", never V-1).
+// Flota de rescate (Pro): un punto por camioneta con cuántas personas lleva ("Camioneta 1", nunca V-1).
 export function vehiculosAGeoJSON(grafo: Grafo, vehiculos: readonly Vehiculo[] | undefined): FeatureCollection<Point, VehiculoProps> {
   const nodos = new Map(grafo.nodos.map((n) => [n.id, n]));
   const features: Feature<Point, VehiculoProps>[] = [];

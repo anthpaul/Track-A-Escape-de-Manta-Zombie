@@ -1,7 +1,7 @@
 import type { EstadoSobreviviente, Grafo, Nodo } from "./tipos";
 
-// Turns contract codes (S-0005, N-0165) into words a visitor understands. The ids stay in the
-// data and in accessible labels; only what is read on screen changes.
+// Convierte los códigos del contrato (S-0005, N-0165) en palabras que un visitante entiende. Los ids se mantienen en los
+// datos y en las etiquetas accesibles; solo cambia lo que se lee en pantalla.
 
 const BARRIOS: Record<NonNullable<Nodo["barrio"]>, string> = {
   tarqui: "Tarqui",
@@ -15,7 +15,7 @@ export function nombreSobreviviente(id: string): string {
   return numero ? `Sobreviviente ${Number(numero)}` : id;
 }
 
-// Label of the followed person on the map: a bitten or safe person must never read as one still on the way.
+// Etiqueta de la persona seguida en el mapa: alguien mordido o a salvo nunca debe leerse como si siguiera en camino.
 export function etiquetaPersona(id: string, estado: EstadoSobreviviente): string {
   const nombre = nombreSobreviviente(id);
   return estado === "mordido" ? `${nombre} · mordido` : estado === "a_salvo" ? `${nombre} · a salvo` : nombre;
@@ -34,7 +34,7 @@ export function refugioMasCercano(grafo: Grafo, nodo: Nodo | undefined) {
   return mejor;
 }
 
-// "en Los Esteros" inside the four start neighbourhoods of the challenge, otherwise near a shelter.
+// "en Los Esteros" dentro de los cuatro barrios de inicio del reto; en otro caso, cerca de un refugio.
 export function lugarDeNodo(grafo: Grafo, nodoId: string): string {
   const nodo = grafo.nodos.find((n) => n.id === nodoId);
   if (!nodo) return "en un punto desconocido";

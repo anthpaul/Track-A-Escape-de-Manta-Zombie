@@ -70,9 +70,9 @@ test("a closed street counts the survivors whose route got longer or changed she
     turno: 2,
     aristasBloqueadas: ["C-0002"],
     sobrevivientes: [
-      { id: "S-0001", nodo: "N-0002", estado: "en_ruta", refugio: "R-01", callesRestantes: 4 }, // detour
-      { id: "S-0002", nodo: "N-0001", estado: "en_ruta", refugio: "R-02", callesRestantes: 1 }, // other shelter
-      { id: "S-0003", nodo: "N-0002", estado: "en_ruta", refugio: "R-01", callesRestantes: 1 }, // same route
+      { id: "S-0001", nodo: "N-0002", estado: "en_ruta", refugio: "R-01", callesRestantes: 4 }, // desvío
+      { id: "S-0002", nodo: "N-0001", estado: "en_ruta", refugio: "R-02", callesRestantes: 1 }, // otro refugio
+      { id: "S-0003", nodo: "N-0002", estado: "en_ruta", refugio: "R-01", callesRestantes: 1 }, // misma ruta
     ],
   });
   assert.equal(derivarAlertas(grafo, previo, actual)[0].descripcion, "2 sobrevivientes cambiaron de camino");

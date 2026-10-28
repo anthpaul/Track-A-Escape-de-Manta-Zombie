@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
-// Guards the inward dependency rule documented in README.md, so it cannot erode silently.
+// Protege la regla de dependencias hacia adentro documentada en README.md, para que no se erosione en silencio.
 const RAIZ = __dirname;
 
 function archivos(carpeta: string): string[] {
@@ -14,7 +14,7 @@ function archivos(carpeta: string): string[] {
   });
 }
 
-// Relative imports are resolved to "@/features/mapa/..." so "../../map/x" cannot sneak past the rules.
+// Los imports relativos se resuelven a "@/features/mapa/..." para que "../../map/x" no pueda saltarse las reglas.
 function importsDe(ruta: string): string[] {
   const fuente = readFileSync(ruta, "utf-8");
   return [...fuente.matchAll(/from\s+"([^"]+)"|import\("([^"]+)"\)/g)].map((m) => {
@@ -27,7 +27,7 @@ function importsDe(ruta: string): string[] {
 
 const capa = (ruta: string) => relative(RAIZ, ruta).split(sep)[0];
 
-// layer → what it must never import
+// capa → lo que nunca debe importar
 const PROHIBIDO: Record<string, RegExp[]> = {
   domain: [/^react/, /maplibre/, /^next/, /^lucide-react$/, /features\/mapa\/(map|data|ui|simbologia)\//],
   simbologia: [/maplibre/, /features\/mapa\/(map|data|ui)\//],

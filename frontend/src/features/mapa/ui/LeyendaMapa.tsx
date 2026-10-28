@@ -6,15 +6,15 @@ import { cn } from "@/lib/utils";
 import { COLOR_CALLE, COLOR_RUTA, COLOR_SOBREVIVIENTE } from "@/features/mapa/simbologia/colores";
 import { ICONO_REFUGIO, ICONO_VEHICULO, ICONOS_ZOMBIE } from "@/features/mapa/simbologia/iconos";
 
-// Same icons and colors the map draws (simbologia/), so the legend can never drift from the layers.
+// Los mismos íconos y colores que dibuja el mapa (simbologia/), así la leyenda nunca se desfasa de las capas.
 const ZOMBIES: { nombre: string; Icono: LucideIcon; color: string }[] = [
   { nombre: "Caminante", ...ICONOS_ZOMBIE.caminante },
   { nombre: "Corredor (persigue)", ...ICONOS_ZOMBIE.corredor },
   { nombre: "Horda (bloquea la zona)", ...ICONOS_ZOMBIE.horda },
 ];
 
-// Bridges are a double line on the map; closed streets and damaged bridges carry the same traffic
-// sign the map draws on them (no-entry disc, danger triangle).
+// Los puentes son una línea doble en el mapa; las calles cerradas y los puentes dañados llevan la misma señal
+// de tránsito que el mapa dibuja sobre ellos (disco de prohibido el paso, triángulo de peligro).
 type Linea = { nombre: string; color: string; punteada?: boolean; doble?: boolean; senal?: "prohibido" | "peligro" };
 const LINEAS: Linea[] = [
   { nombre: "Ruta planificada", color: COLOR_RUTA, punteada: true },
@@ -45,7 +45,7 @@ function SimboloLinea({ color, punteada, doble, senal }: Linea) {
   );
 }
 
-// Map legend: open on wide screens, a small button on phones so it never hides the map.
+// Leyenda del mapa: abierta en pantallas anchas y un botón pequeño en teléfonos, para que nunca tape el mapa.
 export default function LeyendaMapa() {
   const [abierta, setAbierta] = useState(false);
   useEffect(() => setAbierta(window.matchMedia("(min-width: 768px)").matches), []);
@@ -53,7 +53,7 @@ export default function LeyendaMapa() {
   return (
     <aside
       aria-label="Leyenda del mapa"
-      // Above the OSM/CARTO attribution, which must stay visible.
+      // Encima de la atribución de OSM/CARTO, que debe seguir visible.
       className="absolute bottom-8 right-3 z-10 w-56 rounded-lg border border-crimson-300 bg-crimson-100/90 text-xs text-calabaza-900 backdrop-blur"
     >
       <button

@@ -26,18 +26,18 @@ type Props = {
   onSeleccionarSobreviviente: (sobrevivienteId: string) => void;
 };
 
-// Clicks prefer a shelter, then an on-road survivor, then a bitten one (they often share a node),
-// then a traffic sign on a blocked street.
+// Los clics priorizan un refugio, luego un sobreviviente en camino, luego uno mordido (suelen compartir nodo),
+// y luego una señal de tránsito en una calle bloqueada.
 const PRIORIDAD = ["refugios", "refugios-base", "sobrevivientes", "mordidos", "senales"];
 
-// Presentational map. Loaded as one client-only chunk; layers draw in mount order
-// (streets, shelters, arrows and route, selection, horde zones, survivors, zombies, traffic signs on top).
+// Mapa presentacional. Se carga como un único chunk solo de cliente; las capas se dibujan en orden de montaje
+// (calles, refugios, flechas y ruta, selección, zonas de horda, sobrevivientes, zombies y señales de tránsito encima).
 export default function MapaVivo(props: Props) {
   const { grafo, snapshot, aristasBloqueadas, capas, anilloSobrevivienteId, refugioId, ruta } = props;
   const [senal, setSenal] = useState<string | null>(null);
 
-  // Remember since which turn each street is blocked. Updated while rendering when a new snapshot
-  // arrives (React's "adjust state on prop change" pattern), so the card never lags a turn behind.
+  // Recuerda desde qué turno está bloqueada cada calle. Se actualiza durante el render cuando llega un snapshot
+  // nuevo (patrón de React "ajustar el estado cuando cambia una prop"), así la tarjeta nunca va un turno atrasada.
   const [registro, setRegistro] = useState<{ snapshot: typeof snapshot; bloqueos: Bloqueos } | null>(null);
   let bloqueos = registro?.bloqueos ?? null;
   if (registro?.snapshot !== snapshot) {
@@ -45,7 +45,7 @@ export default function MapaVivo(props: Props) {
     setRegistro({ snapshot, bloqueos });
   }
 
-  // The card closes by itself when its street reopens.
+  // La tarjeta se cierra sola cuando su calle se reabre.
   const calleSenal = senal && aristasBloqueadas.has(senal) ? grafo.calles.find((c) => c.id === senal) : undefined;
   const nodoSenal = calleSenal && grafo.nodos.find((n) => n.id === calleSenal.desde);
   const puntoSenal = calleSenal?.geometria[Math.floor(calleSenal.geometria.length / 2)] ?? (nodoSenal ? [nodoSenal.lng, nodoSenal.lat] : null);

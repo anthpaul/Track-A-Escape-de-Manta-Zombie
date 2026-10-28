@@ -1,3 +1,3 @@
-// Public API of the map feature. The rest of the app imports only from here.
+// API pública de la feature del mapa. El resto de la app importa solo desde aquí.
 export { default as PantallaMapa } from "./PantallaMapa";
 export { default as PantallaInicio } from "./PantallaInicio";

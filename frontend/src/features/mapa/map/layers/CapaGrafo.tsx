@@ -15,9 +15,9 @@ import { conVisibilidad } from "./visibilidad";
 
 type Props = { grafo: Grafo; aristasBloqueadas?: ReadonlySet<string>; refugiosVisibles?: boolean };
 
-// Static graph layers: the walkable network (colored by type, red when blocked, damaged bridges
-// dashed) and shelters. The traffic signs live in CapaSenales, drawn on top of everything.
-// Streets cannot be switched off: blocked streets are a requirement of the live map.
+// Capas del grafo estático: la red caminable (coloreada por tipo, en rojo si está bloqueada, puentes dañados
+// punteados) y los refugios. Las señales de tránsito viven en CapaSenales, dibujadas encima de todo.
+// Las calles no se pueden apagar: las calles bloqueadas son un requisito del mapa en vivo.
 export default function CapaGrafo({ grafo, aristasBloqueadas, refugiosVisibles = true }: Props) {
   const calles = useMemo(() => callesAGeoJSON(grafo, aristasBloqueadas), [grafo, aristasBloqueadas]);
   const refugios = useMemo(() => refugiosAGeoJSON(grafo), [grafo]);

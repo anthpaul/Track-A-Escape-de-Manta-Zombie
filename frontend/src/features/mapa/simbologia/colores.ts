@@ -1,14 +1,14 @@
-// Map symbology (palette 2): every color here carries meaning and is shared by the map layers
-// and the panel legend. They are NOT theme tokens on purpose.
-// Walkable network: light, quiet tones so the network reads as background. Orange belongs to
-// zombies, pink to bitten survivors and red to danger: streets never reuse those hues.
+// Simbología del mapa (paleta 2): cada color de aquí tiene un significado y lo comparten las capas del mapa
+// y la leyenda del panel. A propósito NO son tokens del tema.
+// Red caminable: tonos claros y discretos para que la red se lea como fondo. El naranja es de los
+// zombies, el rosa de los sobrevivientes mordidos y el rojo del peligro: las calles nunca reutilizan esos tonos.
 export const COLOR_CALLE = {
   avenida: "#fee8d3", // calabaza-900
-  calle: "#f4bade", // crimson-900, drawn faint
-  callejon: "#f4bade", // crimson-900, thinner and fainter than a street
+  calle: "#f4bade", // crimson-900, dibujada tenue
+  callejon: "#f4bade", // crimson-900, más delgado y tenue que una calle
   puente: "#74d1e8", // marea-800
-  bloqueada: "#fb3055", // sangre-700: danger, same family as the horde zone
-  // Damaged bridge: the warning-sign orange; the dashed double line and the triangle tell it from a zombie.
+  bloqueada: "#fb3055", // sangre-700: peligro, misma familia que la zona de horda
+  // Puente dañado: el naranja de las señales de advertencia; la línea doble punteada y el triángulo lo distinguen de un zombie.
   danado: "#fb8b24", // calabaza-500
 } as const;
 
@@ -16,8 +16,8 @@ export const COLOR_ZOMBIE = { caminante: "#fb8b24", corredor: "#e36414", horda: 
 export const COLOR_REFUGIO = { relleno: "#bae8f4", borde: "#0f4c5c" } as const;
 export const COLOR_SOBREVIVIENTE = { en_ruta: "#2fbadd", mordido: "#df319c" } as const;
 export const COLOR_ZONA_HORDA = { relleno: "#9a031e", borde: "#fb3055" } as const;
-// Rescue van (Pro): cream badge, the one light shape on the map that is not a person or a zombie.
+// Camioneta de rescate (Pro): insignia crema, la única forma clara del mapa que no es una persona ni un zombie.
 export const COLOR_VEHICULO = { relleno: "#fee8d3", borde: "#13030d" } as const; // calabaza-900
-export const COLOR_RUTA = "#2fbadd"; // marea-700, dashed
+export const COLOR_RUTA = "#2fbadd"; // marea-700, punteada
 export const COLOR_FLECHA = "#74d1e8"; // marea-800
 export const COLOR_SELECCION = { refugio: "#fb8b24", sobreviviente: "#2fbadd" } as const;

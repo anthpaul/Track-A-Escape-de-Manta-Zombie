@@ -2,8 +2,8 @@ import { refugiosSinAcceso, vecinos } from "./grafo";
 import type { CapaClave, FiltroSobreviviente } from "./panel";
 import type { EstadoSobreviviente, Grafo, Snapshot, Sobreviviente } from "./tipos";
 
-// Derived view data for the panel tabs. Pure, so the counts shown on chips, layers and shelter
-// cards are tested here and the components only render them.
+// Datos de vista derivados para las pestañas del panel. Son puros, así los conteos de los chips, las capas y las tarjetas
+// de refugio se prueban aquí y los componentes solo los renderizan.
 
 const coincide = (grafo: Grafo, s: Sobreviviente, busqueda: string) => {
   const q = busqueda.trim().toLowerCase();
@@ -40,11 +40,11 @@ export type RefugioVista = {
   lleno: boolean;
   enCamino: number;
   accesosBloqueados: number;
-  // Nobody can reach it this turn (horde on the way in, or blocked streets): see refugiosSinAcceso.
+  // Nadie puede alcanzarlo en este turno (horda en el acceso o calles bloqueadas): ver refugiosSinAcceso.
   sinAcceso: boolean;
-  // Why: "horda" when the hordes cut it off, "calle" when closed streets alone already do.
+  // Motivo: "horda" cuando lo aíslan las hordas, "calle" cuando ya lo aíslan solo las calles cerradas.
   motivoSinAcceso: "horda" | "calle" | null;
-  // Survivors heading here who stand on or next to a visible zombie.
+  // Sobrevivientes que vienen hacia aquí y están sobre un zombie visible o junto a él.
   enPeligro: number;
 };
 
