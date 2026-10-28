@@ -279,11 +279,13 @@ AWS Budget con alerta desde el primer día (alertas por SNS al 50 %, 80 % y 100 
 
 ![AWS Budget](docs/budget.png)
 
-[Costos y fórmulas](docs/costos.md): escenario de referencia de **USD 69.50 por
+[Costos y fórmulas](docs/costos.md): escenario de referencia de **USD 85.45 por
 30 días** de demo continua y uso ligero del mapa, antes de créditos y franquicias
 gratuitas. Incluye supuestos no medidos y tarifas de referencia pendientes de
-confirmación regional; no es una factura ni un máximo. El gasto real del evento
-queda pendiente de evidencia de facturación.
+confirmación regional; no es una factura ni un máximo. **Gasto real del evento:
+unos USD 0.02** hasta el 28 de octubre (AWS Budgets y Cost Explorer), bajo un Budget
+de USD 20 con alertas. Lo que cuesta es la demo encendida (~USD 2.85 por día sin capa
+gratuita); apagada, el costo vuelve a casi cero.
 
 ## Limitaciones
 
