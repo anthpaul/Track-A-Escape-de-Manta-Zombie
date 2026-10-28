@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Escape de Manta Zombie",
+  title: "Spondylus Z",
   description: "Motor de rutas en tiempo real para escapar de los zombies de Manta.",
 };
 

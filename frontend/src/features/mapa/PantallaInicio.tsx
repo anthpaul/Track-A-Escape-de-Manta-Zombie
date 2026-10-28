@@ -49,7 +49,7 @@ export default function PantallaInicio() {
       <header className="sticky top-0 z-20 border-b border-crimson-300 bg-background/90 backdrop-blur">
         <nav aria-label="Principal" className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
           <Link href="/" className="font-pixel text-sm text-calabaza-500">
-            Escape de Manta
+            Spondylus Z
           </Link>
           <div className="flex items-center gap-4 text-sm sm:gap-6">
             <a href="#como-funciona" className="hidden hover:text-calabaza-500 sm:inline">Cómo funciona</a>
@@ -63,10 +63,11 @@ export default function PantallaInicio() {
         <section className="relative overflow-hidden border-b border-crimson-300">
           <FondoGrafo grafo={grafo} />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/30" aria-hidden />
-          <div className="relative mx-auto flex max-w-5xl flex-col items-start gap-6 px-4 py-20 sm:py-28">
+          <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-4 py-20 sm:py-28 md:grid-cols-[1fr_auto]">
+            <div className="flex flex-col items-start gap-6">
             <EstadoRonda conexion={vivo.conexion} ronda={vivo.snapshot?.ronda ?? null} turno={vivo.snapshot?.turno ?? null} />
             <h1 className="font-pixel text-5xl leading-none text-calabaza-500 [text-shadow:4px_4px_0_#9a031e] sm:text-7xl">
-              Escape de Manta
+              Spondylus Z
             </h1>
             <p className="max-w-xl text-lg leading-relaxed">
               La noche del 31 de octubre, Manta amanece infestada. Nuestro motor de rutas guía a cada sobreviviente, paso a paso y en
@@ -80,6 +81,15 @@ export default function PantallaInicio() {
                 Cómo funciona
               </a>
             </div>
+            </div>
+            {/* Brand badge: pixel art, so it is scaled without smoothing. */}
+            <img
+              src="/spondylus-z.png"
+              alt="Spondylus Z: calabaza con sombrero de bruja dentro de un anillo naranja"
+              width={252}
+              height={308}
+              className="mx-auto w-48 [image-rendering:pixelated] sm:w-60 md:mx-0"
+            />
           </div>
         </section>
 
@@ -110,7 +120,7 @@ export default function PantallaInicio() {
 
       <footer className="border-t border-crimson-300">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-xs text-crimson-800">
-          <span className="font-pixel text-calabaza-500">Escape de Manta · SpookyThon 2026 · abcstack</span>
+          <span className="font-pixel text-calabaza-500">Spondylus Z · SpookyThon 2026 · abcstack</span>
           <span>Datos del mapa © colaboradores de OpenStreetMap · CARTO</span>
         </div>
       </footer>
