@@ -144,11 +144,13 @@ function motorHttpFalso() {
 test("an evaluation round warms up first, then plays all 150 turns over HTTP and reports its metrics", async () => {
   const { cliente, comandos } = clienteFalso();
   const motores: ReturnType<typeof motorHttpFalso>[] = [];
+  const opciones: ({ timeoutMs?: number } | undefined)[] = [];
   const handler = crearHandler({
     cliente,
     tabla: "t",
     reloj: crearRelojFake(),
-    crearMotorHttp: () => {
+    crearMotorHttp: (o) => {
+      opciones.push(o);
       const m = motorHttpFalso();
       motores.push(m);
       return m;
@@ -161,12 +163,14 @@ test("an evaluation round warms up first, then plays all 150 turns over HTTP and
   assert.match(r.partidaId, /^evaluacion-r1-/);
   assert.equal(r.modo, "evaluacion");
 
-  // Warm-up: its own motor, 3 simultaneous waves as large as the round (20 survivors in R1).
+  // Warm-up: its own motor, 4 simultaneous waves as large as the round (20 survivors in R1). It waits up to
+  // 3 s per request so starting instances finish booting; the round keeps the official 500 ms cut.
   // The round motor is built first (before the lock), the warm-up motor right before turn 1.
   const [ronda, calentamiento] = motores;
   assert.equal(motores.length, 2, "warm-up and round use separate motors, so their latencies never mix");
-  assert.deepEqual(r.calentamiento!.map((o) => [o.oleada, o.pedidos, o.errores]), [[1, 20, 0], [2, 20, 0], [3, 20, 0]]);
-  assert.equal(calentamiento.llamadas, 60);
+  assert.deepEqual(r.calentamiento!.map((o) => [o.oleada, o.pedidos, o.errores]), [[1, 20, 0], [2, 20, 0], [3, 20, 0], [4, 20, 0]]);
+  assert.equal(calentamiento.llamadas, 80);
+  assert.deepEqual(opciones, [undefined, { timeoutMs: 3000 }]);
 
   // Evaluation rounds never stop early, and the metrics count only the round's own calls.
   assert.equal(r.metricas!.turnosEjecutados, 150);

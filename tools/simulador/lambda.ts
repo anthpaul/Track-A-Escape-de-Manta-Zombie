@@ -15,7 +15,9 @@
  * HTTP from the same region, so the measured latency is the service's and not the operator's
  * internet. It warms the API Lambda first (simultaneous waves as large as the round, on a motor of
  * their own so those latencies never mix with the round's), plays all 150 turns and returns the
- * warm-up waves and the round metrics.
+ * warm-up waves and the round metrics. Warm-up requests wait up to 3 s: a new API instance needs
+ * more than 500 ms to boot and open its DynamoDB connection, and cutting it earlier only makes the
+ * next wave ask for yet another cold instance.
  *
  * Environment: MUNDO_TABLE; PASO_URL and PASO_KEY for evaluation rounds.
  */
@@ -26,7 +28,7 @@ import { DynamoPersistencia, type ClienteEscritura } from "./dynamo-persistencia
 import { crearMotorEnProceso, siguientePasoEnProceso } from "./motor-en-proceso";
 import { correrRonda, type ConfigRonda, type ResultadoTurno } from "./turno";
 import { relojReal, type Reloj } from "./reloj";
-import { MotorHttp } from "./motor-http";
+import { MotorHttp, type OpcionesMotorHttp } from "./motor-http";
 import { calentar, type ResultadoOleada } from "./calentar";
 import { calcularMetricas, p95DeLatencias, type MetricasRonda } from "./metricas";
 import type { ClienteMotor } from "./motor-falso";
@@ -67,14 +69,14 @@ export function crearHandler(deps: {
   cliente: ClienteEscritura;
   tabla: string;
   reloj?: Reloj;
-  // Evaluation rounds: one call per motor (warm-up, then the round). Defaults to POST /paso from PASO_URL / PASO_KEY.
-  crearMotorHttp?: () => MotorMedido;
+  // Evaluation rounds: one call per motor (the round, then the warm-up). Defaults to POST /paso from PASO_URL / PASO_KEY.
+  crearMotorHttp?: (opciones?: Pick<OpcionesMotorHttp, "timeoutMs">) => MotorMedido;
   pausaCalentamientoMs?: number;
 }) {
   return async (evento: EventoDemo | null | undefined): Promise<ResultadoDemo> => {
     const { ronda, semilla, modo } = parseEvento(evento);
     const crear = ronda === 1 ? crearEscenarioR1 : ronda === 2 ? crearEscenarioR2 : crearEscenarioR3;
-    const crearMotorHttp = deps.crearMotorHttp ?? (() => new MotorHttp());
+    const crearMotorHttp = deps.crearMotorHttp ?? ((opciones) => new MotorHttp(opciones));
     // Built before anything is written, so a missing PASO_URL / PASO_KEY fails without touching the lock.
     const motorHttp = modo === "evaluacion" ? crearMotorHttp() : undefined;
     // The demo motor reads the live round config, which only exists once the scenario is built.
@@ -106,10 +108,10 @@ export function crearHandler(deps: {
       if (motorHttp) {
         // Wake as many API instances as the round will hit at once, before turn 1 counts.
         calentamiento = await calentar({
-          motor: crearMotorHttp(),
+          motor: crearMotorHttp({ timeoutMs: 3000 }),
           concurrencia: config.sobrevivientes.length,
-          oleadas: 3,
-          pausaMs: deps.pausaCalentamientoMs ?? 1000,
+          oleadas: 4,
+          pausaMs: deps.pausaCalentamientoMs ?? 2000,
           nodo: config.sobrevivientes[0]!.nodo,
         });
       }
