@@ -71,11 +71,15 @@ export default function LeyendaMapa() {
       {abierta && (
         <ul className="space-y-1.5 px-3 pb-3">
           <li className="flex items-center gap-2">
-            <ICONOS_PERSONA.en_ruta.Icono className="size-4 shrink-0" style={{ color: ICONOS_PERSONA.en_ruta.color }} strokeWidth={2.75} aria-hidden />
+            <span className="flex size-4 shrink-0 items-center justify-center rounded-full" style={{ background: ICONOS_PERSONA.en_ruta.color }} aria-hidden>
+              <ICONOS_PERSONA.en_ruta.Icono className="size-2.5 text-crimson-100" strokeWidth={2.75} />
+            </span>
             Sobreviviente en camino
           </li>
           <li className="flex items-center gap-2">
-            <ICONOS_PERSONA.mordido.Icono className="size-4 shrink-0" style={{ color: ICONOS_PERSONA.mordido.color }} strokeWidth={2.75} aria-hidden />
+            <span className="flex size-4 shrink-0 items-center justify-center rounded-full" style={{ background: ICONOS_PERSONA.mordido.color }} aria-hidden>
+              <ICONOS_PERSONA.mordido.Icono className="size-2.5 text-crimson-100" strokeWidth={2.75} />
+            </span>
             Sobreviviente mordido
           </li>
           {ZOMBIES.map(({ nombre, Icono, color, forma }) => (

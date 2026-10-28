@@ -47,9 +47,14 @@ test("the legend cuts the same shapes with CSS", () => {
   assert.equal(clipPathForma("rombo"), "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)");
 });
 
-test("people are the Lucide person icons in their state color, outlined so they read on the dark map", () => {
-  assert.deepEqual([ICONOS_MAPA.persona!.Icono, ICONOS_MAPA.persona!.trazo, ICONOS_MAPA.persona!.fondo], [UserRound, COLOR_SOBREVIVIENTE.en_ruta, null]);
-  assert.deepEqual([ICONOS_MAPA["persona-mordida"]!.Icono, ICONOS_MAPA["persona-mordida"]!.trazo], [UserRoundX, COLOR_SOBREVIVIENTE.mordido]);
+test("people are a disc in their state color with a black person icon inside, so the icon reads", () => {
+  const persona = ICONOS_MAPA.persona!;
+  const mordida = ICONOS_MAPA["persona-mordida"]!;
+  assert.deepEqual([persona.Icono, persona.fondo, persona.forma ?? "disco", persona.trazo], [UserRound, COLOR_SOBREVIVIENTE.en_ruta, "disco", "#13030d"]);
+  assert.deepEqual([mordida.Icono, mordida.fondo, mordida.forma ?? "disco", mordida.trazo], [UserRoundX, COLOR_SOBREVIVIENTE.mordido, "disco", "#13030d"]);
+});
+
+test("an icon can still get a dark outline drawn behind it", () => {
   const svg = decodificar(svgIconoMapa('<svg stroke="#2fbadd" stroke-width="2.75"><path d="M1 1"/></svg>', null, "disco", "#000", "#13030d"));
   // The dark outline is drawn first and wider; the colored icon goes on top.
   assert.match(svg, /<svg stroke="#13030d" stroke-width="[\d.]+"><path d="M1 1"\/><\/svg>.*<svg stroke="#2fbadd" stroke-width="2.75">/);

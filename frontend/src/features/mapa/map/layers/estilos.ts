@@ -202,10 +202,10 @@ export const capaVehiculos: LayerProps = {
 
 // Los sobrevivientes en camino y los mordidos son capas separadas para poder apagar cada una (pestaña Capas).
 // Los sobrevivientes que ya están en un refugio se cuentan en el panel, no se dibujan.
-// Personas: el ícono de persona en el color de su estado (con una X si fue mordida), no un círculo.
+// Personas: bolita del color de su estado con el ícono de persona en negro (con una X si fue mordida).
 const disposicionPersona = (imagen: string): SymbolLayerSpecification["layout"] => ({
   "icon-image": imagen,
-  "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.42, 16, 0.75],
+  "icon-size": ["interpolate", ["linear"], ["zoom"], 12, 0.32, 16, 0.62],
   "icon-allow-overlap": true,
   "icon-ignore-placement": true,
 });

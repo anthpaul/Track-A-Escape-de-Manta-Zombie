@@ -22,8 +22,8 @@ export const ICONOS_PERSONA = {
 export const ICONO_REFUGIO = { Icono: ShieldCheck, color: COLOR_REFUGIO.relleno, borde: COLOR_REFUGIO.borde, forma: "cuadrado" } as const;
 export const ICONO_VEHICULO = { Icono: Truck, color: COLOR_VEHICULO.relleno, borde: COLOR_VEHICULO.borde, forma: "pentagono" } as const;
 
-// Cada entidad del mapa tiene su propia forma: nada de círculos (salvo la señal de prohibido el paso,
-// que es la señal de tránsito real) ni triángulos, y ninguna forma se repite.
+// Cada entidad del mapa tiene su propia forma: zombies, refugios y camionetas nunca son círculos ni triángulos y
+// ninguna forma se repite. Los círculos quedan para las personas (bolita con el ícono) y la señal de prohibido el paso.
 export type FormaIcono = "disco" | "cuadrado" | "rombo" | "pentagono" | "hexagono" | "octagono";
 type FormaPoligono = Exclude<FormaIcono, "disco" | "cuadrado">;
 
@@ -56,9 +56,9 @@ export const ICONOS_MAPA: Record<string, IconoMapa> = {
   "zombie-caminante": { Icono: ICONOS_ZOMBIE.caminante.Icono, fondo: ICONOS_ZOMBIE.caminante.color, trazo: "#ffffff", forma: ICONOS_ZOMBIE.caminante.forma },
   "zombie-corredor": { Icono: ICONOS_ZOMBIE.corredor.Icono, fondo: ICONOS_ZOMBIE.corredor.color, trazo: "#ffffff", forma: ICONOS_ZOMBIE.corredor.forma },
   "zombie-horda": { Icono: ICONOS_ZOMBIE.horda.Icono, fondo: ICONOS_ZOMBIE.horda.color, trazo: "#ffffff", forma: ICONOS_ZOMBIE.horda.forma },
-  // Personas: el ícono de Lucide en el color de su estado, sin insignia y con contorno oscuro.
-  persona: { Icono: ICONOS_PERSONA.en_ruta.Icono, fondo: null, trazo: ICONOS_PERSONA.en_ruta.color, grosor: 2.75, halo: "#13030d" },
-  "persona-mordida": { Icono: ICONOS_PERSONA.mordido.Icono, fondo: null, trazo: ICONOS_PERSONA.mordido.color, grosor: 2.75, halo: "#13030d" },
+  // Personas: una bolita del color de su estado con el ícono de persona en negro adentro, para que se lea.
+  persona: { Icono: ICONOS_PERSONA.en_ruta.Icono, fondo: ICONOS_PERSONA.en_ruta.color, trazo: "#13030d", grosor: 2.75 },
+  "persona-mordida": { Icono: ICONOS_PERSONA.mordido.Icono, fondo: ICONOS_PERSONA.mordido.color, trazo: "#13030d", grosor: 2.75 },
   refugio: { Icono: ICONO_REFUGIO.Icono, fondo: ICONO_REFUGIO.color, trazo: ICONO_REFUGIO.borde, forma: "cuadrado", borde: ICONO_REFUGIO.borde },
   // Punta de las flechas del siguiente paso: apunta al norte y la capa la rota.
   flecha: { Icono: Navigation2, fondo: null, trazo: COLOR_FLECHA, relleno: COLOR_FLECHA },
