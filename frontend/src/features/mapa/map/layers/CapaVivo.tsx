@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Layer, Source } from "react-map-gl/maplibre";
 import {
+  ocupacionRefugiosAGeoJSON,
   refugiosSinAccesoAGeoJSON,
   sobrevivientesAGeoJSON,
   vehiculosAGeoJSON,
@@ -12,6 +13,7 @@ import {
 import type { Grafo, Snapshot } from "@/features/mapa/domain/tipos";
 import {
   capaMordidos,
+  capaRefugiosOcupacion,
   capaRefugiosSinAcceso,
   capaRefugiosSinAccesoEtiqueta,
   capaSobrevivientes,
@@ -34,6 +36,7 @@ export default function CapaVivo({ grafo, snapshot, capas }: Props) {
   );
   const zombies = useMemo(() => zombiesAGeoJSON(grafo, snapshot.zombies), [grafo, snapshot.zombies]);
   const sinAcceso = useMemo(() => refugiosSinAccesoAGeoJSON(grafo, snapshot), [grafo, snapshot]);
+  const ocupacion = useMemo(() => ocupacionRefugiosAGeoJSON(grafo, snapshot.refugios), [grafo, snapshot.refugios]);
   const vehiculos = useMemo(() => vehiculosAGeoJSON(grafo, snapshot.vehiculos), [grafo, snapshot.vehiculos]);
 
   return (
@@ -44,6 +47,9 @@ export default function CapaVivo({ grafo, snapshot, capas }: Props) {
       <Source id="refugios-sin-acceso" type="geojson" data={sinAcceso}>
         <Layer {...conVisibilidad(capaRefugiosSinAcceso, capas.refugio)} />
         <Layer {...conVisibilidad(capaRefugiosSinAccesoEtiqueta, capas.refugio)} />
+      </Source>
+      <Source id="refugios-ocupacion" type="geojson" data={ocupacion}>
+        <Layer {...conVisibilidad(capaRefugiosOcupacion, capas.refugio)} />
       </Source>
       <Source id="sobrevivientes" type="geojson" data={sobrevivientes}>
         <Layer {...conVisibilidad(capaSobrevivientes, capas.sobreviviente)} />

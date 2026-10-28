@@ -8,6 +8,7 @@ import CapaSeleccion from "@/features/mapa/map/layers/CapaSeleccion";
 import CapaSenales from "@/features/mapa/map/layers/CapaSenales";
 import RegistroIconos from "@/features/mapa/map/layers/RegistroIconos";
 import AjustePadding from "@/features/mapa/map/AjustePadding";
+import BotonCentrar from "@/features/mapa/map/BotonCentrar";
 import TarjetaBloqueo from "@/features/mapa/map/TarjetaBloqueo";
 import { actualizarBloqueos, type Bloqueos } from "@/features/mapa/domain/bloqueos";
 import type { CapasVisibles } from "@/features/mapa/map/layers/visibilidad";
@@ -88,6 +89,7 @@ export default function MapaVivo(props: Props) {
         />
       )}
       <AjustePadding panelAbierto={props.panelAbierto} />
+      <BotonCentrar />
     </MapaBase>
   );
 }

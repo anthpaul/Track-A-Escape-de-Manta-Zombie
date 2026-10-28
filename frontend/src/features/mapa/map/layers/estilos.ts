@@ -122,12 +122,34 @@ export const capaRefugiosEtiquetas: LayerProps = {
     "text-field": ["get", "nombre"],
     "text-font": FUENTE_ETIQUETAS,
     "text-size": 12,
-    // Mueve la etiqueta al lado donde quepa, para que nunca se corte en el borde de la pantalla.
-    "text-variable-anchor": ["top", "bottom", "left", "right"],
+    // Mueve la etiqueta al lado donde quepa, para que nunca se corte en el borde de la pantalla. Encima del ícono va
+    // la ocupación en vivo (capaRefugiosOcupacion), así que el nombre nunca se pone arriba.
+    "text-variable-anchor": ["top", "left", "right"],
     "text-radial-offset": 1.2,
     "text-justify": "auto",
   },
   paint: { "text-color": "#ffffff", "text-halo-color": "#000000", "text-halo-width": 1.5 },
+};
+
+// Ocupación en vivo sobre el ícono del refugio: "12/50 a salvo" en celeste, "50/50 LLENO" en rojo. Siempre visible, porque
+// es la respuesta a "¿cuántos llegaron?" sin abrir el panel.
+export const capaRefugiosOcupacion: LayerProps = {
+  id: "refugios-ocupacion",
+  type: "symbol",
+  layout: {
+    "text-field": ["get", "texto"],
+    "text-font": FUENTE_ETIQUETAS,
+    "text-size": ["interpolate", ["linear"], ["zoom"], 12, 12, 16, 15],
+    "text-anchor": "bottom",
+    "text-offset": [0, -1.5],
+    "text-allow-overlap": true,
+    "text-ignore-placement": true,
+  },
+  paint: {
+    "text-color": ["case", ["get", "lleno"], COLOR_CALLE.bloqueada, COLOR_REFUGIO.relleno],
+    "text-halo-color": "#000000",
+    "text-halo-width": 1.5,
+  },
 };
 
 // Refugio que nadie puede alcanzar en este turno: anillo de peligro alrededor y una etiqueta "SIN ACCESO" bajo su nombre.

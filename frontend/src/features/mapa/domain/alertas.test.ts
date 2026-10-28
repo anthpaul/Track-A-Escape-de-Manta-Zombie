@@ -129,11 +129,11 @@ test("the turn bar sums each kind of event in plain words, bad news first", () =
     { id: "d", turno: 22, tipo: "mordido", titulo: "", descripcion: "", cantidad: 4 },
   ] as const;
   assert.deepEqual(resumenTurno([...alertas], 23), [
-    { texto: "7 mordidos", tono: "mordido" },
-    { texto: "1 horda nueva", tono: "peligro" },
-    { texto: "2 llegaron", tono: "llegada" },
+    { texto: "7 mordidos", tono: "mordido", tipo: "mordido" },
+    { texto: "1 horda nueva", tono: "peligro", tipo: "horda" },
+    { texto: "2 llegaron", tono: "llegada", tipo: "llegada" },
   ]);
-  assert.deepEqual(resumenTurno([...alertas], 22), [{ texto: "4 mordidos", tono: "mordido" }]);
+  assert.deepEqual(resumenTurno([...alertas], 22), [{ texto: "4 mordidos", tono: "mordido", tipo: "mordido" }]);
 });
 
 test("bites and arrivals carry how many people they cover", () => {
