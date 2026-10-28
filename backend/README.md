@@ -35,6 +35,12 @@ El motor depende de `FuenteMundo`, no del SDK de DynamoDB. La implementación
   el sobreviviente ya no se queda quieto. Elige, entre quedarse y los vecinos legales,
   el nodo más lejano (en calles) de los zombies que se mueven (AGENTS.md §4.3, regla 2).
 
+- **K4, capacidad** (`src/motor/cupos.ts`): en cada turno reparte los lugares libres de
+  cada refugio (capacidad − a salvo) entre los sobrevivientes en ruta, por distancia en
+  calles y después por id. El A* solo apunta al refugio asignado y a los lugares sin
+  reclamar; si ninguno es alcanzable, a cualquiera con lugar. Sin escrituras: los
+  sobrevivientes llegan en el mismo `TURNO#N` que ya lee `DynamoFuente`.
+
 Medición local con los escenarios S4 de `tools/simulador`, el motor real en proceso y
 16 semillas por ronda (no mide red ni AWS; los escenarios no son los del jurado):
 
