@@ -58,11 +58,37 @@ ronda() {
   estado
 }
 
+# A running round holds the lock until it ends (a demo stops once nobody is on the road, at most
+# 5 minutes). Wait for it instead of failing, but only with the demos off: otherwise a new demo
+# would grab the lock again a minute later.
+esperar_candado() {
+  if [ "$(aws scheduler get-schedule --name "$SCHEDULE" --query State --output text)" != "DISABLED" ]; then
+    echo "Las rondas demo están prendidas: corré 'tools/demo/demo.sh modo-prueba' antes de evaluar." >&2
+    exit 1
+  fi
+  local intento
+  for intento in $(seq 1 40); do
+    if curl -fsS "$SITIO/api/estado" | node -e '
+      let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => {
+        const j = JSON.parse(s);
+        if (j.ok === false) process.exit(0);
+        console.log(`  esperando a que termine la ronda en curso (R${j.ronda}, turno ${j.turno}, ${j.metricas.vivos} en ruta)…`);
+        process.exit(1);
+      });'; then
+      return 0
+    fi
+    sleep 10
+  done
+  echo "Después de casi 7 minutos sigue habiendo una ronda en curso; revisá 'tools/demo/demo.sh estado'." >&2
+  exit 1
+}
+
 # Fire-test round: the simulator Lambda warms the API, plays all 150 turns calling POST /paso over
 # HTTP from us-east-2 and answers with the metrics. Synchronous: it waits the ~5 minutes of the round.
 evaluar() {
   local numero="${1:?Uso: demo.sh evaluar <1|2|3> [semilla]}" semilla="${2:-42}" salida
   case "$numero" in 1 | 2 | 3) ;; *) echo "La ronda tiene que ser 1, 2 o 3." >&2; exit 1 ;; esac
+  esperar_candado
   salida="$(mktemp)"
   echo "R$numero de evaluación (semilla $semilla): calentando y jugando 150 turnos, unos 5 minutos…"
   # --cli-read-timeout 0: the CLI would otherwise give up after 60 s while the round is still running.
