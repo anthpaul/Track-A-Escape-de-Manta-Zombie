@@ -1,5 +1,5 @@
-# Private bucket for the static export (frontend/out). Only CloudFront can read it (OAC).
-# The Terraform state bucket lives in infra/bootstrap, not here.
+# Bucket privado para el export estático (frontend/out). Solo CloudFront puede leerlo (OAC).
+# El bucket del state de Terraform vive en infra/bootstrap, no aquí.
 resource "aws_s3_bucket" "site" {
   bucket_prefix = "${local.name_prefix}-site-"
   force_destroy = true

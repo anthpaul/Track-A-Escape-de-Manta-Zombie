@@ -1,14 +1,15 @@
-# Simulator Lambda + EventBridge Scheduler for demo rounds (S6, AGENTS.md §2 and R10).
+# Lambda del simulador + EventBridge Scheduler para las rondas de demo (S6, AGENTS.md §2 y R10).
 #
-# Every `demo_schedule` the scheduler starts one demo round, so the public map is
-# never frozen. The round takes the active-game lock conditionally: if an
-# evaluation (or a previous demo) holds it, the invocation exits without writing.
-# Before an evaluation round, disable the demos: `demo_enabled = false` and apply,
-# or `aws scheduler update-schedule ... --state DISABLED` (tools/demo/demo.sh pausar).
-# Evaluation rounds run on this same Lambda: `tools/demo/demo.sh evaluar 3` invokes it with
-# "modo": "evaluacion", and it calls POST /paso over HTTP (PASO_URL, PASO_KEY below).
+# Cada `demo_schedule` el scheduler arranca una ronda de demo, así el mapa público
+# nunca queda congelado. La ronda toma el candado de partida activa de forma
+# condicional: si una evaluación (o una demo anterior) lo tiene, la invocación
+# termina sin escribir nada.
+# Antes de una ronda de evaluación hay que deshabilitar las demos: `demo_enabled = false`
+# y apply, o `aws scheduler update-schedule ... --state DISABLED` (tools/demo/demo.sh pausar).
+# Las rondas de evaluación corren en esta misma Lambda: `tools/demo/demo.sh evaluar 3` la
+# invoca con "modo": "evaluacion", y ella llama a POST /paso por HTTP (PASO_URL y PASO_KEY, abajo).
 #
-# Run `npm run build:simulador` first: archive_file zips tools/simulador/dist/lambda.js.
+# Ejecutar primero `npm run build:simulador`: archive_file comprime tools/simulador/dist/lambda.js.
 data "archive_file" "simulador" {
   type        = "zip"
   source_file = "${path.module}/../tools/simulador/dist/lambda.js"
@@ -27,8 +28,8 @@ resource "aws_iam_role" "simulador" {
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
-# Least privilege: its own log group and only the writes DynamoPersistencia makes
-# (lock, metadata and turns through TransactWriteItems). No reads, no Scan.
+# Mínimo privilegio: su propio log group y solo las escrituras que hace DynamoPersistencia
+# (candado, metadatos y turnos mediante TransactWriteItems). Sin lecturas ni Scan.
 data "aws_iam_policy_document" "simulador" {
   statement {
     sid       = "Logs"
@@ -59,8 +60,8 @@ resource "aws_lambda_function" "simulador" {
   runtime          = "nodejs24.x"
   handler          = "lambda.handler"
   architectures    = ["arm64"]
-  memory_size      = 1024 # evaluation rounds send up to 200 requests at once; more CPU keeps the client from adding delay
-  timeout          = 900  # a round lasts 5 minutes; 15 minutes is the Lambda ceiling
+  memory_size      = 1024 # las rondas de evaluación envían hasta 200 pedidos a la vez; más CPU evita que el cliente sume demora
+  timeout          = 900  # una ronda dura 5 minutos; 15 minutos es el máximo de Lambda
   role             = aws_iam_role.simulador.arn
   filename         = data.archive_file.simulador.output_path
   source_code_hash = data.archive_file.simulador.output_base64sha256
@@ -68,10 +69,10 @@ resource "aws_lambda_function" "simulador" {
   environment {
     variables = {
       MUNDO_TABLE = aws_dynamodb_table.main.name
-      # Evaluation rounds call POST /paso over HTTP from this region, straight to API Gateway
-      # (no CloudFront hop), so the measured p95 is the service's and not the operator's internet.
+      # Las rondas de evaluación llaman a POST /paso por HTTP desde esta región, directo a API Gateway
+      # (sin pasar por CloudFront), así el p95 medido es el del servicio y no el de la conexión del operador.
       PASO_URL = "${aws_apigatewayv2_api.api.api_endpoint}/api/paso"
-      # Same sensitive variable the API Lambda already receives (TF_VAR_api_key, never committed).
+      # La misma variable sensible que ya recibe la Lambda de la API (TF_VAR_api_key, nunca commiteada).
       PASO_KEY = var.api_key
     }
   }
@@ -82,7 +83,7 @@ resource "aws_lambda_function" "simulador" {
   ]
 }
 
-# A failed demo round is never retried: the next schedule starts a fresh one.
+# Una ronda de demo fallida nunca se reintenta: la siguiente ejecución del schedule arranca una nueva.
 resource "aws_lambda_function_event_invoke_config" "simulador" {
   function_name                = aws_lambda_function.simulador.function_name
   maximum_retry_attempts       = 0
@@ -98,7 +99,7 @@ data "aws_iam_policy_document" "scheduler_assume" {
       identifiers = ["scheduler.amazonaws.com"]
     }
 
-    # Confused-deputy protection: only schedules of this account can assume it.
+    # Protección contra confused deputy: solo los schedules de esta cuenta pueden asumirlo.
     condition {
       test     = "StringEquals"
       variable = "aws:SourceAccount"

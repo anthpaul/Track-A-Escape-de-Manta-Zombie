@@ -1,9 +1,9 @@
-// Tests for the CloudFront viewer-request function. Run: node --test infra/functions/rewrite-html.test.mjs
+// Tests de la función viewer-request de CloudFront. Ejecutar: node --test infra/functions/rewrite-html.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-// The file is plain CloudFront JS (no exports), so it is evaluated to get its handler.
+// El archivo es JS plano de CloudFront (sin exports), así que se evalúa para obtener su handler.
 const codigo = readFileSync(new URL("./rewrite-html.js", import.meta.url), "utf-8");
 const handler = new Function(`${codigo}; return handler;`)();
 const reescribir = (uri) => handler({ request: { uri } }).uri;
