@@ -11,7 +11,9 @@ Rama: `feat/mapa-rediseno` · Entrega: un PR con commits por unidad · Tests: `n
   - Al tocar un puente o calle cortada, una tarjeta: "Puente dañado" / "Nadie puede cruzar desde el turno 21" (el turno es el primero en que el front la vio bloqueada).
   - Leyenda de la imagen: "Calle", "Puente", "Calle bloqueada", "Puente dañado".
 - **S2** Leyenda (imagen 2): grupos "PERSONAS" (Sobreviviente, Mordido), "PELIGRO" (Zombie, "Horda (zona peligrosa)"), "LUGARES Y CALLES" (Refugio, "Refugio sin acceso", "Calle cerrada", "Ruta elegida"); botón píldora con tres puntos (celeste, rosa, naranja) "Cerrar leyenda"; cerrada, la píldora dice "Leyenda". Imagen 5: "Abre la leyenda cuando la necesites. Se cierra sola para no tapar el mapa."
-- **S3** Panel (imagen 3): arriba "Ronda 2 · Turno 23" y "En vivo"; tres cifras "a salvo" (celeste), "en camino" (blanco), "mordidos" (rosa). Alertas agrupadas por turno ("ESTE TURNO · 23", "TURNO 22") con título y detalle en lenguaje claro, por ejemplo "7 sobrevivientes mordidos" / "La mayoría cerca del Aeropuerto Eloy Alfaro", "Nueva horda en Jaramijó" / "El Faro de Jaramijó quedó sin acceso", "2 llegaron a Universidad ULEAM" / "Ya son 20 a salvo", "Se cerró una calle en Tarqui" / "3 sobrevivientes cambiaron de camino", "4 sobrevivientes mordidos" / "Zona centro". `TODO:` si el riel de 4 pestañas se mantiene (pregunta abierta).
+- **S3** Panel (imagen 3): arriba "Ronda 2 · Turno 23" y "En vivo"; tres cifras "a salvo" (celeste), "en camino" (blanco), "mordidos" (rosa). Alertas agrupadas por turno ("ESTE TURNO · 23", "TURNO 22") con título y detalle en lenguaje claro, por ejemplo "7 sobrevivientes mordidos" / "La mayoría cerca del Aeropuerto Eloy Alfaro", "Nueva horda en Jaramijó" / "El Faro de Jaramijó quedó sin acceso", "2 llegaron a Universidad ULEAM" / "Ya son 20 a salvo", "Se cerró una calle en Tarqui" / "3 sobrevivientes cambiaron de camino", "4 sobrevivientes mordidos" / "Zona centro". Se mantiene el riel de 4 pestañas (respuesta de Anthony: "Mantener el riel").
+- **S6** Notificaciones (imagen de la barra): píldora arriba al centro "TURNO 23 · 7 mordidos · 1 horda nueva · 2 llegaron" con "Ver qué pasó" y ×, en lugar del cartel rojo. Pedido: "quiero que se vean asi las notificaciones".
+- **S7** Pestaña Refugios (imagen del panel): filas con nombre, "20 / 200", barra fina y una línea de estado: "3 en camino · 1 en peligro", "1 en camino", "Sin acceso: hay una horda en la entrada".
 - **S4** Ayuda guiada (imágenes 3–5), tarjetas "1 DE 4" con "Saltar", "Atrás", "Siguiente" y puntos de progreso:
   1. "Así va la partida" — "Arriba ves cuántos están a salvo, en camino y mordidos. Abajo, cada refugio y quién va hacia él."
   2. "Toca un punto celeste" — "Cada punto celeste es un sobreviviente. Tócalo para ver a dónde va y su camino."
@@ -25,7 +27,7 @@ Rama: `feat/mapa-rediseno` · Entrega: un PR con commits por unidad · Tests: `n
 |---|---|---|---|---|
 | T1 | S1 | inline | hecho (120 tests, capturas) | 187efce |
 | T2 | S2 | inline | hecho (captura) | ver log |
-| T3 | S3 | inline | bloqueada por pregunta | |
+| T3 | S3, S6, S7 | inline | hecho (126 tests, capturas) | ver log |
 | T4 | S4 | inline | bloqueada por paso 4 | |
 | T5 | S5 | inline | bloqueada por imagen | |
 
@@ -35,3 +37,5 @@ Rama: `feat/mapa-rediseno` · Entrega: un PR con commits por unidad · Tests: `n
 - **L2** Decisión: arrancar por T1 y T2, que no dependen de nada abierto. El naranja del puente dañado repite el de los zombies; se respeta el diseño porque el triángulo y el punteado lo distinguen.
 - **L3** T1: señales arriba de todas las capas (los zombies las tapaban). La tarjeta al tocar no se probó en captura (headless no hace clic); su texto está cubierto por tests.
 - **L4** T2: leyenda abajo a la derecha (el mapa ocupa todo el ancho bajo el panel; a la izquierda quedaría tapada). Se cierra sola al tocar fuera. Se agregó "Puente dañado" (viene de la imagen 5A).
+- **L5** (27 oct) Pregunta del panel → "Mantener el riel (Recomendado)". A mitad de T3 llegaron S6 (barra de notificaciones) y S7 (lista de refugios).
+- **L6** T3: las llegadas son alertas nuevas que no abren la barra ni cuentan en el globito (pasan casi cada turno). "Cambiaron de camino" cuenta a quien cambió de refugio o cuya ruta se alargó tras dar su paso (necesita refugio/callesRestantes). "En peligro" = en camino a ese refugio y parado sobre o al lado de un zombie visible. En el mockup los zombies son puntos; se mantienen los íconos por tipo porque el reto los exige.
